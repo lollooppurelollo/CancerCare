@@ -69,26 +69,35 @@ export default function PatientRegistration() {
         },
         {
           onSuccess: async (userData) => {
-            // Create patient profile
-            await apiRequest("POST", "/api/patients", {
-              userId: userData.id,
-              firstName: data.firstName,
-              lastName: data.lastName,
-              age: data.age,
-              gender: data.gender,
-              weight: data.weight,
-              height: data.height,
-              phone: data.phone,
-              medication: data.medication,
-              dosage: data.dosage,
-            });
+            try {
+              // Create patient profile
+              await apiRequest("POST", "/api/patients", {
+                userId: userData.id,
+                firstName: data.firstName,
+                lastName: data.lastName,
+                age: data.age,
+                gender: data.gender,
+                weight: data.weight,
+                height: data.height,
+                phone: data.phone,
+                medication: data.medication,
+                dosage: data.dosage,
+              });
 
-            toast({
-              title: "Registrazione completata",
-              description: "Il tuo account è stato creato con successo!",
-            });
+              toast({
+                title: "Registrazione completata",
+                description: "Il tuo account è stato creato con successo!",
+              });
 
-            setLocation("/");
+              // Force refresh of authentication state
+              window.location.reload();
+            } catch (error) {
+              toast({
+                title: "Errore",
+                description: "Errore durante la creazione del profilo paziente.",
+                variant: "destructive",
+              });
+            }
           },
           onError: (error) => {
             toast({
@@ -102,7 +111,7 @@ export default function PatientRegistration() {
     } catch (error) {
       toast({
         title: "Errore",
-        description: "Errore durante la creazione del profilo paziente.",
+        description: "Errore durante la registrazione.",
         variant: "destructive",
       });
     }

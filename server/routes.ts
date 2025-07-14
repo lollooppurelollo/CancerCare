@@ -19,6 +19,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = await storage.createUser(userData);
+      
+      // Auto-login after registration
+      (req as any).session.userId = user.id;
+      (req as any).session.userRole = user.role;
+      
       res.json({ id: user.id, username: user.username, role: user.role });
     } catch (error) {
       console.error("Registration error:", error);
