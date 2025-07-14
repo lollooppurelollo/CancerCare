@@ -1,0 +1,35 @@
+import { useLocation } from "wouter";
+import { Home, History, Video } from "lucide-react";
+import { Button } from "./button";
+
+export default function BottomNavigation() {
+  const [location, setLocation] = useLocation();
+
+  const navItems = [
+    { path: "/", icon: Home, label: "Home" },
+    { path: "/history", icon: History, label: "Storico" },
+    { path: "/video", icon: Video, label: "Video" },
+  ];
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 max-w-md mx-auto">
+      <div className="flex">
+        {navItems.map(({ path, icon: Icon, label }) => (
+          <Button
+            key={path}
+            variant="ghost"
+            className={`flex-1 py-3 px-4 flex flex-col items-center justify-center ${
+              location === path 
+                ? "text-sage-600 border-b-2 border-sage-600" 
+                : "text-gray-500"
+            }`}
+            onClick={() => setLocation(path)}
+          >
+            <Icon className="w-5 h-5 mb-1" />
+            <span className="text-xs">{label}</span>
+          </Button>
+        ))}
+      </div>
+    </div>
+  );
+}
