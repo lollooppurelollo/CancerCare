@@ -61,6 +61,18 @@ export default {
           border: "var(--sidebar-border)",
           ring: "var(--sidebar-ring)",
         },
+        sage: {
+          50: "var(--sage-50)",
+          100: "var(--sage-100)",
+          200: "var(--sage-200)",
+          300: "var(--sage-300)",
+          400: "var(--sage-400)",
+          500: "var(--sage-500)",
+          600: "var(--sage-600)",
+          700: "var(--sage-700)",
+          800: "var(--sage-800)",
+          900: "var(--sage-900)",
+        },
       },
       keyframes: {
         "accordion-down": {
