@@ -89,8 +89,8 @@ export default function PatientRegistration() {
                 description: "Il tuo account è stato creato con successo!",
               });
 
-              // Force refresh of authentication state
-              window.location.reload();
+              // Redirect to patient home
+              setLocation("/");
             } catch (error) {
               toast({
                 title: "Errore",
@@ -348,6 +348,18 @@ export default function PatientRegistration() {
             </Button>
           </form>
         </Form>
+
+        <div className="mt-6 text-center">
+          <p className="text-sage-600">
+            Hai già un account?{" "}
+            <button
+              onClick={() => setLocation("/patient/login")}
+              className="text-sage-600 hover:text-sage-700 underline font-medium"
+            >
+              Accedi qui
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -5,7 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/use-auth";
 import NotFound from "@/pages/not-found";
-import RoleSelection from "@/pages/role-selection";
+import Landing from "@/pages/landing";
+import PatientLogin from "@/pages/patient-login";
 import PatientRegistration from "@/pages/patient-registration";
 import PatientHome from "@/pages/patient-home";
 import PatientHistory from "@/pages/patient-history";
@@ -32,9 +33,10 @@ function Router() {
   if (!user) {
     return (
       <Switch>
-        <Route path="/register" component={PatientRegistration} />
+        <Route path="/patient/login" component={PatientLogin} />
+        <Route path="/patient/register" component={PatientRegistration} />
         <Route path="/doctor/login" component={DoctorLogin} />
-        <Route path="/" component={RoleSelection} />
+        <Route path="/" component={Landing} />
         <Route component={NotFound} />
       </Switch>
     );
