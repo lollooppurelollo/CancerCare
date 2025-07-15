@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Settings, Save, AlertTriangle } from "lucide-react";
+import { Settings, Save, AlertTriangle, User, Bell, MoreVertical } from "lucide-react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import MedicationCalendar from "@/components/ui/medication-calendar";
@@ -13,6 +15,7 @@ export default function PatientHome() {
   const [diaryContent, setDiaryContent] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
 
   const { data: patient } = useQuery({
     queryKey: ["/api/patients/me"],
@@ -88,9 +91,23 @@ export default function PatientHome() {
             <h1 className="text-lg font-bold">{patient.firstName} {patient.lastName}</h1>
             <p className="text-sage-100 text-sm">{patient.medication} {patient.dosage}</p>
           </div>
-          <Button variant="ghost" size="sm" className="text-white hover:bg-sage-600">
-            <Settings className="w-5 h-5" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="text-white hover:bg-sage-600">
+                <Settings className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => setLocation("/profile")}>
+                <User className="mr-2 h-4 w-4" />
+                Profilo paziente
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLocation("/settings")}>
+                <Bell className="mr-2 h-4 w-4" />
+                Impostazioni app
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

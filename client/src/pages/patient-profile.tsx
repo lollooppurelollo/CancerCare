@@ -1,15 +1,14 @@
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
-import { ArrowLeft, Heart } from "lucide-react";
+import { ArrowLeft, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -19,9 +18,7 @@ const medications = {
   palbociclib: ["125mg 1x/die", "100mg 1x/die", "75mg 1x/die"],
 };
 
-const registrationSchema = z.object({
-  username: z.string().min(3, "Username deve avere almeno 3 caratteri"),
-  password: z.string().min(6, "Password deve avere almeno 6 caratteri"),
+const profileSchema = z.object({
   firstName: z.string().min(1, "Nome è richiesto"),
   lastName: z.string().min(1, "Cognome è richiesto"),
   age: z.number().min(18, "Età deve essere almeno 18").max(100, "Età non valida"),
@@ -33,89 +30,70 @@ const registrationSchema = z.object({
   dosage: z.string().min(1, "Dosaggio è richiesto"),
 });
 
-type RegistrationForm = z.infer<typeof registrationSchema>;
+type ProfileForm = z.infer<typeof profileSchema>;
 
-export default function PatientRegistration() {
+export default function PatientProfile() {
   const [, setLocation] = useLocation();
-  const { register, isRegisterLoading, registerError } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedMedication, setSelectedMedication] = useState<string>("");
 
-  const form = useForm<RegistrationForm>({
-    resolver: zodResolver(registrationSchema),
+  const { data: patient, isLoading } = useQuery({
+    queryKey: ["/api/patients/me"],
+  });
+
+  const form = useForm<ProfileForm>({
+    resolver: zodResolver(profileSchema),
     defaultValues: {
-      username: "",
-      password: "",
-      firstName: "",
-      lastName: "",
-      age: 0,
-      gender: undefined,
-      weight: 0,
-      height: 0,
-      phone: "",
-      medication: undefined,
-      dosage: "",
+      firstName: patient?.firstName || "",
+      lastName: patient?.lastName || "",
+      age: patient?.age || 0,
+      gender: patient?.gender || undefined,
+      weight: patient?.weight || 0,
+      height: patient?.height || 0,
+      phone: patient?.phone || "",
+      medication: patient?.medication || undefined,
+      dosage: patient?.dosage || "",
     },
   });
 
-  const onSubmit = async (data: RegistrationForm) => {
-    try {
-      // Register user
-      register(
-        {
-          username: data.username,
-          password: data.password,
-          role: "patient",
-        },
-        {
-          onSuccess: async (userData) => {
-            try {
-              // Create patient profile
-              await apiRequest("POST", "/api/patients", {
-                userId: userData.id,
-                firstName: data.firstName,
-                lastName: data.lastName,
-                age: data.age,
-                gender: data.gender,
-                weight: data.weight,
-                height: data.height,
-                phone: data.phone,
-                medication: data.medication,
-                dosage: data.dosage,
-              });
-
-              toast({
-                title: "Registrazione completata",
-                description: "Il tuo account è stato creato con successo!",
-              });
-
-              // Redirect to patient home
-              setLocation("/");
-            } catch (error) {
-              toast({
-                title: "Errore",
-                description: "Errore durante la creazione del profilo paziente.",
-                variant: "destructive",
-              });
-            }
-          },
-          onError: (error) => {
-            toast({
-              title: "Errore",
-              description: "Registrazione fallita. Riprova.",
-              variant: "destructive",
-            });
-          },
-        }
-      );
-    } catch (error) {
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: ProfileForm) => {
+      await apiRequest("PUT", `/api/patients/${patient?.id}`, data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Profilo aggiornato",
+        description: "Le tue informazioni sono state salvate con successo.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/patients/me"] });
+      setLocation("/");
+    },
+    onError: () => {
       toast({
         title: "Errore",
-        description: "Errore durante la registrazione.",
+        description: "Impossibile aggiornare il profilo. Riprova.",
         variant: "destructive",
       });
-    }
+    },
+  });
+
+  const onSubmit = (data: ProfileForm) => {
+    updateProfileMutation.mutate(data);
   };
+
+  if (isLoading) {
+    return (
+      <div className="max-w-md mx-auto bg-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-sage-500 rounded-full flex items-center justify-center mb-4">
+            <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          </div>
+          <p className="text-sage-600">Caricamento profilo...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-md mx-auto bg-white min-h-screen">
@@ -129,39 +107,11 @@ export default function PatientRegistration() {
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-xl font-bold text-sage-800">Registrazione Paziente</h1>
+          <h1 className="text-xl font-bold text-sage-800">Profilo Paziente</h1>
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Username</FormLabel>
-                  <FormControl>
-                    <Input {...field} className="focus:ring-sage-500" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="password" className="focus:ring-sage-500" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -277,6 +227,20 @@ export default function PatientRegistration() {
 
             <FormField
               control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Numero di telefono</FormLabel>
+                  <FormControl>
+                    <Input {...field} type="tel" className="focus:ring-sage-500" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="medication"
               render={({ field }) => (
                 <FormItem>
@@ -325,41 +289,16 @@ export default function PatientRegistration() {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Numero di telefono</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="tel" className="focus:ring-sage-500" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <Button 
               type="submit" 
               className="w-full bg-sage-500 hover:bg-sage-600 text-white mt-6"
-              disabled={isRegisterLoading}
+              disabled={updateProfileMutation.isPending}
             >
-              {isRegisterLoading ? "Registrazione..." : "Registrati"}
+              <Save className="mr-2 w-4 h-4" />
+              {updateProfileMutation.isPending ? "Salvando..." : "Salva modifiche"}
             </Button>
           </form>
         </Form>
-
-        <div className="mt-6 text-center">
-          <p className="text-sage-600">
-            Hai già un account?{" "}
-            <button
-              onClick={() => setLocation("/patient/login")}
-              className="text-sage-600 hover:text-sage-700 underline font-medium"
-            >
-              Accedi qui
-            </button>
-          </p>
-        </div>
       </div>
     </div>
   );

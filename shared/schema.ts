@@ -1,7 +1,14 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb, varchar, date } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, varchar, date, real } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Session storage table for authentication
+export const sessions = pgTable("sessions", {
+  sid: varchar("sid").primaryKey(),
+  sess: jsonb("sess").notNull(),
+  expire: timestamp("expire").notNull(),
+});
 
 // Users table for authentication
 export const users = pgTable("users", {
@@ -57,6 +64,8 @@ export const symptoms = pgTable("symptoms", {
   present: boolean("present").notNull(),
   intensity: integer("intensity"), // 0-10 scale
   diarrheaCount: integer("diarrhea_count"), // for diarrhea specifically
+  feverTemperature: real("fever_temperature"), // temperature in Celsius
+  feverChills: boolean("fever_chills"), // chills with fever
   additionalNotes: text("additional_notes"),
   createdAt: timestamp("created_at").defaultNow(),
 });

@@ -13,11 +13,11 @@ interface SymptomTrackerProps {
 
 const symptoms = [
   { id: "stanchezza", name: "Stanchezza", type: "intensity" },
-  { id: "malessere", name: "Malessere", type: "boolean" },
-  { id: "rash", name: "Rash cutaneo", type: "boolean" },
+  { id: "malessere", name: "Malessere", type: "intensity" },
+  { id: "rash", name: "Rash cutaneo", type: "intensity" },
   { id: "diarrea", name: "Diarrea", type: "count" },
   { id: "dolore_addominale", name: "Dolore addominale", type: "intensity" },
-  { id: "febbre", name: "Febbre", type: "boolean" },
+  { id: "febbre", name: "Febbre", type: "fever" },
   { id: "sintomi_influenzali", name: "Sintomi influenzali", type: "boolean" },
 ];
 
@@ -39,6 +39,8 @@ export default function SymptomTracker({ patientId }: SymptomTrackerProps) {
           present: state.present || false,
           intensity: state.intensity || null,
           diarrheaCount: state.count || null,
+          feverTemperature: state.temperature || null,
+          feverChills: state.chills || false,
           additionalNotes: symptom.id === symptoms[0].id ? additionalNotes : null,
         };
       });
@@ -138,6 +140,53 @@ export default function SymptomTracker({ patientId }: SymptomTrackerProps) {
                       onChange={(e) => updateSymptomState(symptom.id, { count: parseInt(e.target.value) || 0 })}
                       className="w-16 text-sm"
                     />
+                  </div>
+                )}
+                
+                {symptom.type === "fever" && (
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-gray-500">Temperatura max (°C):</span>
+                      <Input
+                        type="number"
+                        min="35"
+                        max="45"
+                        step="0.1"
+                        value={state.temperature || ""}
+                        onChange={(e) => updateSymptomState(symptom.id, { temperature: parseFloat(e.target.value) || null })}
+                        className="w-20 text-sm"
+                        placeholder="37.5"
+                      />
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-gray-500">Picco febbrile con brividi:</span>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`px-2 py-1 rounded text-xs ${
+                            !state.chills 
+                              ? "bg-sage-500 text-white" 
+                              : "bg-gray-200 text-gray-600"
+                          }`}
+                          onClick={() => updateSymptomState(symptom.id, { chills: false })}
+                        >
+                          No
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`px-2 py-1 rounded text-xs ${
+                            state.chills 
+                              ? "bg-sage-500 text-white" 
+                              : "bg-gray-200 text-gray-600"
+                          }`}
+                          onClick={() => updateSymptomState(symptom.id, { chills: true })}
+                        >
+                          Sì
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 )}
                 

@@ -11,6 +11,8 @@ import PatientRegistration from "@/pages/patient-registration";
 import PatientHome from "@/pages/patient-home";
 import PatientHistory from "@/pages/patient-history";
 import PatientVideo from "@/pages/patient-video";
+import PatientProfile from "@/pages/patient-profile";
+import AppSettings from "@/pages/app-settings";
 import DoctorDashboard from "@/pages/doctor-dashboard";
 import DoctorLogin from "@/pages/doctor-login";
 
@@ -56,6 +58,8 @@ function Router() {
       <Route path="/" component={PatientHome} />
       <Route path="/history" component={PatientHistory} />
       <Route path="/video" component={PatientVideo} />
+      <Route path="/profile" component={PatientProfile} />
+      <Route path="/settings" component={AppSettings} />
       <Route component={NotFound} />
     </Switch>
   );
