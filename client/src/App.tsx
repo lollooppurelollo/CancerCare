@@ -12,9 +12,11 @@ import PatientHome from "@/pages/patient-home";
 import PatientHistory from "@/pages/patient-history";
 import PatientVideo from "@/pages/patient-video";
 import PatientProfile from "@/pages/patient-profile";
+import PatientAdvice from "@/pages/patient-advice";
 import AppSettings from "@/pages/app-settings";
 import DoctorDashboard from "@/pages/doctor-dashboard";
 import DoctorLogin from "@/pages/doctor-login";
+import DoctorRegistration from "@/pages/doctor-registration";
 
 function Router() {
   const { user, isLoading } = useAuth();
@@ -38,6 +40,7 @@ function Router() {
         <Route path="/patient/login" component={PatientLogin} />
         <Route path="/patient/register" component={PatientRegistration} />
         <Route path="/doctor/login" component={DoctorLogin} />
+        <Route path="/doctor/register" component={DoctorRegistration} />
         <Route path="/" component={Landing} />
         <Route component={NotFound} />
       </Switch>
@@ -57,6 +60,7 @@ function Router() {
     <Switch>
       <Route path="/" component={PatientHome} />
       <Route path="/history" component={PatientHistory} />
+      <Route path="/advice" component={PatientAdvice} />
       <Route path="/video" component={PatientVideo} />
       <Route path="/profile" component={PatientProfile} />
       <Route path="/settings" component={AppSettings} />

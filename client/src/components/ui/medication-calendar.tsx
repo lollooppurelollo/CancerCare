@@ -37,7 +37,7 @@ export default function MedicationCalendar({ medication }: MedicationCalendarPro
     const daysSinceStart = Math.floor((date.getTime() - cycleStart.getTime()) / (1000 * 60 * 60 * 24));
     
     if (medication === "abemaciclib") {
-      // Continuous daily for abemaciclib
+      // Continuous daily therapy for abemaciclib (no pause days unless set by doctor)
       return true;
     } else if (medication === "ribociclib" || medication === "palbociclib") {
       // 21 days on, 7 days off cycle

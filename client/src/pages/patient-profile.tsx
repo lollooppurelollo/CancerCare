@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -45,17 +45,35 @@ export default function PatientProfile() {
   const form = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      firstName: patient?.firstName || "",
-      lastName: patient?.lastName || "",
-      age: patient?.age || 0,
-      gender: patient?.gender || undefined,
-      weight: patient?.weight || 0,
-      height: patient?.height || 0,
-      phone: patient?.phone || "",
-      medication: patient?.medication || undefined,
-      dosage: patient?.dosage || "",
+      firstName: "",
+      lastName: "",
+      age: 0,
+      gender: undefined,
+      weight: 0,
+      height: 0,
+      phone: "",
+      medication: undefined,
+      dosage: "",
     },
   });
+
+  // Update form when patient data is loaded
+  React.useEffect(() => {
+    if (patient) {
+      form.reset({
+        firstName: patient.firstName || "",
+        lastName: patient.lastName || "",
+        age: patient.age || 0,
+        gender: patient.gender || undefined,
+        weight: patient.weight || 0,
+        height: patient.height || 0,
+        phone: patient.phone || "",
+        medication: patient.medication || undefined,
+        dosage: patient.dosage || "",
+      });
+      setSelectedMedication(patient.medication || "");
+    }
+  }, [patient, form]);
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: ProfileForm) => {

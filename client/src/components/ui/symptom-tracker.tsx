@@ -17,6 +17,7 @@ const symptoms = [
   { id: "rash", name: "Rash cutaneo", type: "intensity" },
   { id: "diarrea", name: "Diarrea", type: "count" },
   { id: "dolore_addominale", name: "Dolore addominale", type: "intensity" },
+  { id: "dolori_articolari", name: "Dolori articolari", type: "intensity" },
   { id: "febbre", name: "Febbre", type: "fever" },
   { id: "sintomi_influenzali", name: "Sintomi influenzali", type: "boolean" },
 ];

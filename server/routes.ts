@@ -420,6 +420,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Advice routes
+  app.get("/api/advice", async (req, res) => {
+    try {
+      const advice = await storage.getAdviceItems();
+      res.json(advice);
+    } catch (error) {
+      console.error("Get advice error:", error);
+      res.status(500).json({ message: "Failed to get advice items" });
+    }
+  });
+
+  app.post("/api/advice", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied: Only doctors can create advice items" });
+      }
+
+      const userId = (req as any).session?.userId;
+      const adviceData = {
+        ...req.body,
+        uploadedBy: userId
+      };
+
+      const advice = await storage.createAdviceItem(adviceData);
+      res.json(advice);
+    } catch (error) {
+      console.error("Create advice error:", error);
+      res.status(500).json({ message: "Failed to create advice item" });
+    }
+  });
+
+  app.delete("/api/advice/:id", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied: Only doctors can delete advice items" });
+      }
+
+      const adviceId = parseInt(req.params.id);
+      await storage.deleteAdviceItem(adviceId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete advice error:", error);
+      res.status(500).json({ message: "Failed to delete advice item" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

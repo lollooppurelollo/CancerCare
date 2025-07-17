@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { Home, History, Video } from "lucide-react";
+import { Home, History, Video, BookOpen } from "lucide-react";
 import { Button } from "./button";
 
 export default function BottomNavigation() {
@@ -8,7 +8,8 @@ export default function BottomNavigation() {
   const navItems = [
     { path: "/", icon: Home, label: "Home" },
     { path: "/history", icon: History, label: "Storico" },
-    { path: "/video", icon: Video, label: "Video" },
+    { path: "/advice", icon: BookOpen, label: "Consigli" },
+    { path: "/video", icon: Video, label: "Contatti" },
   ];
 
   return (
@@ -18,14 +19,14 @@ export default function BottomNavigation() {
           <Button
             key={path}
             variant="ghost"
-            className={`flex-1 py-3 px-4 flex flex-col items-center justify-center ${
+            className={`flex-1 py-2 px-2 flex flex-col items-center justify-center ${
               location === path 
                 ? "text-sage-600 border-b-2 border-sage-600" 
                 : "text-gray-500"
             }`}
             onClick={() => setLocation(path)}
           >
-            <Icon className="w-5 h-5 mb-1" />
+            <Icon className="w-4 h-4 mb-1" />
             <span className="text-xs">{label}</span>
           </Button>
         ))}

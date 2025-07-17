@@ -1,9 +1,10 @@
 import { 
-  users, patients, medicationSchedules, diaryEntries, symptoms, messages, alerts,
+  users, patients, medicationSchedules, diaryEntries, symptoms, messages, alerts, adviceItems,
   type User, type InsertUser, type Patient, type InsertPatient,
   type MedicationSchedule, type InsertMedicationSchedule,
   type DiaryEntry, type InsertDiaryEntry, type Symptom, type InsertSymptom,
-  type Message, type InsertMessage, type Alert, type InsertAlert
+  type Message, type InsertMessage, type Alert, type InsertAlert,
+  type AdviceItem, type InsertAdviceItem
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, gte, lte, or } from "drizzle-orm";
@@ -54,6 +55,11 @@ export interface IStorage {
   getActiveAlerts(): Promise<Alert[]>;
   getAlertsByPatient(patientId: number): Promise<Alert[]>;
   resolveAlert(id: number): Promise<Alert>;
+
+  // Advice items operations
+  getAdviceItems(): Promise<AdviceItem[]>;
+  createAdviceItem(advice: InsertAdviceItem): Promise<AdviceItem>;
+  deleteAdviceItem(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -313,6 +319,23 @@ export class DatabaseStorage implements IStorage {
       .where(eq(alerts.id, id))
       .returning();
     return alert;
+  }
+
+  // Advice items operations
+  async getAdviceItems(): Promise<AdviceItem[]> {
+    return await db.select().from(adviceItems).orderBy(desc(adviceItems.createdAt));
+  }
+
+  async createAdviceItem(adviceData: InsertAdviceItem): Promise<AdviceItem> {
+    const [advice] = await db
+      .insert(adviceItems)
+      .values(adviceData)
+      .returning();
+    return advice;
+  }
+
+  async deleteAdviceItem(id: number): Promise<void> {
+    await db.delete(adviceItems).where(eq(adviceItems.id, id));
   }
 }
 

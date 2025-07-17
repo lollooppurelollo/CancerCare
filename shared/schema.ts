@@ -77,6 +77,20 @@ export const messages = pgTable("messages", {
   senderId: integer("sender_id").notNull().references(() => users.id),
   content: text("content").notNull(),
   isUrgent: boolean("is_urgent").default(false),
+  fileUrl: text("file_url"),
+  fileName: text("file_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Advice items uploaded by doctors
+export const adviceItems = pgTable("advice_items", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  type: text("type").notNull(), // 'file', 'video', 'link'
+  url: text("url").notNull(),
+  category: text("category").notNull(),
+  uploadedBy: integer("uploaded_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -151,6 +165,13 @@ export const alertsRelations = relations(alerts, ({ one }) => ({
   }),
 }));
 
+export const adviceItemsRelations = relations(adviceItems, ({ one }) => ({
+  uploadedByUser: one(users, {
+    fields: [adviceItems.uploadedBy],
+    references: [users.id],
+  }),
+}));
+
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertPatientSchema = createInsertSchema(patients).omit({ id: true, createdAt: true });
@@ -159,6 +180,7 @@ export const insertDiaryEntrySchema = createInsertSchema(diaryEntries).omit({ id
 export const insertSymptomSchema = createInsertSchema(symptoms).omit({ id: true, createdAt: true });
 export const insertMessageSchema = createInsertSchema(messages).omit({ id: true, createdAt: true });
 export const insertAlertSchema = createInsertSchema(alerts).omit({ id: true, createdAt: true });
+export const insertAdviceItemSchema = createInsertSchema(adviceItems).omit({ id: true, createdAt: true });
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -175,3 +197,5 @@ export type Message = typeof messages.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Alert = typeof alerts.$inferSelect;
 export type InsertAlert = z.infer<typeof insertAlertSchema>;
+export type AdviceItem = typeof adviceItems.$inferSelect;
+export type InsertAdviceItem = z.infer<typeof insertAdviceItemSchema>;

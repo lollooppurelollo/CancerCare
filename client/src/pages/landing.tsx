@@ -15,33 +15,45 @@ export default function Landing() {
         <h1 className="text-2xl font-bold text-sage-800 mb-2 text-center">CDK 4/6 Inhibitors</h1>
         <p className="text-sage-600 mb-8 text-center">Monitoraggio per pazienti con inibitori CDK 4/6</p>
         
-        <div className="w-full space-y-4">
-          <h2 className="text-lg font-semibold text-sage-700 text-center mb-4">Accedi come:</h2>
+        <div className="w-full space-y-6">
+          <div className="space-y-3">
+            <h2 className="text-lg font-semibold text-sage-700 text-center">Accedi</h2>
+            <div className="grid grid-cols-2 gap-3">
+              <Button 
+                onClick={() => setLocation("/patient/login")}
+                className="bg-sage-500 hover:bg-sage-600 text-white py-3 rounded-lg font-medium flex items-center justify-center"
+              >
+                <LogIn className="mr-2 w-4 h-4" />
+                Paziente
+              </Button>
+              <Button 
+                onClick={() => setLocation("/doctor/login")}
+                className="bg-sage-600 hover:bg-sage-700 text-white py-3 rounded-lg font-medium flex items-center justify-center"
+              >
+                <LogIn className="mr-2 w-4 h-4" />
+                Medico
+              </Button>
+            </div>
+          </div>
           
           <div className="space-y-3">
-            <Button 
-              onClick={() => setLocation("/patient/login")}
-              className="w-full bg-sage-500 hover:bg-sage-600 text-white py-4 px-6 rounded-xl font-medium transition-colors flex items-center justify-center"
-            >
-              <LogIn className="mr-3 w-5 h-5" />
-              Login Paziente
-            </Button>
-            
-            <Button 
-              onClick={() => setLocation("/patient/register")}
-              className="w-full bg-sage-400 hover:bg-sage-500 text-white py-4 px-6 rounded-xl font-medium transition-colors flex items-center justify-center"
-            >
-              <UserPlus className="mr-3 w-5 h-5" />
-              Registrati come Paziente
-            </Button>
-            
-            <Button 
-              onClick={() => setLocation("/doctor/login")}
-              className="w-full bg-sage-600 hover:bg-sage-700 text-white py-4 px-6 rounded-xl font-medium transition-colors flex items-center justify-center"
-            >
-              <LogIn className="mr-3 w-5 h-5" />
-              Login Medico
-            </Button>
+            <h2 className="text-lg font-semibold text-sage-700 text-center">Registrati</h2>
+            <div className="grid grid-cols-2 gap-3">
+              <Button 
+                onClick={() => setLocation("/patient/register")}
+                className="bg-sage-400 hover:bg-sage-500 text-white py-3 rounded-lg font-medium flex items-center justify-center"
+              >
+                <UserPlus className="mr-2 w-4 h-4" />
+                Paziente
+              </Button>
+              <Button 
+                onClick={() => setLocation("/doctor/register")}
+                className="bg-sage-500 hover:bg-sage-600 text-white py-3 rounded-lg font-medium flex items-center justify-center"
+              >
+                <UserPlus className="mr-2 w-4 h-4" />
+                Medico
+              </Button>
+            </div>
           </div>
         </div>
       </div>
