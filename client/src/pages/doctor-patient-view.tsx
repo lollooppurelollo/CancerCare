@@ -8,10 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import MedicationCalendar from "@/components/ui/medication-calendar";
 
 export default function DoctorPatientView() {
-  const [match] = useRoute("/doctor/patient-view/:patientId");
+  const [match, params] = useRoute("/doctor/patient-view/:patientId");
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("home");
-  const patientId = match?.patientId ? parseInt(match.patientId) : null;
+  const patientId = params?.patientId ? parseInt(params.patientId) : null;
 
   const { data: patient } = useQuery({
     queryKey: ["/api/patients", patientId],

@@ -11,14 +11,15 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function DoctorChat() {
-  const [match] = useRoute("/doctor/chat/:patientId");
+  const [match, params] = useRoute("/doctor/chat/:patientId");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const patientId = match?.patientId ? parseInt(match.patientId) : null;
+  const patientId = params?.patientId ? parseInt(params.patientId) : null;
   
   const [newMessage, setNewMessage] = useState("");
   const [isUrgent, setIsUrgent] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const { data: patient } = useQuery({
     queryKey: ["/api/patients", patientId],
@@ -36,15 +37,38 @@ export default function DoctorChat() {
   });
 
   const sendMessageMutation = useMutation({
-    mutationFn: async (data: { content: string; isUrgent: boolean }) => {
-      await apiRequest("POST", "/api/messages", {
-        ...data,
-        patientId,
-      });
+    mutationFn: async (data: { content: string; isUrgent: boolean; file?: File }) => {
+      if (!patientId) {
+        throw new Error("PatientId is null or undefined");
+      }
+      
+      if (data.file) {
+        // Upload file first
+        const formData = new FormData();
+        formData.append('file', data.file);
+        formData.append('patientId', patientId.toString());
+        formData.append('content', data.content);
+        formData.append('isUrgent', data.isUrgent.toString());
+        
+        const response = await fetch('/api/messages/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to upload file');
+        }
+      } else {
+        await apiRequest("POST", "/api/messages", {
+          ...data,
+          patientId,
+        });
+      }
     },
     onSuccess: () => {
       setNewMessage("");
       setIsUrgent(false);
+      setSelectedFile(null);
       toast({
         title: "Messaggio inviato",
         description: "Il messaggio è stato inviato al paziente.",
@@ -62,11 +86,19 @@ export default function DoctorChat() {
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newMessage.trim()) {
+    if (newMessage.trim() || selectedFile) {
       sendMessageMutation.mutate({
         content: newMessage,
         isUrgent,
+        file: selectedFile || undefined
       });
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
     }
   };
 
@@ -196,6 +228,20 @@ export default function DoctorChat() {
                       </div>
                     </div>
                     <p className="text-gray-800">{message.content}</p>
+                    {message.fileUrl && (
+                      <div className="mt-2 p-2 bg-gray-50 rounded-lg">
+                        <a
+                          href={message.fileUrl}
+                          download={message.fileName}
+                          className="flex items-center space-x-2 text-blue-600 hover:text-blue-800"
+                        >
+                          <span>📎</span>
+                          <span className="text-sm underline">
+                            {message.fileName || "File allegato"}
+                          </span>
+                        </a>
+                      </div>
+                    )}
                   </div>
                 ))
               )}
@@ -217,26 +263,65 @@ export default function DoctorChat() {
                 rows={3}
                 className="w-full"
               />
+              {selectedFile && (
+                <div className="p-3 bg-gray-50 rounded-lg mb-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700">
+                      📎 {selectedFile.name}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedFile(null)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      ✕
+                    </Button>
+                  </div>
+                </div>
+              )}
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="urgent"
-                    checked={isUrgent}
-                    onChange={(e) => setIsUrgent(e.target.checked)}
-                    className="rounded border-gray-300"
-                  />
-                  <label htmlFor="urgent" className="text-sm text-gray-700">
-                    Messaggio urgente
-                  </label>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="urgent"
+                      checked={isUrgent}
+                      onChange={(e) => setIsUrgent(e.target.checked)}
+                      className="rounded border-gray-300"
+                    />
+                    <label htmlFor="urgent" className="text-sm text-gray-700">
+                      Messaggio urgente
+                    </label>
+                  </div>
+                  <div>
+                    <input
+                      type="file"
+                      id="fileInput"
+                      className="hidden"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+                      onChange={handleFileSelect}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => document.getElementById('fileInput')?.click()}
+                      className="flex items-center space-x-2"
+                    >
+                      <span>📎</span>
+                      <span>Allega</span>
+                    </Button>
+                  </div>
                 </div>
                 <Button
                   type="submit"
-                  disabled={!newMessage.trim() || sendMessageMutation.isPending}
+                  disabled={(!newMessage.trim() && !selectedFile) || sendMessageMutation.isPending}
                   className="flex items-center space-x-2"
                 >
                   <Send className="w-4 h-4" />
-                  <span>Invia</span>
+                  <span>{sendMessageMutation.isPending ? "Invio..." : "Invia"}</span>
                 </Button>
               </div>
             </form>

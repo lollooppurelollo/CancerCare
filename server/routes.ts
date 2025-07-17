@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
@@ -6,8 +7,43 @@ import {
   insertSymptomSchema, insertMessageSchema, insertAlertSchema 
 } from "@shared/schema";
 import { z } from "zod";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup multer for file uploads
+  const uploadDir = path.join(process.cwd(), 'uploads');
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  const storage_config = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+  });
+
+  const upload = multer({ 
+    storage: storage_config,
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.txt'];
+      const ext = path.extname(file.originalname).toLowerCase();
+      if (allowedTypes.includes(ext)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Invalid file type'));
+      }
+    }
+  });
+
+  // Serve uploaded files
+  app.use('/uploads', express.static(uploadDir));
   // Authentication routes
   app.post("/api/auth/register", async (req, res) => {
     try {
@@ -478,8 +514,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Not authenticated" });
       }
 
+      // Ensure patientId is parsed as number
+      const patientId = req.body.patientId ? parseInt(req.body.patientId) : null;
+      if (!patientId) {
+        return res.status(400).json({ message: "PatientId is required" });
+      }
+
       const messageData = insertMessageSchema.parse({
         ...req.body,
+        patientId: patientId,
         senderId: userId
       });
 
@@ -500,6 +543,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Create message error:", error);
       res.status(500).json({ message: "Failed to create message" });
+    }
+  });
+
+  // File upload endpoint for messages
+  app.post("/api/messages/upload", upload.single('file'), async (req, res) => {
+    try {
+      const userId = (req as any).session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const patientId = req.body.patientId ? parseInt(req.body.patientId) : null;
+      if (!patientId) {
+        return res.status(400).json({ message: "PatientId is required" });
+      }
+
+      const file = req.file;
+      if (!file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const messageData = insertMessageSchema.parse({
+        patientId: patientId,
+        senderId: userId,
+        content: req.body.content || `File condiviso: ${file.originalname}`,
+        isUrgent: req.body.isUrgent === 'true',
+        fileUrl: `/uploads/${file.filename}`,
+        fileName: file.originalname
+      });
+
+      const message = await storage.createMessage(messageData);
+      
+      // Create alert for urgent messages
+      if (messageData.isUrgent) {
+        await storage.createAlert({
+          patientId: messageData.patientId,
+          type: "message",
+          message: "Messaggio urgente con file allegato",
+          severity: "medium",
+          resolved: false
+        });
+      }
+
+      res.json(message);
+    } catch (error) {
+      console.error("Upload message error:", error);
+      res.status(500).json({ message: "Failed to upload file" });
     }
   });
 
