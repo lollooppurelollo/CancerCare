@@ -184,9 +184,6 @@ export default function DoctorPatientView() {
               <CardContent>
                 <MedicationCalendar 
                   medication={patient.medication}
-                  schedules={medicationSchedules}
-                  patientId={patientId}
-                  readOnly={true}
                 />
               </CardContent>
             </Card>
