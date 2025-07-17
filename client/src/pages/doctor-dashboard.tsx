@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Search, Settings, TriangleAlert, Eye, Video, Phone, Calendar, BarChart3 } from "lucide-react";
+import { Search, Settings, TriangleAlert, Eye, Video, MessageCircle, Calendar, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
@@ -69,6 +69,15 @@ export default function DoctorDashboard() {
       });
     } catch {
       return dateString;
+    }
+  };
+
+  const handleVideoCall = (patientId: number) => {
+    const patient = patients.find((p: any) => p.id === patientId);
+    if (patient) {
+      const meetingTitle = `Consulenza medica con ${patient.firstName} ${patient.lastName}`;
+      const meetUrl = `https://meet.google.com/new?title=${encodeURIComponent(meetingTitle)}`;
+      window.open(meetUrl, '_blank');
     }
   };
 
@@ -154,12 +163,7 @@ export default function DoctorDashboard() {
                         onClick={() => setLocation(`/doctor/patient/${alert.patientId}`)}
                         className="text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium"
                       >
-                        {getPatientName(alert.patientId)}
-                        {getPatientBirthDate(alert.patientId) && (
-                          <span className="text-gray-500 ml-2">
-                            (nato il {getPatientBirthDate(alert.patientId)})
-                          </span>
-                        )}
+                        {getPatientName(alert.patientId)} {getPatientBirthDate(alert.patientId) && `(nato il ${getPatientBirthDate(alert.patientId)})`}
                       </button>
                       <p className="text-xs opacity-75 mt-1">
                         {formatTimestamp(alert.createdAt)}
@@ -169,7 +173,8 @@ export default function DoctorDashboard() {
                       <Button 
                         size="sm" 
                         variant="outline"
-                        onClick={() => setLocation(`/doctor/patient/${alert.patientId}`)}
+                        onClick={() => setLocation(`/doctor/patient-view/${alert.patientId}`)}
+                        title="Vedi interfaccia paziente"
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
@@ -177,13 +182,15 @@ export default function DoctorDashboard() {
                         size="sm" 
                         variant="outline"
                         onClick={() => setLocation(`/doctor/chat/${alert.patientId}`)}
+                        title="Chat con paziente"
                       >
-                        <Phone className="w-4 h-4" />
+                        <MessageCircle className="w-4 h-4" />
                       </Button>
                       <Button 
                         size="sm" 
                         variant="outline"
-                        onClick={() => setLocation(`/doctor/chat/${alert.patientId}`)}
+                        onClick={() => handleVideoCall(alert.patientId)}
+                        title="Videochiamata Google Meet"
                       >
                         <Video className="w-4 h-4" />
                       </Button>

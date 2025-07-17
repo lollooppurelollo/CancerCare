@@ -64,6 +64,36 @@ Preferred communication style: Simple, everyday language.
 - **Messages**: Patient-doctor communication
 - **Alerts**: System-generated notifications
 
+## Recent Changes (January 2025)
+
+1. **Enhanced Doctor Dashboard**:
+   - Added birth date display next to patient names in urgent alerts (formato "nato il DD/MM/YYYY")
+   - Updated database schema to include birth_date field with sample data
+   - Fixed birth date formatting to appear on same line as patient name
+
+2. **Doctor-Patient Communication System**:
+   - Created comprehensive chat system with dedicated doctor-patient chat page
+   - Added chat buttons to doctor dashboard and patient detail pages
+   - Implemented real-time messaging functionality for direct communication
+   - Enhanced doctor permissions for patient communication and calendar modification
+
+3. **Patient Interface View for Doctors**:
+   - Created doctor-patient-view page showing complete patient interface
+   - Includes all patient screens: Home, Symptoms, History, Video, Profile
+   - Allows doctors to see exactly what patients see with navigation tabs
+   - Provides comprehensive patient data visualization
+
+4. **Enhanced Alert System**:
+   - Removed phone icon from alert buttons as requested
+   - Added MessageCircle icon for chat functionality
+   - Implemented Google Meet integration for video calls
+   - Updated button functionality: Eye = patient view, Chat = messaging, Video = Google Meet
+
+5. **Video Call Integration**:
+   - Added Google Meet integration for doctor-patient video consultations
+   - Automatic meeting title generation with patient name
+   - Opens in new tab for seamless video communication
+
 ## Data Flow
 
 1. **Patient Registration**: New patients create accounts with medical information
@@ -71,6 +101,7 @@ Preferred communication style: Simple, everyday language.
 3. **Data Aggregation**: System processes patient data for alerts and analytics
 4. **Doctor Review**: Healthcare providers monitor patient status and respond to alerts
 5. **Communication**: Bidirectional messaging between patients and doctors
+6. **Video Consultations**: Google Meet integration for face-to-face consultations
 
 ## External Dependencies
 
