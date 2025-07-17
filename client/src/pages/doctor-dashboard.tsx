@@ -54,10 +54,18 @@ export default function DoctorDashboard() {
   );
 
   const urgentAlerts = alerts.filter((alert: any) => alert.severity === "high");
-  const todayUpdates = messages.filter((message: any) => {
-    const today = new Date().toISOString().split('T')[0];
-    return message.createdAt?.startsWith(today);
-  });
+  const messageAlerts = alerts.filter((alert: any) => alert.type === "message");
+  
+  // Conteggio pazienti per farmaco
+  const patientsByDrug = patients.reduce((acc: any, patient: any) => {
+    const drug = patient.medication || "non specificato";
+    acc[drug] = (acc[drug] || 0) + 1;
+    return acc;
+  }, {});
+  
+  const abemaciclibCount = patientsByDrug.abemaciclib || 0;
+  const ribociclibCount = patientsByDrug.ribociclib || 0;
+  const palbociclibCount = patientsByDrug.palbociclib || 0;
 
   const getPatientName = (patientId: number) => {
     const patient = patients.find((p: any) => p.id === patientId);
@@ -144,22 +152,42 @@ export default function DoctorDashboard() {
             <BarChart3 className="inline w-5 h-5 mr-2" />
             Statistiche
           </h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-sage-50 p-4 rounded-lg border border-sage-200">
-              <div className="text-2xl font-bold text-sage-600">{patients.length}</div>
-              <div className="text-sm text-gray-600">Pazienti totali</div>
+          
+          {/* Pazienti per farmaco */}
+          <div className="mb-4">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Pazienti per farmaco</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-sage-50 p-3 rounded-lg border border-sage-200">
+                <div className="text-xl font-bold text-sage-600">{abemaciclibCount}</div>
+                <div className="text-xs text-gray-600">Abemaciclib</div>
+              </div>
+              <div className="bg-teal-50 p-3 rounded-lg border border-teal-200">
+                <div className="text-xl font-bold text-teal-600">{ribociclibCount}</div>
+                <div className="text-xs text-gray-600">Ribociclib</div>
+              </div>
+              <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-200">
+                <div className="text-xl font-bold text-indigo-600">{palbociclibCount}</div>
+                <div className="text-xs text-gray-600">Palbociclib</div>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                <div className="text-xl font-bold text-gray-600">{patients.length}</div>
+                <div className="text-xs text-gray-600">Totale</div>
+              </div>
             </div>
-            <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-              <div className="text-2xl font-bold text-red-600">{urgentAlerts.length}</div>
-              <div className="text-sm text-gray-600">Avvisi urgenti</div>
-            </div>
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <div className="text-2xl font-bold text-blue-600">{todayUpdates.length}</div>
-              <div className="text-sm text-gray-600">Aggiornamenti oggi</div>
-            </div>
-            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-              <div className="text-2xl font-bold text-green-600">92%</div>
-              <div className="text-sm text-gray-600">Aderenza terapia</div>
+          </div>
+          
+          {/* Avvisi e messaggi */}
+          <div>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Avvisi e messaggi</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-red-50 p-3 rounded-lg border border-red-200">
+                <div className="text-xl font-bold text-red-600">{urgentAlerts.length}</div>
+                <div className="text-xs text-gray-600">Avvisi urgenti</div>
+              </div>
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                <div className="text-xl font-bold text-blue-600">{messageAlerts.length}</div>
+                <div className="text-xs text-gray-600">Messaggi pazienti</div>
+              </div>
             </div>
           </div>
         </div>
@@ -168,7 +196,7 @@ export default function DoctorDashboard() {
         <div className="mb-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-3">
             <TriangleAlert className="inline w-5 h-5 mr-2 text-red-500" />
-            Avvisi
+            Avvisi ({alerts.length})
           </h2>
           
           {alerts.length === 0 ? (
@@ -192,6 +220,11 @@ export default function DoctorDashboard() {
                     <div className="flex-1 pr-4">
                       <div className="flex items-center space-x-2 mb-1">
                         <p className="font-medium">{alert.message}</p>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          alert.type === 'symptom' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
+                        }`}>
+                          {alert.type === 'symptom' ? 'Sintomo' : 'Messaggio'}
+                        </span>
                       </div>
                       <button
                         onClick={() => setLocation(`/doctor/patient-view/${alert.patientId}`)}
