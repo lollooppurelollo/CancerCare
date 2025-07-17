@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
-import { ArrowLeft, Send, Phone, Video, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Send, Video, AlertTriangle, User, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -88,7 +88,7 @@ export default function DoctorChat() {
     e.preventDefault();
     if (newMessage.trim() || selectedFile) {
       sendMessageMutation.mutate({
-        content: newMessage,
+        content: newMessage.trim() || "File inviato",
         isUrgent,
         file: selectedFile || undefined
       });
@@ -114,48 +114,72 @@ export default function DoctorChat() {
 
   const filteredMessages = messages.filter((msg: any) => msg.patientId === patientId);
   const patientAlerts = alerts.filter((alert: any) => alert.patientId === patientId && !alert.resolved);
+  const urgentMessages = filteredMessages.filter((msg: any) => msg.isUrgent);
+  const recentUrgentMessages = urgentMessages.filter((msg: any) => {
+    const messageTime = new Date(msg.createdAt).getTime();
+    const now = new Date().getTime();
+    return now - messageTime < 24 * 60 * 60 * 1000; // Last 24 hours
+  });
 
   return (
     <div className="max-w-4xl mx-auto bg-white min-h-screen">
       <div className="p-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              onClick={() => setLocation("/doctor")}
-              className="flex items-center space-x-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Torna al Dashboard</span>
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-sage-800">
-                Chat con {patient?.firstName} {patient?.lastName}
-              </h1>
-              {patient?.birthDate && (
-                <p className="text-sm text-gray-500">
-                  Nato il {new Date(patient.birthDate).toLocaleDateString('it-IT')}
-                </p>
-              )}
+        <div className="bg-sage-50 p-6 rounded-xl mb-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                onClick={() => setLocation("/doctor")}
+                className="flex items-center space-x-2 hover:bg-sage-100"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Dashboard</span>
+              </Button>
+              <div className="border-l border-sage-200 pl-4">
+                <h1 className="text-2xl font-bold text-sage-800 mb-1">
+                  <MessageSquare className="w-6 h-6 inline mr-2" />
+                  Chat con {patient?.firstName} {patient?.lastName}
+                </h1>
+                <div className="flex items-center space-x-4 text-sm text-gray-600">
+                  <span>Farmaco: {patient?.medication}</span>
+                  {patient?.birthDate && (
+                    <span>Nato il {new Date(patient.birthDate).toLocaleDateString('it-IT')}</span>
+                  )}
+                  {recentUrgentMessages.length > 0 && (
+                    <Badge variant="destructive" className="text-xs">
+                      {recentUrgentMessages.length} messaggi urgenti
+                    </Badge>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="flex space-x-2">
-            <Button size="sm" variant="outline">
-              <Phone className="w-4 h-4 mr-2" />
-              Chiama
-            </Button>
-            <Button size="sm" variant="outline">
-              <Video className="w-4 h-4 mr-2" />
-              Video
-            </Button>
-            <Button 
-              size="sm" 
-              variant="outline"
-              onClick={() => setLocation(`/doctor/patient/${patientId}`)}
-            >
-              Profilo Paziente
-            </Button>
+            <div className="flex space-x-2">
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="bg-sage-500 hover:bg-sage-600 text-white border-sage-500"
+                onClick={() => setLocation(`/doctor/patient-view/${patientId}`)}
+                title="Visualizza interfaccia paziente"
+              >
+                <User className="w-4 h-4 mr-2" />
+                Profilo
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="bg-green-500 hover:bg-green-600 text-white border-green-500"
+                onClick={() => {
+                  const meetingTitle = `Consulto con ${patient?.firstName} ${patient?.lastName}`;
+                  const meetUrl = `https://meet.google.com/new?title=${encodeURIComponent(meetingTitle)}`;
+                  window.open(meetUrl, '_blank');
+                }}
+                title="Avvia videochiamata Google Meet"
+              >
+                <Video className="w-4 h-4 mr-2" />
+                Video
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -189,59 +213,76 @@ export default function DoctorChat() {
         )}
 
         {/* Messages */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Cronologia Messaggi</CardTitle>
+        <Card className="mb-6 shadow-sm">
+          <CardHeader className="bg-sage-50 rounded-t-lg">
+            <CardTitle className="text-sage-800 flex items-center">
+              <MessageSquare className="w-5 h-5 mr-2" />
+              Conversazione
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4 max-h-96 overflow-y-auto">
+          <CardContent className="p-0">
+            <div className="space-y-3 max-h-96 overflow-y-auto p-4">
               {filteredMessages.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">
-                  Nessun messaggio ancora. Inizia la conversazione!
-                </p>
+                <div className="text-center text-gray-500 py-12">
+                  <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p className="text-lg">Nessun messaggio ancora</p>
+                  <p className="text-sm">Inizia la conversazione con il paziente!</p>
+                </div>
               ) : (
                 filteredMessages.map((message: any) => (
                   <div
                     key={message.id}
-                    className={`p-4 rounded-lg ${
+                    className={`flex ${
                       message.senderId === patient?.userId
-                        ? "bg-gray-100 ml-8"
-                        : "bg-sage-100 mr-8"
+                        ? "justify-start"
+                        : "justify-end"
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-sm">
-                        {message.senderId === patient?.userId
-                          ? `${patient?.firstName} ${patient?.lastName}`
-                          : "Medico"
-                        }
-                      </span>
-                      <div className="flex items-center space-x-2">
-                        {message.isUrgent && (
-                          <Badge variant="destructive" className="text-xs">
-                            Urgente
-                          </Badge>
-                        )}
-                        <span className="text-xs text-gray-500">
-                          {formatTimestamp(message.createdAt)}
+                    <div
+                      className={`max-w-xs lg:max-w-md px-4 py-3 rounded-lg ${
+                        message.senderId === patient?.userId
+                          ? "bg-gray-100 text-gray-900"
+                          : "bg-sage-500 text-white"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-medium text-xs">
+                          {message.senderId === patient?.userId
+                            ? `${patient?.firstName} ${patient?.lastName}`
+                            : "Medico"
+                          }
                         </span>
-                      </div>
-                    </div>
-                    <p className="text-gray-800">{message.content}</p>
-                    {message.fileUrl && (
-                      <div className="mt-2 p-2 bg-gray-50 rounded-lg">
-                        <a
-                          href={message.fileUrl}
-                          download={message.fileName}
-                          className="flex items-center space-x-2 text-blue-600 hover:text-blue-800"
-                        >
-                          <span>📎</span>
-                          <span className="text-sm underline">
-                            {message.fileName || "File allegato"}
+                        <div className="flex items-center space-x-1">
+                          {message.isUrgent && (
+                            <Badge variant="destructive" className="text-xs px-1 py-0">
+                              ⚠️
+                            </Badge>
+                          )}
+                          <span className={`text-xs ${
+                            message.senderId === patient?.userId
+                              ? "text-gray-500"
+                              : "text-sage-200"
+                          }`}>
+                            {formatTimestamp(message.createdAt)}
                           </span>
-                        </a>
+                        </div>
                       </div>
-                    )}
+                      <p className="text-sm">{message.content}</p>
+                      {message.fileUrl && (
+                        <div className="mt-2 p-2 bg-white/20 rounded-lg">
+                          <a
+                            href={message.fileUrl}
+                            download={message.fileName}
+                            className="flex items-center space-x-2 text-blue-600 hover:text-blue-800"
+                          >
+                            <span>📎</span>
+                            <span className="text-xs underline">
+                              {message.fileName || "File allegato"}
+                            </span>
+                          </a>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))
               )}
@@ -250,23 +291,26 @@ export default function DoctorChat() {
         </Card>
 
         {/* Send Message Form */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Invia Messaggio</CardTitle>
+        <Card className="shadow-sm">
+          <CardHeader className="bg-sage-50 rounded-t-lg">
+            <CardTitle className="text-sage-800 flex items-center">
+              <Send className="w-5 h-5 mr-2" />
+              Invia Messaggio
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <form onSubmit={handleSendMessage} className="space-y-4">
               <Textarea
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Scrivi il tuo messaggio..."
+                placeholder="Scrivi il tuo messaggio al paziente..."
                 rows={3}
-                className="w-full"
+                className="w-full border-sage-200 focus:border-sage-400 focus:ring-sage-400"
               />
               {selectedFile && (
-                <div className="p-3 bg-gray-50 rounded-lg mb-3">
+                <div className="p-3 bg-sage-50 rounded-lg mb-3 border border-sage-200">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-700">
+                    <span className="text-sm text-sage-700">
                       📎 {selectedFile.name}
                     </span>
                     <Button
@@ -274,7 +318,7 @@ export default function DoctorChat() {
                       variant="ghost"
                       size="sm"
                       onClick={() => setSelectedFile(null)}
-                      className="text-red-500 hover:text-red-700"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
                     >
                       ✕
                     </Button>
@@ -289,10 +333,10 @@ export default function DoctorChat() {
                       id="urgent"
                       checked={isUrgent}
                       onChange={(e) => setIsUrgent(e.target.checked)}
-                      className="rounded border-gray-300"
+                      className="rounded border-gray-300 text-red-600 focus:ring-red-500"
                     />
-                    <label htmlFor="urgent" className="text-sm text-gray-700">
-                      Messaggio urgente
+                    <label htmlFor="urgent" className="text-sm text-gray-700 cursor-pointer">
+                      ⚠️ Messaggio urgente
                     </label>
                   </div>
                   <div>
@@ -308,20 +352,29 @@ export default function DoctorChat() {
                       variant="outline"
                       size="sm"
                       onClick={() => document.getElementById('fileInput')?.click()}
-                      className="flex items-center space-x-2"
+                      className="flex items-center space-x-2 border-sage-200 hover:bg-sage-50 hover:border-sage-300"
                     >
                       <span>📎</span>
-                      <span>Allega</span>
+                      <span>Allega File</span>
                     </Button>
                   </div>
                 </div>
                 <Button
                   type="submit"
                   disabled={(!newMessage.trim() && !selectedFile) || sendMessageMutation.isPending}
-                  className="flex items-center space-x-2"
+                  className="flex items-center space-x-2 bg-sage-600 hover:bg-sage-700 text-white"
                 >
-                  <Send className="w-4 h-4" />
-                  <span>{sendMessageMutation.isPending ? "Invio..." : "Invia"}</span>
+                  {sendMessageMutation.isPending ? (
+                    <>
+                      <span className="animate-spin">⏳</span>
+                      <span>Invio...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      <span>Invia</span>
+                    </>
+                  )}
                 </Button>
               </div>
             </form>
