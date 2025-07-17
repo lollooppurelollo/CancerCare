@@ -215,27 +215,36 @@ export default function DoctorChat() {
             <CardContent>
               <div className="space-y-2">
                 {patientAlerts.map((alert: any) => (
-                  <div key={alert.id} className="flex items-center justify-between p-3 bg-white rounded-lg">
-                    <div className="flex-1">
-                      <p className="font-medium text-orange-800">{alert.message}</p>
-                      <p className="text-sm text-gray-600">
-                        {formatTimestamp(alert.createdAt)}
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant={alert.severity === "high" ? "destructive" : "secondary"}>
-                        {alert.severity}
-                      </Badge>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="bg-green-500 hover:bg-green-600 text-white border-green-500 hover:border-green-600"
-                        onClick={() => resolveAlertMutation.mutate(alert.id)}
-                        disabled={resolveAlertMutation.isPending}
-                        title="Contrassegna come risolto"
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                      </Button>
+                  <div key={alert.id} className="p-3 bg-white rounded-lg relative">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="font-medium text-orange-800">{alert.message}</p>
+                        <p className="text-sm text-gray-600">
+                          {formatTimestamp(alert.createdAt)}
+                        </p>
+                        
+                        {/* Pulsante Risolto in basso a sinistra */}
+                        <div className="mt-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="bg-green-500 hover:bg-green-600 text-white border-green-500 hover:border-green-600 text-xs px-2 py-1"
+                            onClick={() => resolveAlertMutation.mutate(alert.id)}
+                            disabled={resolveAlertMutation.isPending}
+                            title="Contrassegna come risolto"
+                          >
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            Risolto
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      {/* Badge severità in alto a destra */}
+                      <div className="absolute top-3 right-3">
+                        <Badge variant={alert.severity === "high" ? "destructive" : "secondary"}>
+                          {alert.severity}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
                 ))}

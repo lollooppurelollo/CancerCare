@@ -186,10 +186,10 @@ export default function DoctorDashboard() {
               {alerts.map((alert: any) => (
                 <div
                   key={alert.id}
-                  className={`p-4 rounded-lg border ${getAlertColor(alert.severity)}`}
+                  className={`p-4 rounded-lg border ${getAlertColor(alert.severity)} relative`}
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex-1">
+                    <div className="flex-1 pr-4">
                       <div className="flex items-center space-x-2 mb-1">
                         <p className="font-medium">{alert.message}</p>
                       </div>
@@ -202,19 +202,25 @@ export default function DoctorDashboard() {
                       <p className="text-xs opacity-75 mt-1">
                         {formatTimestamp(alert.createdAt)}
                       </p>
+                      
+                      {/* Pulsante Risolto in basso a sinistra */}
+                      <div className="mt-3">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="bg-green-500 hover:bg-green-600 text-white border-green-500 hover:border-green-600 text-xs px-2 py-1"
+                          onClick={() => resolveAlertMutation.mutate(alert.id)}
+                          disabled={resolveAlertMutation.isPending}
+                          title="Contrassegna come risolto"
+                        >
+                          <CheckCircle className="w-3 h-3 mr-1" />
+                          Risolto
+                        </Button>
+                      </div>
                     </div>
-                    <div className="ml-4 flex flex-col space-y-2">
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        className="bg-green-500 hover:bg-green-600 text-white border-green-500 hover:border-green-600"
-                        onClick={() => resolveAlertMutation.mutate(alert.id)}
-                        disabled={resolveAlertMutation.isPending}
-                        title="Contrassegna come risolto"
-                      >
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Risolvi
-                      </Button>
+                    
+                    {/* Pulsanti principali a destra */}
+                    <div className="flex flex-col space-y-2">
                       <Button 
                         size="sm" 
                         variant="outline"
