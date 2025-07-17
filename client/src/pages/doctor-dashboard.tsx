@@ -153,10 +153,18 @@ export default function DoctorDashboard() {
             Statistiche
           </h2>
           
+          {/* Pazienti totali - grande in alto */}
+          <div className="mb-4">
+            <div className="bg-sage-50 p-6 rounded-lg border border-sage-200 text-center">
+              <div className="text-4xl font-bold text-sage-600 mb-1">{patients.length}</div>
+              <div className="text-lg text-gray-700 font-medium">Pazienti totali</div>
+            </div>
+          </div>
+          
           {/* Pazienti per farmaco */}
           <div className="mb-4">
             <h3 className="text-sm font-medium text-gray-700 mb-2">Pazienti per farmaco</h3>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div className="bg-sage-50 p-3 rounded-lg border border-sage-200">
                 <div className="text-xl font-bold text-sage-600">{abemaciclibCount}</div>
                 <div className="text-xs text-gray-600">Abemaciclib</div>
@@ -169,10 +177,6 @@ export default function DoctorDashboard() {
                 <div className="text-xl font-bold text-indigo-600">{palbociclibCount}</div>
                 <div className="text-xs text-gray-600">Palbociclib</div>
               </div>
-              <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                <div className="text-xl font-bold text-gray-600">{patients.length}</div>
-                <div className="text-xs text-gray-600">Totale</div>
-              </div>
             </div>
           </div>
           
@@ -180,20 +184,32 @@ export default function DoctorDashboard() {
           <div>
             <h3 className="text-sm font-medium text-gray-700 mb-2">Avvisi e messaggi</h3>
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-red-50 p-3 rounded-lg border border-red-200">
+              <button 
+                onClick={() => {
+                  const urgentSection = document.getElementById('urgent-alerts-section');
+                  urgentSection?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="bg-red-50 p-3 rounded-lg border border-red-200 hover:bg-red-100 transition-colors text-left"
+              >
                 <div className="text-xl font-bold text-red-600">{urgentAlerts.length}</div>
                 <div className="text-xs text-gray-600">Avvisi urgenti</div>
-              </div>
-              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+              </button>
+              <button 
+                onClick={() => {
+                  const messageSection = document.getElementById('message-alerts-section');
+                  messageSection?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="bg-blue-50 p-3 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors text-left"
+              >
                 <div className="text-xl font-bold text-blue-600">{messageAlerts.length}</div>
                 <div className="text-xs text-gray-600">Messaggi pazienti</div>
-              </div>
+              </button>
             </div>
           </div>
         </div>
 
         {/* Alerts Section */}
-        <div className="mb-6">
+        <div className="mb-6" id="alerts-section">
           <h2 className="text-lg font-semibold text-gray-800 mb-3">
             <TriangleAlert className="inline w-5 h-5 mr-2 text-red-500" />
             Avvisi ({alerts.length})
@@ -210,84 +226,180 @@ export default function DoctorDashboard() {
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {alerts.map((alert: any) => (
-                <div
-                  key={alert.id}
-                  className={`p-4 rounded-lg border ${getAlertColor(alert.severity)} relative`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 pr-4">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <p className="font-medium">{alert.message}</p>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          alert.type === 'symptom' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
-                        }`}>
-                          {alert.type === 'symptom' ? 'Sintomo' : 'Messaggio'}
-                        </span>
+            <div className="space-y-6">
+              {/* Avvisi urgenti */}
+              {urgentAlerts.length > 0 && (
+                <div id="urgent-alerts-section">
+                  <h3 className="text-md font-medium text-red-700 mb-3 flex items-center">
+                    <TriangleAlert className="w-4 h-4 mr-2" />
+                    Avvisi urgenti ({urgentAlerts.length})
+                  </h3>
+                  <div className="space-y-3">
+                    {urgentAlerts.map((alert: any) => (
+                      <div
+                        key={alert.id}
+                        className={`p-4 rounded-lg border ${getAlertColor(alert.severity)} relative`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 pr-4">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <p className="font-medium">{alert.message}</p>
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                                Sintomo
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => setLocation(`/doctor/patient-view/${alert.patientId}`)}
+                              className="text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                            >
+                              {getPatientName(alert.patientId)} {getPatientBirthDate(alert.patientId) && `(nato il ${getPatientBirthDate(alert.patientId)})`}
+                            </button>
+                            <p className="text-xs opacity-75 mt-1">
+                              {formatTimestamp(alert.createdAt)}
+                            </p>
+                            
+                            {/* Pulsante Risolto in basso a sinistra */}
+                            <div className="mt-3">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="bg-green-500 hover:bg-green-600 text-white border-green-500 hover:border-green-600 text-xs px-2 py-1"
+                                onClick={() => resolveAlertMutation.mutate(alert.id)}
+                                disabled={resolveAlertMutation.isPending}
+                                title="Contrassegna come risolto"
+                              >
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Risolto
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          {/* Pulsanti principali a destra */}
+                          <div className="flex flex-col space-y-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="bg-sage-500 hover:bg-sage-600 text-white border-sage-500 hover:border-sage-600"
+                              onClick={() => setLocation(`/doctor/patient-view/${alert.patientId}`)}
+                              title="Visualizza profilo paziente"
+                            >
+                              <Eye className="w-4 h-4 mr-2" />
+                              Profilo
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="bg-blue-500 hover:bg-blue-600 text-white border-blue-500 hover:border-blue-600"
+                              onClick={() => setLocation(`/doctor/chat/${alert.patientId}`)}
+                              title="Chat con paziente"
+                            >
+                              <MessageCircle className="w-4 h-4 mr-2" />
+                              Chat
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="bg-purple-500 hover:bg-purple-600 text-white border-purple-500 hover:border-purple-600"
+                              onClick={() => handleVideoCall(alert.patientId)}
+                              title="Avvia videochiamata Google Meet"
+                            >
+                              <Video className="w-4 h-4 mr-2" />
+                              Video
+                            </Button>
+                          </div>
+                        </div>
                       </div>
-                      <button
-                        onClick={() => setLocation(`/doctor/patient-view/${alert.patientId}`)}
-                        className="text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium"
-                      >
-                        {getPatientName(alert.patientId)} {getPatientBirthDate(alert.patientId) && `(nato il ${getPatientBirthDate(alert.patientId)})`}
-                      </button>
-                      <p className="text-xs opacity-75 mt-1">
-                        {formatTimestamp(alert.createdAt)}
-                      </p>
-                      
-                      {/* Pulsante Risolto in basso a sinistra */}
-                      <div className="mt-3">
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          className="bg-green-500 hover:bg-green-600 text-white border-green-500 hover:border-green-600 text-xs px-2 py-1"
-                          onClick={() => resolveAlertMutation.mutate(alert.id)}
-                          disabled={resolveAlertMutation.isPending}
-                          title="Contrassegna come risolto"
-                        >
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          Risolto
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    {/* Pulsanti principali a destra */}
-                    <div className="flex flex-col space-y-2">
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        className="bg-sage-500 hover:bg-sage-600 text-white border-sage-500 hover:border-sage-600"
-                        onClick={() => setLocation(`/doctor/patient-view/${alert.patientId}`)}
-                        title="Visualizza profilo paziente"
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        Profilo
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        className="bg-blue-500 hover:bg-blue-600 text-white border-blue-500 hover:border-blue-600"
-                        onClick={() => setLocation(`/doctor/chat/${alert.patientId}`)}
-                        title="Chat con paziente"
-                      >
-                        <MessageCircle className="w-4 h-4 mr-2" />
-                        Chat
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        className="bg-purple-500 hover:bg-purple-600 text-white border-purple-500 hover:border-purple-600"
-                        onClick={() => handleVideoCall(alert.patientId)}
-                        title="Avvia videochiamata Google Meet"
-                      >
-                        <Video className="w-4 h-4 mr-2" />
-                        Video
-                      </Button>
-                    </div>
+                    ))}
                   </div>
                 </div>
-              ))}
+              )}
+
+              {/* Messaggi pazienti */}
+              {messageAlerts.length > 0 && (
+                <div id="message-alerts-section">
+                  <h3 className="text-md font-medium text-blue-700 mb-3 flex items-center">
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Messaggi pazienti ({messageAlerts.length})
+                  </h3>
+                  <div className="space-y-3">
+                    {messageAlerts.map((alert: any) => (
+                      <div
+                        key={alert.id}
+                        className={`p-4 rounded-lg border ${getAlertColor(alert.severity)} relative`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 pr-4">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <p className="font-medium">{alert.message}</p>
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                Messaggio
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => setLocation(`/doctor/patient-view/${alert.patientId}`)}
+                              className="text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                            >
+                              {getPatientName(alert.patientId)} {getPatientBirthDate(alert.patientId) && `(nato il ${getPatientBirthDate(alert.patientId)})`}
+                            </button>
+                            <p className="text-xs opacity-75 mt-1">
+                              {formatTimestamp(alert.createdAt)}
+                            </p>
+                            
+                            {/* Pulsante Risolto in basso a sinistra */}
+                            <div className="mt-3">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="bg-green-500 hover:bg-green-600 text-white border-green-500 hover:border-green-600 text-xs px-2 py-1"
+                                onClick={() => resolveAlertMutation.mutate(alert.id)}
+                                disabled={resolveAlertMutation.isPending}
+                                title="Contrassegna come risolto"
+                              >
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Risolto
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          {/* Pulsanti principali a destra */}
+                          <div className="flex flex-col space-y-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="bg-sage-500 hover:bg-sage-600 text-white border-sage-500 hover:border-sage-600"
+                              onClick={() => setLocation(`/doctor/patient-view/${alert.patientId}`)}
+                              title="Visualizza profilo paziente"
+                            >
+                              <Eye className="w-4 h-4 mr-2" />
+                              Profilo
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="bg-blue-500 hover:bg-blue-600 text-white border-blue-500 hover:border-blue-600"
+                              onClick={() => setLocation(`/doctor/chat/${alert.patientId}`)}
+                              title="Chat con paziente"
+                            >
+                              <MessageCircle className="w-4 h-4 mr-2" />
+                              Chat
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="bg-purple-500 hover:bg-purple-600 text-white border-purple-500 hover:border-purple-600"
+                              onClick={() => handleVideoCall(alert.patientId)}
+                              title="Avvia videochiamata Google Meet"
+                            >
+                              <Video className="w-4 h-4 mr-2" />
+                              Video
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
