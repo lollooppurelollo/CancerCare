@@ -10,7 +10,8 @@ import { apiRequest } from "@/lib/queryClient";
 import PatientCard from "@/components/ui/patient-card";
 
 export default function DoctorDashboard() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [nameSearch, setNameSearch] = useState("");
+  const [birthDateSearch, setBirthDateSearch] = useState("");
   const [, setLocation] = useLocation();
   const { logout } = useAuth();
   const { toast } = useToast();
@@ -48,10 +49,16 @@ export default function DoctorDashboard() {
     },
   });
 
-  const filteredPatients = patients.filter((patient: any) =>
-    patient.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    patient.lastName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredPatients = patients.filter((patient: any) => {
+    const nameMatch = nameSearch === "" || 
+      patient.firstName.toLowerCase().includes(nameSearch.toLowerCase()) ||
+      patient.lastName.toLowerCase().includes(nameSearch.toLowerCase());
+    
+    const birthDateMatch = birthDateSearch === "" || 
+      (patient.birthDate && patient.birthDate.includes(birthDateSearch));
+    
+    return nameMatch && birthDateMatch;
+  });
 
   const urgentAlerts = alerts.filter((alert: any) => alert.severity === "high");
   const messageAlerts = alerts.filter((alert: any) => alert.type === "message");
@@ -135,14 +142,45 @@ export default function DoctorDashboard() {
 
         {/* Search Bar */}
         <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-            <Input
-              className="pl-10 focus:ring-sage-500 focus:border-sage-500"
-              placeholder="Cerca paziente per nome o cognome..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <h3 className="text-sm font-medium text-gray-700 mb-2">Cerca paziente</h3>
+          <div className="space-y-3">
+            {/* Campo nome/cognome */}
+            <div className="relative">
+              <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+              <Input
+                className="pl-10 focus:ring-sage-500 focus:border-sage-500"
+                placeholder="Nome o cognome..."
+                value={nameSearch}
+                onChange={(e) => setNameSearch(e.target.value)}
+              />
+            </div>
+            
+            {/* Campo data di nascita */}
+            <div className="relative">
+              <Calendar className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+              <Input
+                className="pl-10 focus:ring-sage-500 focus:border-sage-500"
+                placeholder="Data di nascita (DD/MM/YYYY)..."
+                value={birthDateSearch}
+                onChange={(e) => setBirthDateSearch(e.target.value)}
+              />
+            </div>
+            
+            {/* Pulsante per pulire i filtri */}
+            {(nameSearch || birthDateSearch) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setNameSearch("");
+                  setBirthDateSearch("");
+                }}
+                className="w-full"
+              >
+                <X className="w-4 h-4 mr-2" />
+                Pulisci filtri
+              </Button>
+            )}
           </div>
         </div>
 
@@ -407,14 +445,14 @@ export default function DoctorDashboard() {
         {/* Patient List */}
         <div className="mb-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-3">
-            Pazienti {searchQuery && `(${filteredPatients.length} risultati)`}
+            Pazienti {(nameSearch || birthDateSearch) && `(${filteredPatients.length} risultati)`}
           </h2>
           
           <div className="space-y-3">
             {filteredPatients.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-500">
-                  {searchQuery ? "Nessun paziente trovato" : "Nessun paziente registrato"}
+                  {(nameSearch || birthDateSearch) ? "Nessun paziente trovato con i criteri di ricerca" : "Nessun paziente registrato"}
                 </p>
               </div>
             ) : (
