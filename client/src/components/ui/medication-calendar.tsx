@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { Button } from "./button";
 
 interface MedicationCalendarProps {
@@ -8,7 +8,9 @@ interface MedicationCalendarProps {
 
 export default function MedicationCalendar({ medication }: MedicationCalendarProps) {
   const weekDays = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
+  const months = ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"];
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
+  const [viewMode, setViewMode] = useState<"week" | "month">("month"); // "week" for single week, "month" for 4 weeks
   
   const weeks = useMemo(() => {
     const today = new Date();
@@ -16,20 +18,23 @@ export default function MedicationCalendar({ medication }: MedicationCalendarPro
     startOfWeek.setDate(today.getDate() - today.getDay() + 1); // Monday
     startOfWeek.setDate(startOfWeek.getDate() + (currentWeekOffset * 7));
     
-    return Array.from({ length: 4 }, (_, weekIndex) => {
+    const weeksToShow = viewMode === "week" ? 1 : 4;
+    
+    return Array.from({ length: weeksToShow }, (_, weekIndex) => {
       return Array.from({ length: 7 }, (_, dayIndex) => {
         const date = new Date(startOfWeek);
         date.setDate(startOfWeek.getDate() + (weekIndex * 7) + dayIndex);
         return {
           date: date.getDate(),
           month: date.getMonth(),
+          monthName: months[date.getMonth()],
           dayName: weekDays[dayIndex],
           shouldTake: getShouldTake(medication, date),
           isToday: date.toDateString() === today.toDateString(),
         };
       });
     });
-  }, [medication, currentWeekOffset]);
+  }, [medication, currentWeekOffset, viewMode]);
 
   // Logic for medication schedules
   function getShouldTake(medication: string, date: Date): boolean {
@@ -59,7 +64,19 @@ export default function MedicationCalendar({ medication }: MedicationCalendarPro
         >
           <ChevronLeft className="w-4 h-4" />
         </Button>
-        <h3 className="text-sm font-medium text-sage-700">Calendario terapia (4 settimane)</h3>
+        <div className="flex items-center space-x-2">
+          <h3 className="text-sm font-medium text-sage-700">
+            {viewMode === "week" ? "Settimana" : "Mese"} - {weeks[0]?.[0]?.monthName}
+          </h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setViewMode(viewMode === "week" ? "month" : "week")}
+            className="p-1"
+          >
+            <Calendar className="w-4 h-4" />
+          </Button>
+        </div>
         <Button
           variant="ghost"
           size="sm"

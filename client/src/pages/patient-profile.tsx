@@ -13,9 +13,9 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 const medications = {
-  abemaciclib: ["150mg 2x/die", "100mg 2x/die", "50mg 2x/die"],
-  ribociclib: ["3 cp/die", "2 cp/die", "1 cp/die"],
-  palbociclib: ["125mg 1x/die", "100mg 1x/die", "75mg 1x/die"],
+  abemaciclib: ["150mg 2 volte", "100mg 2 volte", "50mg 2 volte"],
+  ribociclib: ["3 cp", "2 cp", "1 cp"],
+  palbociclib: ["125mg", "100mg", "75mg"],
 };
 
 const profileSchema = z.object({
@@ -84,13 +84,37 @@ export default function PatientProfile() {
         title: "Profilo aggiornato",
         description: "Le tue informazioni sono state salvate con successo.",
       });
+      // Invalidate all related queries to ensure data consistency
       queryClient.invalidateQueries({ queryKey: ["/api/patients/me"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/medication-schedules"] });
       setLocation("/");
     },
     onError: () => {
       toast({
         title: "Errore",
         description: "Impossibile aggiornare il profilo. Riprova.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/auth/logout", {});
+    },
+    onSuccess: () => {
+      toast({
+        title: "Logout effettuato",
+        description: "Sei stato disconnesso con successo.",
+      });
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1000);
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Impossibile effettuare il logout. Riprova.",
         variant: "destructive",
       });
     },
@@ -307,14 +331,26 @@ export default function PatientProfile() {
               )}
             />
 
-            <Button 
-              type="submit" 
-              className="w-full bg-sage-500 hover:bg-sage-600 text-white mt-6"
-              disabled={updateProfileMutation.isPending}
-            >
-              <Save className="mr-2 w-4 h-4" />
-              {updateProfileMutation.isPending ? "Salvando..." : "Salva modifiche"}
-            </Button>
+            <div className="space-y-4 mt-6">
+              <Button 
+                type="submit" 
+                className="w-full bg-sage-500 hover:bg-sage-600 text-white"
+                disabled={updateProfileMutation.isPending}
+              >
+                <Save className="mr-2 w-4 h-4" />
+                {updateProfileMutation.isPending ? "Salvando..." : "Salva modifiche"}
+              </Button>
+              
+              <Button 
+                type="button"
+                variant="outline"
+                onClick={() => logoutMutation.mutate()}
+                disabled={logoutMutation.isPending}
+                className="w-full border-red-300 text-red-600 hover:bg-red-50"
+              >
+                {logoutMutation.isPending ? "Disconnessione..." : "Disconnetti account"}
+              </Button>
+            </div>
           </form>
         </Form>
       </div>

@@ -92,6 +92,9 @@ export default function PatientVideo() {
     if (['jpg', 'jpeg', 'png', 'gif'].includes(extension || '')) {
       return <Image className="w-4 h-4 text-blue-500" />;
     }
+    if (['pdf'].includes(extension || '')) {
+      return <FileText className="w-4 h-4 text-red-500" />;
+    }
     return <FileText className="w-4 h-4 text-gray-500" />;
   };
 
