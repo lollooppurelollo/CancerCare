@@ -30,7 +30,7 @@ export default function DoctorPatientDetail() {
   const [selectedDosage, setSelectedDosage] = useState<string>("");
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
 
-  const { data: patient, isLoading: patientLoading } = useQuery({
+  const { data: patient, isLoading: patientLoading, error: patientError } = useQuery({
     queryKey: ["/api/patients", patientId],
     enabled: !!patientId,
   });
@@ -182,10 +182,28 @@ export default function DoctorPatientDetail() {
     );
   }
 
+  if (patientError) {
+    return (
+      <div className="max-w-6xl mx-auto bg-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">Errore nel caricamento del paziente</p>
+          <Button onClick={() => setLocation("/doctor")}>
+            Torna al Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (!patient) {
     return (
       <div className="max-w-6xl mx-auto bg-white min-h-screen flex items-center justify-center">
-        <p className="text-red-600">Paziente non trovato</p>
+        <div className="text-center">
+          <p className="text-red-600 mb-4">Paziente non trovato</p>
+          <Button onClick={() => setLocation("/doctor")}>
+            Torna al Dashboard
+          </Button>
+        </div>
       </div>
     );
   }

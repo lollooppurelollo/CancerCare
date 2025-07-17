@@ -40,6 +40,13 @@ export default function DoctorDashboard() {
     return patient ? `${patient.firstName} ${patient.lastName}` : "Paziente sconosciuto";
   };
 
+  const getPatientBirthDate = (patientId: number) => {
+    const patient = patients.find((p: any) => p.id === patientId);
+    if (!patient?.birthDate) return "";
+    const birthDate = new Date(patient.birthDate);
+    return birthDate.toLocaleDateString('it-IT');
+  };
+
   const getAlertColor = (severity: string) => {
     switch (severity) {
       case "high":
@@ -148,6 +155,11 @@ export default function DoctorDashboard() {
                         className="text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium"
                       >
                         {getPatientName(alert.patientId)}
+                        {getPatientBirthDate(alert.patientId) && (
+                          <span className="text-gray-500 ml-2">
+                            (nato il {getPatientBirthDate(alert.patientId)})
+                          </span>
+                        )}
                       </button>
                       <p className="text-xs opacity-75 mt-1">
                         {formatTimestamp(alert.createdAt)}

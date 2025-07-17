@@ -148,6 +148,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/patients/:id", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const patientId = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const patient = await storage.updatePatient(patientId, updates);
+      res.json(patient);
+    } catch (error) {
+      console.error("Update patient error:", error);
+      res.status(500).json({ message: "Failed to update patient" });
+    }
+  });
+
   app.get("/api/patients/search", async (req, res) => {
     try {
       const userRole = (req as any).session?.userRole;
