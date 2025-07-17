@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
-import { ArrowLeft, Send, Video, AlertTriangle, User, MessageSquare } from "lucide-react";
+import { ArrowLeft, Send, Video, AlertTriangle, User, MessageSquare, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,26 @@ export default function DoctorChat() {
   const [newMessage, setNewMessage] = useState("");
   const [isUrgent, setIsUrgent] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const resolveAlertMutation = useMutation({
+    mutationFn: async (alertId: number) => {
+      await apiRequest("POST", `/api/alerts/${alertId}/resolve`, {});
+    },
+    onSuccess: () => {
+      toast({
+        title: "Avviso risolto",
+        description: "L'avviso è stato rimosso dalla lista degli avvisi attivi.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/alerts", patientId] });
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Impossibile risolvere l'avviso.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const { data: patient } = useQuery({
     queryKey: ["/api/patients", patientId],
@@ -196,15 +216,27 @@ export default function DoctorChat() {
               <div className="space-y-2">
                 {patientAlerts.map((alert: any) => (
                   <div key={alert.id} className="flex items-center justify-between p-3 bg-white rounded-lg">
-                    <div>
+                    <div className="flex-1">
                       <p className="font-medium text-orange-800">{alert.message}</p>
                       <p className="text-sm text-gray-600">
                         {formatTimestamp(alert.createdAt)}
                       </p>
                     </div>
-                    <Badge variant={alert.severity === "high" ? "destructive" : "secondary"}>
-                      {alert.severity}
-                    </Badge>
+                    <div className="flex items-center space-x-2">
+                      <Badge variant={alert.severity === "high" ? "destructive" : "secondary"}>
+                        {alert.severity}
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="bg-green-500 hover:bg-green-600 text-white border-green-500 hover:border-green-600"
+                        onClick={() => resolveAlertMutation.mutate(alert.id)}
+                        disabled={resolveAlertMutation.isPending}
+                        title="Contrassegna come risolto"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>

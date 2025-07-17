@@ -1,16 +1,20 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Search, Settings, TriangleAlert, Eye, Video, MessageCircle, Calendar, BarChart3 } from "lucide-react";
+import { Search, Settings, TriangleAlert, Eye, Video, MessageCircle, Calendar, BarChart3, CheckCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import PatientCard from "@/components/ui/patient-card";
 
 export default function DoctorDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [, setLocation] = useLocation();
   const { logout } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: patients = [] } = useQuery({
     queryKey: ["/api/patients"],
@@ -22,6 +26,26 @@ export default function DoctorDashboard() {
 
   const { data: messages = [] } = useQuery({
     queryKey: ["/api/messages"],
+  });
+
+  const resolveAlertMutation = useMutation({
+    mutationFn: async (alertId: number) => {
+      await apiRequest("POST", `/api/alerts/${alertId}/resolve`, {});
+    },
+    onSuccess: () => {
+      toast({
+        title: "Avviso risolto",
+        description: "L'avviso è stato rimosso dalla lista degli avvisi attivi.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/alerts"] });
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Impossibile risolvere l'avviso.",
+        variant: "destructive",
+      });
+    },
   });
 
   const filteredPatients = patients.filter((patient: any) =>
@@ -141,13 +165,23 @@ export default function DoctorDashboard() {
         </div>
 
         {/* Alerts Section */}
-        {alerts.length > 0 && (
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-3">
-              <TriangleAlert className="inline w-5 h-5 mr-2 text-red-500" />
-              Avvisi
-            </h2>
-            
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-800 mb-3">
+            <TriangleAlert className="inline w-5 h-5 mr-2 text-red-500" />
+            Avvisi
+          </h2>
+          
+          {alerts.length === 0 ? (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center">
+                <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+                <p className="text-green-800 font-medium">Nessun avviso attivo</p>
+              </div>
+              <p className="text-sm text-green-600 mt-1">
+                Tutti i pazienti sono sotto controllo. Ottimo lavoro!
+              </p>
+            </div>
+          ) : (
             <div className="space-y-3">
               {alerts.map((alert: any) => (
                 <div
@@ -173,6 +207,17 @@ export default function DoctorDashboard() {
                       <Button 
                         size="sm" 
                         variant="outline"
+                        className="bg-green-500 hover:bg-green-600 text-white border-green-500 hover:border-green-600"
+                        onClick={() => resolveAlertMutation.mutate(alert.id)}
+                        disabled={resolveAlertMutation.isPending}
+                        title="Contrassegna come risolto"
+                      >
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Risolvi
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
                         className="bg-sage-500 hover:bg-sage-600 text-white border-sage-500 hover:border-sage-600"
                         onClick={() => setLocation(`/doctor/patient-view/${alert.patientId}`)}
                         title="Visualizza profilo paziente"
@@ -193,7 +238,7 @@ export default function DoctorDashboard() {
                       <Button 
                         size="sm" 
                         variant="outline"
-                        className="bg-green-500 hover:bg-green-600 text-white border-green-500 hover:border-green-600"
+                        className="bg-purple-500 hover:bg-purple-600 text-white border-purple-500 hover:border-purple-600"
                         onClick={() => handleVideoCall(alert.patientId)}
                         title="Avvia videochiamata Google Meet"
                       >
@@ -205,8 +250,8 @@ export default function DoctorDashboard() {
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Patient List */}
         <div className="mb-6">
