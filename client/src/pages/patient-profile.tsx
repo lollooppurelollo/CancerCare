@@ -87,7 +87,11 @@ export default function PatientProfile() {
       // Invalidate all related queries to ensure data consistency
       queryClient.invalidateQueries({ queryKey: ["/api/patients/me"] });
       queryClient.invalidateQueries({ queryKey: ["/api/medication-schedules"] });
-      setLocation("/");
+      // Force refresh of all patient-related queries
+      queryClient.refetchQueries({ queryKey: ["/api/patients/me"] });
+      setTimeout(() => {
+        setLocation("/");
+      }, 100);
     },
     onError: () => {
       toast({
@@ -287,11 +291,14 @@ export default function PatientProfile() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Farmaco</FormLabel>
-                  <Select onValueChange={(value) => {
-                    field.onChange(value);
-                    setSelectedMedication(value);
-                    form.setValue("dosage", "");
-                  }} defaultValue={field.value}>
+                  <Select 
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      setSelectedMedication(value);
+                      form.setValue("dosage", "");
+                    }} 
+                    value={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger className="focus:ring-sage-500">
                         <SelectValue placeholder="Seleziona farmaco" />
@@ -314,7 +321,10 @@ export default function PatientProfile() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Dosaggio</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    value={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger className="focus:ring-sage-500">
                         <SelectValue placeholder="Seleziona dosaggio" />
