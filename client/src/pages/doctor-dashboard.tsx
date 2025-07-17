@@ -173,10 +173,18 @@ export default function DoctorDashboard() {
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => setLocation(`/doctor/chat/${alert.patientId}`)}
+                      >
                         <Phone className="w-4 h-4" />
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => setLocation(`/doctor/chat/${alert.patientId}`)}
+                      >
                         <Video className="w-4 h-4" />
                       </Button>
                     </div>

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRoute } from "wouter";
 import { useLocation } from "wouter";
-import { ArrowLeft, Save, Calendar, FileText, Activity, Pill } from "lucide-react";
+import { ArrowLeft, Save, Calendar, FileText, Activity, Pill, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -211,18 +211,34 @@ export default function DoctorPatientDetail() {
   return (
     <div className="max-w-6xl mx-auto bg-white min-h-screen">
       <div className="p-6">
-        <div className="flex items-center mb-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocation("/doctor")}
+              className="text-sage-600 mr-4"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-sage-800">
+                {patient.firstName} {patient.lastName}
+              </h1>
+              {patient.birthDate && (
+                <p className="text-sm text-gray-600">
+                  Nato il {new Date(patient.birthDate).toLocaleDateString('it-IT')}
+                </p>
+              )}
+            </div>
+          </div>
           <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setLocation("/doctor")}
-            className="text-sage-600 mr-4"
+            onClick={() => setLocation(`/doctor/chat/${patientId}`)}
+            className="bg-sage-500 hover:bg-sage-600"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <Phone className="w-4 h-4 mr-2" />
+            Chat
           </Button>
-          <h1 className="text-2xl font-bold text-sage-800">
-            {patient.firstName} {patient.lastName}
-          </h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -530,6 +530,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/messages/:patientId", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const patientId = parseInt(req.params.patientId);
+      const messages = await storage.getMessagesByPatient(patientId);
+      res.json(messages);
+    } catch (error) {
+      console.error("Get patient messages error:", error);
+      res.status(500).json({ message: "Failed to get messages" });
+    }
+  });
+
+  app.get("/api/alerts/:patientId", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const patientId = parseInt(req.params.patientId);
+      const alerts = await storage.getAlertsByPatient(patientId);
+      res.json(alerts);
+    } catch (error) {
+      console.error("Get patient alerts error:", error);
+      res.status(500).json({ message: "Failed to get alerts" });
+    }
+  });
+
   // Alert routes
   app.get("/api/alerts", async (req, res) => {
     try {
