@@ -127,6 +127,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/patients/:id", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const patientId = parseInt(req.params.id);
+      const patient = await storage.getPatientById(patientId);
+      
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found" });
+      }
+
+      res.json(patient);
+    } catch (error) {
+      console.error("Get patient error:", error);
+      res.status(500).json({ message: "Failed to get patient" });
+    }
+  });
+
   app.get("/api/patients/search", async (req, res) => {
     try {
       const userRole = (req as any).session?.userRole;
@@ -190,6 +211,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/medication-schedules/:patientId", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const patientId = parseInt(req.params.patientId);
+      const { startDate, endDate } = req.query;
+      
+      const schedules = await storage.getMedicationScheduleByPatientAndDateRange(
+        patientId,
+        startDate as string || "2024-01-01",
+        endDate as string || "2024-12-31"
+      );
+
+      res.json(schedules);
+    } catch (error) {
+      console.error("Get patient medication schedules error:", error);
+      res.status(500).json({ message: "Failed to get medication schedules" });
+    }
+  });
+
+  app.post("/api/medication-schedules/:patientId/toggle", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const patientId = parseInt(req.params.patientId);
+      const { date, shouldTake } = req.body;
+      
+      // Check if schedule exists for this date
+      const existingSchedule = await storage.getMedicationScheduleByPatientAndDate(patientId, date);
+      
+      if (existingSchedule) {
+        const updatedSchedule = await storage.updateMedicationSchedule(existingSchedule.id, {
+          shouldTake
+        });
+        res.json(updatedSchedule);
+      } else {
+        const newSchedule = await storage.createMedicationSchedule({
+          patientId,
+          date,
+          shouldTake
+        });
+        res.json(newSchedule);
+      }
+    } catch (error) {
+      console.error("Toggle medication schedule error:", error);
+      res.status(500).json({ message: "Failed to toggle medication schedule" });
+    }
+  });
+
   // Diary routes
   app.post("/api/diary-entries", async (req, res) => {
     try {
@@ -245,6 +321,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(entries);
     } catch (error) {
       console.error("Get diary entries error:", error);
+      res.status(500).json({ message: "Failed to get diary entries" });
+    }
+  });
+
+  app.get("/api/diary-entries/:patientId", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const patientId = parseInt(req.params.patientId);
+      const entries = await storage.getDiaryEntriesByPatient(patientId);
+      res.json(entries);
+    } catch (error) {
+      console.error("Get patient diary entries error:", error);
       res.status(500).json({ message: "Failed to get diary entries" });
     }
   });
@@ -324,6 +416,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(symptoms);
     } catch (error) {
       console.error("Get symptoms error:", error);
+      res.status(500).json({ message: "Failed to get symptoms" });
+    }
+  });
+
+  app.get("/api/symptoms/:patientId", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const patientId = parseInt(req.params.patientId);
+      const symptoms = await storage.getSymptomsByPatient(patientId);
+      res.json(symptoms);
+    } catch (error) {
+      console.error("Get patient symptoms error:", error);
+      res.status(500).json({ message: "Failed to get symptoms" });
+    }
+  });
+
+  app.get("/api/symptoms/:patientId", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const patientId = parseInt(req.params.patientId);
+      const symptoms = await storage.getSymptomsByPatient(patientId);
+      res.json(symptoms);
+    } catch (error) {
+      console.error("Get patient symptoms error:", error);
       res.status(500).json({ message: "Failed to get symptoms" });
     }
   });

@@ -15,6 +15,7 @@ import PatientProfile from "@/pages/patient-profile";
 import PatientAdvice from "@/pages/patient-advice";
 import AppSettings from "@/pages/app-settings";
 import DoctorDashboard from "@/pages/doctor-dashboard";
+import DoctorPatientDetail from "@/pages/doctor-patient-detail";
 import DoctorLogin from "@/pages/doctor-login";
 import DoctorRegistration from "@/pages/doctor-registration";
 
@@ -51,6 +52,8 @@ function Router() {
     return (
       <Switch>
         <Route path="/" component={DoctorDashboard} />
+        <Route path="/doctor" component={DoctorDashboard} />
+        <Route path="/doctor/patient/:id" component={DoctorPatientDetail} />
         <Route component={NotFound} />
       </Switch>
     );

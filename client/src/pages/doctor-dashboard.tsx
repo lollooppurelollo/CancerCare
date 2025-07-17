@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Search, Settings, TriangleAlert, Eye, Video, Phone, Calendar, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,7 @@ import PatientCard from "@/components/ui/patient-card";
 
 export default function DoctorDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [, setLocation] = useLocation();
   const { logout } = useAuth();
 
   const { data: patients = [] } = useQuery({
@@ -32,6 +34,11 @@ export default function DoctorDashboard() {
     const today = new Date().toISOString().split('T')[0];
     return message.createdAt?.startsWith(today);
   });
+
+  const getPatientName = (patientId: number) => {
+    const patient = patients.find((p: any) => p.id === patientId);
+    return patient ? `${patient.firstName} ${patient.lastName}` : "Paziente sconosciuto";
+  };
 
   const getAlertColor = (severity: string) => {
     switch (severity) {
@@ -133,12 +140,27 @@ export default function DoctorDashboard() {
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <p className="font-medium mb-1">{alert.message}</p>
-                      <p className="text-xs opacity-75">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <p className="font-medium">{alert.message}</p>
+                      </div>
+                      <button
+                        onClick={() => setLocation(`/doctor/patient/${alert.patientId}`)}
+                        className="text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                      >
+                        {getPatientName(alert.patientId)}
+                      </button>
+                      <p className="text-xs opacity-75 mt-1">
                         {formatTimestamp(alert.createdAt)}
                       </p>
                     </div>
                     <div className="ml-4 flex space-x-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => setLocation(`/doctor/patient/${alert.patientId}`)}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
                       <Button size="sm" variant="outline">
                         <Phone className="w-4 h-4" />
                       </Button>
