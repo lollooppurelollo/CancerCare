@@ -94,6 +94,20 @@ Preferred communication style: Simple, everyday language.
    - Automatic meeting title generation with patient name
    - Opens in new tab for seamless video communication
 
+6. **Messaging System with File Attachments (July 2025)**:
+   - Fixed critical patientId null bug in messaging system
+   - Added comprehensive file upload support (PDF, DOC, images, etc.)
+   - Implemented multer for server-side file handling
+   - Added file attachment visualization in chat interface
+   - Enhanced messaging UI with file selection and preview
+
+7. **Dashboard UI Improvements (July 2025)**:
+   - Improved patient card layout with better "Chat con Lorenzo Casadei" formatting
+   - Enhanced button styling with consistent colors and spacing
+   - Added functional video call and profile buttons
+   - Reorganized button priority: Chat first, then Profile, then Video
+   - Improved visual hierarchy and user experience
+
 ## Data Flow
 
 1. **Patient Registration**: New patients create accounts with medical information

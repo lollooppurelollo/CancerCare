@@ -31,49 +31,57 @@ export default function PatientCard({ patient }: PatientCardProps) {
   };
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
+    <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <h3 className="font-medium text-gray-800">
-            {patient.firstName} {patient.lastName}
+          <h3 className="font-semibold text-gray-900 text-lg mb-2">
+            Chat con {patient.firstName} {patient.lastName}
           </h3>
-          <p className="text-sm text-gray-600">
-            {patient.medication} - In trattamento
-          </p>
-          <p className="text-xs text-gray-500">
-            Registrato: {formatDate(patient.createdAt)}
-          </p>
-          <p className="text-xs text-sage-600">
-            Tel: {patient.phone}
-          </p>
+          <div className="space-y-1">
+            <p className="text-sm text-gray-600">
+              <span className="font-medium">Farmaco:</span> {patient.medication}
+            </p>
+            <p className="text-sm text-gray-600">
+              <span className="font-medium">Stato:</span> In trattamento
+            </p>
+            <p className="text-sm text-gray-600">
+              <span className="font-medium">Telefono:</span> {patient.phone}
+            </p>
+            <p className="text-xs text-gray-500">
+              Registrato: {formatDate(patient.createdAt)}
+            </p>
+          </div>
         </div>
-        <div className="ml-4 flex space-x-2">
+        <div className="ml-4 flex flex-col space-y-2">
           <Button 
             size="sm" 
             variant="outline" 
-            className="bg-sage-500 hover:bg-sage-600 text-white"
-            onClick={() => setLocation(`/doctor/patient-view/${patient.id}`)}
-            title="Vedi interfaccia paziente"
-          >
-            <Eye className="w-4 h-4" />
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="bg-blue-500 hover:bg-blue-600 text-white"
+            className="bg-blue-500 hover:bg-blue-600 text-white border-blue-500 hover:border-blue-600"
             onClick={() => setLocation(`/doctor/chat/${patient.id}`)}
-            title="Chat con paziente"
+            title="Apri chat con paziente"
           >
-            <MessageCircle className="w-4 h-4" />
+            <MessageCircle className="w-4 h-4 mr-2" />
+            Chat
           </Button>
           <Button 
             size="sm" 
             variant="outline" 
-            className="bg-green-500 hover:bg-green-600 text-white"
-            onClick={() => handleVideoCall(patient.id)}
-            title="Videochiamata Google Meet"
+            className="bg-sage-500 hover:bg-sage-600 text-white border-sage-500 hover:border-sage-600"
+            onClick={() => setLocation(`/doctor/patient-view/${patient.id}`)}
+            title="Visualizza profilo paziente"
           >
-            <Video className="w-4 h-4" />
+            <Eye className="w-4 h-4 mr-2" />
+            Profilo
+          </Button>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="bg-green-500 hover:bg-green-600 text-white border-green-500 hover:border-green-600"
+            onClick={() => handleVideoCall(patient.id)}
+            title="Avvia videochiamata Google Meet"
+          >
+            <Video className="w-4 h-4 mr-2" />
+            Video
           </Button>
         </div>
       </div>

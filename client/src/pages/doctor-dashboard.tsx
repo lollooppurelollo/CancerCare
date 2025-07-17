@@ -160,7 +160,7 @@ export default function DoctorDashboard() {
                         <p className="font-medium">{alert.message}</p>
                       </div>
                       <button
-                        onClick={() => setLocation(`/doctor/patient/${alert.patientId}`)}
+                        onClick={() => setLocation(`/doctor/patient-view/${alert.patientId}`)}
                         className="text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium"
                       >
                         {getPatientName(alert.patientId)} {getPatientBirthDate(alert.patientId) && `(nato il ${getPatientBirthDate(alert.patientId)})`}
@@ -169,30 +169,36 @@ export default function DoctorDashboard() {
                         {formatTimestamp(alert.createdAt)}
                       </p>
                     </div>
-                    <div className="ml-4 flex space-x-2">
+                    <div className="ml-4 flex flex-col space-y-2">
                       <Button 
                         size="sm" 
                         variant="outline"
+                        className="bg-sage-500 hover:bg-sage-600 text-white border-sage-500 hover:border-sage-600"
                         onClick={() => setLocation(`/doctor/patient-view/${alert.patientId}`)}
-                        title="Vedi interfaccia paziente"
+                        title="Visualizza profilo paziente"
                       >
-                        <Eye className="w-4 h-4" />
+                        <Eye className="w-4 h-4 mr-2" />
+                        Profilo
                       </Button>
                       <Button 
                         size="sm" 
                         variant="outline"
+                        className="bg-blue-500 hover:bg-blue-600 text-white border-blue-500 hover:border-blue-600"
                         onClick={() => setLocation(`/doctor/chat/${alert.patientId}`)}
                         title="Chat con paziente"
                       >
-                        <MessageCircle className="w-4 h-4" />
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                        Chat
                       </Button>
                       <Button 
                         size="sm" 
                         variant="outline"
+                        className="bg-green-500 hover:bg-green-600 text-white border-green-500 hover:border-green-600"
                         onClick={() => handleVideoCall(alert.patientId)}
-                        title="Videochiamata Google Meet"
+                        title="Avvia videochiamata Google Meet"
                       >
-                        <Video className="w-4 h-4" />
+                        <Video className="w-4 h-4 mr-2" />
+                        Video
                       </Button>
                     </div>
                   </div>
