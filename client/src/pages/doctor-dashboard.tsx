@@ -150,11 +150,11 @@ export default function DoctorDashboard() {
             Statistiche
           </h2>
           
-          {/* Pazienti totali - grande in alto */}
+          {/* Pazienti totali - ridimensionato */}
           <div className="mb-4">
-            <div className="bg-sage-50 p-6 rounded-lg border border-sage-200 text-center hover:bg-sage-100 transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer">
-              <div className="text-4xl font-bold text-sage-600 mb-1 transition-transform duration-200 hover:scale-110">{patients.length}</div>
-              <div className="text-lg text-gray-700 font-medium">Pazienti totali</div>
+            <div className="bg-sage-50 p-4 rounded-lg border border-sage-200 text-center hover:bg-sage-100 transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer">
+              <div className="text-2xl font-bold text-sage-600 mb-1 transition-transform duration-200 hover:scale-110">{patients.length}</div>
+              <div className="text-sm text-gray-700 font-medium">Pazienti totali</div>
             </div>
           </div>
           
