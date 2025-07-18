@@ -76,7 +76,7 @@ export default function PatientAdvice() {
   }
 
   return (
-    <div className="max-w-md mx-auto bg-white min-h-screen pb-16">
+    <div className="max-w-md mx-auto bg-white min-h-screen pb-20">
       {/* Header */}
       <div className="bg-sage-500 text-white p-4">
         <h1 className="text-lg font-bold">Consigli</h1>

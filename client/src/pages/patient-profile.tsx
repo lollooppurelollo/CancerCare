@@ -74,7 +74,7 @@ export default function PatientProfile() {
   }
 
   return (
-    <div className="max-w-md mx-auto bg-white min-h-screen pb-16">
+    <div className="max-w-md mx-auto bg-white min-h-screen pb-20">
       <div className="p-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">

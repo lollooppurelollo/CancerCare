@@ -74,7 +74,7 @@ export default function PatientHistory() {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white min-h-screen pb-16">
+    <div className="max-w-md mx-auto bg-white min-h-screen pb-20">
       <div className="p-4">
         <h1 className="text-xl font-bold text-sage-800 mb-4">Storico Sintomi e Diario</h1>
         

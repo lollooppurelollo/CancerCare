@@ -59,7 +59,7 @@ export default function PatientSettings() {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white min-h-screen">
+    <div className="max-w-md mx-auto bg-white min-h-screen pb-20">
       <div className="p-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -211,12 +211,14 @@ export default function PatientSettings() {
           Salva Impostazioni
         </Button>
 
-        <div className="text-sm text-gray-500 mt-4 p-3 bg-sage-50 rounded-lg">
-          <p className="font-medium mb-1 flex items-center">
-            <Bell className="w-4 h-4 mr-1" />
+        <div className="text-sm text-gray-600 mt-4 p-4 bg-sage-50 rounded-lg border border-sage-200">
+          <p className="font-medium mb-2 flex items-center text-sage-700">
+            <Bell className="w-4 h-4 mr-2" />
             Notifiche
           </p>
-          <p>Le notifiche ti aiuteranno a ricordare di assumere il farmaco, compilare il diario e registrare i sintomi negli orari impostati.</p>
+          <p className="leading-relaxed">
+            Le notifiche ti aiuteranno a ricordare di assumere il farmaco, compilare il diario e registrare i sintomi negli orari impostati.
+          </p>
         </div>
       </div>
 
