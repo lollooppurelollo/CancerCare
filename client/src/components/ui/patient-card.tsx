@@ -56,31 +56,31 @@ export default function PatientCard({ patient }: PatientCardProps) {
           <Button 
             size="sm" 
             variant="outline" 
-            className="bg-sage-500 hover:bg-sage-600 text-white border-sage-500 hover:border-sage-600"
+            className="bg-sage-500 hover:bg-sage-600 text-white border-sage-500 hover:border-sage-600 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
             onClick={() => setLocation(`/doctor/patient-view/${patient.id}`)}
             title="Visualizza profilo paziente"
           >
-            <Eye className="w-4 h-4 mr-2" />
+            <Eye className="w-4 h-4 mr-2 transition-transform duration-200 hover:scale-110" />
             Profilo
           </Button>
           <Button 
             size="sm" 
             variant="outline" 
-            className="bg-blue-500 hover:bg-blue-600 text-white border-blue-500 hover:border-blue-600"
+            className="bg-blue-500 hover:bg-blue-600 text-white border-blue-500 hover:border-blue-600 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
             onClick={() => setLocation(`/doctor/chat/${patient.id}`)}
             title="Apri chat con paziente"
           >
-            <MessageCircle className="w-4 h-4 mr-2" />
+            <MessageCircle className="w-4 h-4 mr-2 transition-transform duration-200 hover:scale-110" />
             Chat
           </Button>
           <Button 
             size="sm" 
             variant="outline" 
-            className="bg-purple-500 hover:bg-purple-600 text-white border-purple-500 hover:border-purple-600"
+            className="bg-purple-500 hover:bg-purple-600 text-white border-purple-500 hover:border-purple-600 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
             onClick={() => handleVideoCall(patient.id)}
             title="Avvia videochiamata Google Meet"
           >
-            <Video className="w-4 h-4 mr-2" />
+            <Video className="w-4 h-4 mr-2 transition-transform duration-200 hover:scale-110" />
             Video
           </Button>
         </div>
