@@ -152,6 +152,35 @@ export default function PatientHome() {
       {/* Weekly Calendar */}
       <div className="p-4 bg-white border-b border-gray-200">
         <MedicationCalendar medication={patient.medication} patientId={patient.id} />
+        
+        {/* Missed Medication Button */}
+        <div className="mt-4">
+          <Dialog open={showMissedMedDialog} onOpenChange={setShowMissedMedDialog}>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
+              >
+                <XCircle className="w-5 h-5 mr-2" />
+                Segnala Terapia Non Assunta
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Segnalazione Terapia Non Assunta</DialogTitle>
+              </DialogHeader>
+              <MissedMedicationDialog
+                missedDates={missedDates}
+                setMissedDates={setMissedDates}
+                notes={missedMedNotes}
+                setNotes={setMissedMedNotes}
+                onSave={() => reportMissedMedication.mutate()}
+                onCancel={() => setShowMissedMedDialog(false)}
+                isLoading={reportMissedMedication.isPending}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Daily Diary */}
@@ -181,7 +210,7 @@ export default function PatientHome() {
         <SymptomTracker patientId={patient.id} />
 
         {/* Manual Alert */}
-        <div className="mt-6 space-y-3">
+        <div className="mt-6">
           <Button
             onClick={() => sendUrgentAlert.mutate()}
             disabled={sendUrgentAlert.isPending}
@@ -190,33 +219,6 @@ export default function PatientHome() {
             <AlertTriangle className="w-5 h-5 mr-2" />
             {sendUrgentAlert.isPending ? "Invio..." : "Invia Segnalazione Urgente al Medico"}
           </Button>
-
-          {/* Missed Medication Button */}
-          <Dialog open={showMissedMedDialog} onOpenChange={setShowMissedMedDialog}>
-            <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
-              >
-                <XCircle className="w-5 h-5 mr-2" />
-                Segnala Terapia Non Assunta
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Segnalazione Terapia Non Assunta</DialogTitle>
-              </DialogHeader>
-              <MissedMedicationDialog
-                missedDates={missedDates}
-                setMissedDates={setMissedDates}
-                notes={missedMedNotes}
-                setNotes={setMissedMedNotes}
-                onSave={() => reportMissedMedication.mutate()}
-                onCancel={() => setShowMissedMedDialog(false)}
-                isLoading={reportMissedMedication.isPending}
-              />
-            </DialogContent>
-          </Dialog>
         </div>
       </div>
 

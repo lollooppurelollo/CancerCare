@@ -904,19 +904,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/missed-medication/:patientId", async (req, res) => {
     try {
+      const userId = (req as any).session?.userId;
       const userRole = (req as any).session?.userRole;
-      if (userRole !== "doctor") {
-        return res.status(403).json({ message: "Access denied" });
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
       }
 
       const patientId = parseInt(req.params.patientId);
-      const missedMedications = await storage.getMissedMedicationByPatient(patientId);
-      res.json(missedMedications);
+      
+      if (userRole === "doctor") {
+        // Doctors can access any patient's missed medications
+        const missedMedications = await storage.getMissedMedicationByPatient(patientId);
+        res.json(missedMedications);
+      } else {
+        // Patients can only access their own missed medications
+        const patient = await storage.getPatientByUserId(userId);
+        if (!patient || patient.id !== patientId) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+        const missedMedications = await storage.getMissedMedicationByPatient(patientId);
+        res.json(missedMedications);
+      }
     } catch (error) {
       console.error("Get patient missed medications error:", error);
       res.status(500).json({ message: "Failed to get missed medications" });
     }
   });
+
+
 
   app.get("/api/missed-medication/all", async (req, res) => {
     try {
