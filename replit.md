@@ -164,6 +164,17 @@ Preferred communication style: Simple, everyday language.
     - Automatic doctor list refresh after new doctor creation
     - Maintains both quick creation and full management interfaces
 
+14. **Separated Settings and Profile Functionality (July 2025)**:
+    - Completely redesigned patient settings page to focus on notification preferences
+    - Added notification settings for medication reminders (default 09:00)
+    - Added notification settings for diary reminders (default 20:00)
+    - Added notification settings for symptom tracking reminders (default 18:00)
+    - Separated personal data editing to dedicated profile page
+    - Medical information (medication, dosage, assigned doctor) now only editable by doctors
+    - Enhanced doctor patient detail page with assigned doctor modification capability
+    - Patients can only edit personal information: name, age, phone, address
+    - Medical data displayed as read-only for patients with explanatory note
+
 ## Data Flow
 
 1. **Patient Registration**: New patients create accounts with medical information

@@ -185,7 +185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
 
-      const updatedPatient = await storage.updatePatient(patientId, { assignedDoctorId });
+      const updatedPatient = await storage.updatePatient(patientId, req.body);
       res.json(updatedPatient);
     } catch (error) {
       console.error("Update patient error:", error);

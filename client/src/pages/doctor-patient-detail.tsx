@@ -28,6 +28,7 @@ export default function DoctorPatientDetail() {
   
   const [selectedMedication, setSelectedMedication] = useState<string>("");
   const [selectedDosage, setSelectedDosage] = useState<string>("");
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>("");
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
 
   const { data: patient, isLoading: patientLoading, error: patientError } = useQuery({
@@ -50,9 +51,14 @@ export default function DoctorPatientDetail() {
     enabled: !!patientId,
   });
 
+  const { data: doctors } = useQuery({
+    queryKey: ["/api/doctors"],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
   const updatePatientMutation = useMutation({
-    mutationFn: async (data: { medication: string; dosage: string }) => {
-      await apiRequest("PUT", `/api/patients/${patientId}`, data);
+    mutationFn: async (data: { medication?: string; dosage?: string; assignedDoctorId?: number }) => {
+      await apiRequest("PATCH", `/api/patients/${patientId}`, data);
     },
     onSuccess: () => {
       toast({
@@ -134,11 +140,19 @@ export default function DoctorPatientDetail() {
   }, [currentWeekOffset, medicationSchedules, patient?.medication]);
 
   const handleUpdateTreatment = () => {
+    const updates: any = {};
+    
     if (selectedMedication && selectedDosage) {
-      updatePatientMutation.mutate({
-        medication: selectedMedication,
-        dosage: selectedDosage,
-      });
+      updates.medication = selectedMedication;
+      updates.dosage = selectedDosage;
+    }
+    
+    if (selectedDoctorId && selectedDoctorId !== patient?.assignedDoctorId?.toString()) {
+      updates.assignedDoctorId = parseInt(selectedDoctorId);
+    }
+    
+    if (Object.keys(updates).length > 0) {
+      updatePatientMutation.mutate(updates);
     }
   };
 
@@ -274,6 +288,24 @@ export default function DoctorPatientDetail() {
                 <h3 className="font-medium mb-3">Modifica Trattamento</h3>
                 <div className="space-y-3">
                   <div>
+                    <Label htmlFor="assignedDoctor">Medico di Riferimento</Label>
+                    <Select 
+                      value={selectedDoctorId || patient.assignedDoctorId?.toString() || ""} 
+                      onValueChange={setSelectedDoctorId}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleziona medico" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {doctors?.map((doctor: any) => (
+                          <SelectItem key={doctor.id} value={doctor.id.toString()}>
+                            {doctor.firstName} {doctor.lastName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
                     <Label className="text-sm font-medium">Farmaco</Label>
                     <Select 
                       value={selectedMedication} 
@@ -312,7 +344,7 @@ export default function DoctorPatientDetail() {
                   
                   <Button 
                     onClick={handleUpdateTreatment}
-                    disabled={updatePatientMutation.isPending || !selectedMedication || !selectedDosage}
+                    disabled={updatePatientMutation.isPending || (!selectedMedication && !selectedDoctorId) || (selectedMedication && !selectedDosage)}
                     className="w-full bg-sage-500 hover:bg-sage-600"
                   >
                     <Save className="w-4 h-4 mr-2" />
