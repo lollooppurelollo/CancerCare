@@ -125,6 +125,15 @@ Preferred communication style: Simple, everyday language.
    - Added micro-animations to navigation tabs with selection states
    - Implemented smooth transitions for bottom navigation with background colors
 
+10. **Medication Dosage Correction (July 2025)**:
+    - Updated correct dosages for all CDK 4/6 inhibitors across application
+    - Abemaciclib: 150mg, 100mg, 50mg (instead of previous incorrect values)
+    - Ribociclib: 600mg, 400mg, 200mg (instead of previous cp-based values)
+    - Palbociclib: 125mg, 100mg, 75mg (verified and standardized)
+    - Updated database records with correct dosage values
+    - Standardized medication dropdowns in all forms (registration, profile, doctor interface)
+    - Ensured consistency between database and UI display throughout application
+
 ## Data Flow
 
 1. **Patient Registration**: New patients create accounts with medical information

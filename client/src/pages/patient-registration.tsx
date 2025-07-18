@@ -14,9 +14,9 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 const medications = {
-  abemaciclib: ["150mg 2x/die", "100mg 2x/die", "50mg 2x/die"],
-  ribociclib: ["3 cp/die", "2 cp/die", "1 cp/die"],
-  palbociclib: ["125mg 1x/die", "100mg 1x/die", "75mg 1x/die"],
+  abemaciclib: ["150mg", "100mg", "50mg"],
+  ribociclib: ["600mg", "400mg", "200mg"],
+  palbociclib: ["125mg", "100mg", "75mg"],
 };
 
 const registrationSchema = z.object({
