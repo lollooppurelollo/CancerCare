@@ -102,9 +102,13 @@ export default function PatientHome() {
                 <User className="mr-2 h-4 w-4" />
                 Profilo paziente
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLocation("/settings")}>
-                <Bell className="mr-2 h-4 w-4" />
-                Impostazioni app
+              <DropdownMenuItem onClick={() => setLocation("/patient/settings")}>
+                <Settings className="mr-2 h-4 w-4" />
+                Impostazioni
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={sendUrgentAlert.mutate}>
+                <AlertTriangle className="mr-2 h-4 w-4 text-red-500" />
+                Segnalazione Urgente
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { ArrowLeft, Heart } from "lucide-react";
@@ -31,6 +32,7 @@ const registrationSchema = z.object({
   phone: z.string().min(10, "Numero di telefono non valido"),
   medication: z.enum(["abemaciclib", "ribociclib", "palbociclib"], { required_error: "Farmaco è richiesto" }),
   dosage: z.string().min(1, "Dosaggio è richiesto"),
+  assignedDoctorId: z.string().min(1, "Medico di riferimento è richiesto"),
 });
 
 type RegistrationForm = z.infer<typeof registrationSchema>;
@@ -40,6 +42,12 @@ export default function PatientRegistration() {
   const { register, isRegisterLoading, registerError } = useAuth();
   const { toast } = useToast();
   const [selectedMedication, setSelectedMedication] = useState<string>("");
+
+  // Get all doctors for the dropdown
+  const { data: doctors } = useQuery({
+    queryKey: ["/api/doctors/public"],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
   const form = useForm<RegistrationForm>({
     resolver: zodResolver(registrationSchema),
@@ -55,6 +63,7 @@ export default function PatientRegistration() {
       phone: "",
       medication: undefined,
       dosage: "",
+      assignedDoctorId: "",
     },
   });
 
@@ -82,6 +91,7 @@ export default function PatientRegistration() {
                 phone: data.phone,
                 medication: data.medication,
                 dosage: data.dosage,
+                assignedDoctorId: parseInt(data.assignedDoctorId),
               });
 
               toast({
@@ -317,6 +327,31 @@ export default function PatientRegistration() {
                     <SelectContent>
                       {selectedMedication && medications[selectedMedication as keyof typeof medications]?.map((dosage) => (
                         <SelectItem key={dosage} value={dosage}>{dosage}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="assignedDoctorId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Medico di riferimento</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="focus:ring-sage-500">
+                        <SelectValue placeholder="Seleziona il tuo medico" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {doctors?.map((doctor: any) => (
+                        <SelectItem key={doctor.id} value={doctor.id.toString()}>
+                          {doctor.firstName} {doctor.lastName}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

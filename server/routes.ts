@@ -163,6 +163,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update patient assigned doctor
+  app.patch("/api/patients/:id", async (req, res) => {
+    try {
+      const userId = (req as any).session?.userId;
+      const userRole = (req as any).session?.userRole;
+      const patientId = parseInt(req.params.id);
+      const { assignedDoctorId } = req.body;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      // Check if user is patient updating their own data or doctor
+      const patient = await storage.getPatientById(patientId);
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found" });
+      }
+
+      if (userRole === "patient" && patient.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const updatedPatient = await storage.updatePatient(patientId, { assignedDoctorId });
+      res.json(updatedPatient);
+    } catch (error) {
+      console.error("Update patient error:", error);
+      res.status(500).json({ message: "Failed to update patient" });
+    }
+  });
+
   app.get("/api/doctors", async (req, res) => {
     try {
       const userRole = (req as any).session?.userRole;
@@ -174,6 +204,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(doctors);
     } catch (error) {
       console.error("Get doctors error:", error);
+      res.status(500).json({ message: "Failed to get doctors" });
+    }
+  });
+
+  // Public endpoint for patient registration
+  app.get("/api/doctors/public", async (req, res) => {
+    try {
+      const doctors = await storage.getDoctors();
+      // Return only id, firstName, lastName for public use
+      const publicDoctors = doctors.map(doctor => ({
+        id: doctor.id,
+        firstName: doctor.firstName,
+        lastName: doctor.lastName
+      }));
+      res.json(publicDoctors);
+    } catch (error) {
+      console.error("Get public doctors error:", error);
       res.status(500).json({ message: "Failed to get doctors" });
     }
   });

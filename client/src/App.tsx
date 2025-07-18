@@ -13,6 +13,7 @@ import PatientHistory from "@/pages/patient-history";
 import PatientVideo from "@/pages/patient-video";
 import PatientProfile from "@/pages/patient-profile";
 import PatientAdvice from "@/pages/patient-advice";
+import PatientSettings from "@/pages/patient-settings";
 import AppSettings from "@/pages/app-settings";
 import DoctorDashboard from "@/pages/doctor-dashboard";
 import DoctorPatientDetail from "@/pages/doctor-patient-detail";
@@ -73,6 +74,7 @@ function Router() {
       <Route path="/advice" component={PatientAdvice} />
       <Route path="/video" component={PatientVideo} />
       <Route path="/profile" component={PatientProfile} />
+      <Route path="/patient/settings" component={PatientSettings} />
       <Route path="/settings" component={AppSettings} />
       <Route component={NotFound} />
     </Switch>
