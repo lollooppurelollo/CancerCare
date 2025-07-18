@@ -1,17 +1,21 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Settings, Users, User } from "lucide-react";
+import { ArrowLeft, Settings, Users, User, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function AppSettings() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  
+  const isAdmin = user?.id === 4;
   
   const [viewMode, setViewMode] = useState<string>(
     localStorage.getItem("patientViewMode") || "all"
@@ -131,6 +135,43 @@ export default function AppSettings() {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Admin Section */}
+        {isAdmin && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center text-sage-700">
+                <UserCog className="w-5 h-5 mr-2" />
+                Amministrazione
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 bg-sage-50 rounded-lg border">
+                  <div>
+                    <p className="font-medium">Gestione Medici</p>
+                    <p className="text-sm text-gray-600">
+                      Aggiungi, modifica o elimina account medico
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => setLocation("/admin/doctors")}
+                    className="bg-sage-500 hover:bg-sage-600 transition-all duration-200 transform hover:scale-105"
+                  >
+                    <UserCog className="w-4 h-4 mr-2" />
+                    Gestisci
+                  </Button>
+                </div>
+                
+                <div className="text-sm text-gray-500 p-3 bg-gray-50 rounded-lg">
+                  <p className="font-medium mb-1">Account Amministratore</p>
+                  <p>Username: medico | Password: 123456</p>
+                  <p>Solo l'amministratore può aggiungere nuovi medici al sistema.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

@@ -20,6 +20,7 @@ import DoctorPatientView from "@/pages/doctor-patient-view";
 import DoctorChat from "@/pages/doctor-chat";
 import DoctorLogin from "@/pages/doctor-login";
 import DoctorRegistration from "@/pages/doctor-registration";
+import AdminDoctorManagement from "@/pages/admin-doctor-management";
 
 function Router() {
   const { user, isLoading } = useAuth();
@@ -59,6 +60,7 @@ function Router() {
         <Route path="/doctor/patient-view/:patientId" component={DoctorPatientView} />
         <Route path="/doctor/chat/:patientId" component={DoctorChat} />
         <Route path="/settings" component={AppSettings} />
+        <Route path="/admin/doctors" component={AdminDoctorManagement} />
         <Route component={NotFound} />
       </Switch>
     );

@@ -178,6 +178,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin-only routes for doctor management
+  app.post("/api/admin/doctors", async (req, res) => {
+    try {
+      const userId = (req as any).session?.userId;
+      const userRole = (req as any).session?.userRole;
+      
+      if (userRole !== "doctor" || userId !== 4) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const doctorData = insertUserSchema.parse(req.body);
+      const doctor = await storage.createUser(doctorData);
+      res.json(doctor);
+    } catch (error) {
+      console.error("Create doctor error:", error);
+      res.status(500).json({ message: "Failed to create doctor" });
+    }
+  });
+
+  app.delete("/api/admin/doctors/:id", async (req, res) => {
+    try {
+      const userId = (req as any).session?.userId;
+      const userRole = (req as any).session?.userRole;
+      
+      if (userRole !== "doctor" || userId !== 4) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const doctorId = parseInt(req.params.id);
+      if (doctorId === 4) {
+        return res.status(400).json({ message: "Cannot delete admin user" });
+      }
+
+      await storage.deleteUser(doctorId);
+      res.json({ message: "Doctor deleted successfully" });
+    } catch (error) {
+      console.error("Delete doctor error:", error);
+      res.status(500).json({ message: "Failed to delete doctor" });
+    }
+  });
+
   app.get("/api/patients/:id", async (req, res) => {
     try {
       const userRole = (req as any).session?.userRole;

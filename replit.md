@@ -145,6 +145,16 @@ Preferred communication style: Simple, everyday language.
     - Added /api/doctors endpoint for retrieving doctor information
     - Settings automatically refresh dashboard when saved
 
+12. **Admin Doctor Management System (July 2025)**:
+    - Created admin-only doctor management interface at /admin/doctors
+    - Admin credentials: username "medico", password "123456" (user ID 4)
+    - Added specific doctor list: Prof. Federico Piacentini, Prof.ssa Angela Toss, Dr.ssa Claudia O Marini, Dr.ssa Monica Barbolini, Dr. Fabio Canino, Dr.ssa Elena Barbieri, Dr.ssa Emma Zattarin
+    - Implemented admin-only API endpoints for creating and deleting doctors
+    - Added proper password hashing for new doctor accounts
+    - Created admin section in settings page for doctor management access
+    - Only admin user can add new doctors to the system
+    - Prevents deletion of admin account for security
+
 ## Data Flow
 
 1. **Patient Registration**: New patients create accounts with medical information

@@ -16,6 +16,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserById(id: number): Promise<User | undefined>;
   verifyPassword(password: string, hashedPassword: string): Promise<boolean>;
+  deleteUser(id: number): Promise<void>;
 
   // Patient operations
   createPatient(patient: InsertPatient): Promise<Patient>;
@@ -86,6 +87,10 @@ export class DatabaseStorage implements IStorage {
 
   async verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
     return await bcrypt.compare(password, hashedPassword);
+  }
+
+  async deleteUser(id: number): Promise<void> {
+    await db.delete(users).where(eq(users.id, id));
   }
 
   // Patient operations
