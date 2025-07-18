@@ -16,6 +16,8 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   role: text("role").notNull(), // 'patient' or 'doctor'
+  firstName: text("first_name"),
+  lastName: text("last_name"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -33,6 +35,7 @@ export const patients = pgTable("patients", {
   phone: text("phone").notNull(),
   medication: text("medication").notNull(), // 'abemaciclib', 'ribociclib', 'palbociclib'
   dosage: text("dosage").notNull(),
+  assignedDoctorId: integer("assigned_doctor_id").references(() => users.id),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });

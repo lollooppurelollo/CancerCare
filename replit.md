@@ -134,6 +134,17 @@ Preferred communication style: Simple, everyday language.
     - Standardized medication dropdowns in all forms (registration, profile, doctor interface)
     - Ensured consistency between database and UI display throughout application
 
+11. **Settings and Doctor Filtering System (July 2025)**:
+    - Added settings page accessible via gear icon in doctor dashboard
+    - Implemented patient view filtering with two modes: "All patients" and "Specific doctor"
+    - Added doctor selection dropdown with all registered doctors
+    - Created localStorage-based settings persistence
+    - Added assignedDoctorId field to patients table for doctor-patient relationships
+    - Enhanced users table with firstName and lastName fields for doctors
+    - Integrated filtering logic into doctor dashboard patient display
+    - Added /api/doctors endpoint for retrieving doctor information
+    - Settings automatically refresh dashboard when saved
+
 ## Data Flow
 
 1. **Patient Registration**: New patients create accounts with medical information

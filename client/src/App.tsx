@@ -58,6 +58,7 @@ function Router() {
         <Route path="/doctor/patient/:id" component={DoctorPatientDetail} />
         <Route path="/doctor/patient-view/:patientId" component={DoctorPatientView} />
         <Route path="/doctor/chat/:patientId" component={DoctorChat} />
+        <Route path="/settings" component={AppSettings} />
         <Route component={NotFound} />
       </Switch>
     );

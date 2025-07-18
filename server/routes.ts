@@ -163,6 +163,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/doctors", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const doctors = await storage.getDoctors();
+      res.json(doctors);
+    } catch (error) {
+      console.error("Get doctors error:", error);
+      res.status(500).json({ message: "Failed to get doctors" });
+    }
+  });
+
   app.get("/api/patients/:id", async (req, res) => {
     try {
       const userRole = (req as any).session?.userRole;

@@ -1,187 +1,136 @@
-import { useState } from "react";
-import { ArrowLeft, Bell, Clock, Save } from "lucide-react";
-import { useLocation } from "wouter";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Settings, Users, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 export default function AppSettings() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [medicationReminderTime, setMedicationReminderTime] = useState("08:00");
-  const [symptomReminderTime, setSymptomReminderTime] = useState("20:00");
-  const [diaryReminderTime, setDiaryReminderTime] = useState("21:00");
+  const queryClient = useQueryClient();
+  
+  const [viewMode, setViewMode] = useState<string>(
+    localStorage.getItem("patientViewMode") || "all"
+  );
+  const [selectedDoctor, setSelectedDoctor] = useState<string>(
+    localStorage.getItem("selectedDoctorId") || ""
+  );
+
+  // Get all doctors for the dropdown
+  const { data: doctors } = useQuery({
+    queryKey: ["/api/doctors"],
+    enabled: true,
+  });
 
   const handleSaveSettings = () => {
-    // Here you would typically save to localStorage or send to API
-    localStorage.setItem("app_settings", JSON.stringify({
-      notificationsEnabled,
-      medicationReminderTime,
-      symptomReminderTime,
-      diaryReminderTime,
-    }));
-
+    localStorage.setItem("patientViewMode", viewMode);
+    localStorage.setItem("selectedDoctorId", selectedDoctor);
+    
+    // Invalidate patient queries to refresh the dashboard
+    queryClient.invalidateQueries({ queryKey: ["/api/patients"] });
+    
     toast({
       title: "Impostazioni salvate",
-      description: "Le tue preferenze sono state aggiornate con successo.",
+      description: "Le preferenze di visualizzazione sono state aggiornate.",
     });
+    
+    setLocation("/doctor");
   };
-
-  const timeOptions = [
-    { value: "06:00", label: "6:00" },
-    { value: "07:00", label: "7:00" },
-    { value: "08:00", label: "8:00" },
-    { value: "09:00", label: "9:00" },
-    { value: "10:00", label: "10:00" },
-    { value: "11:00", label: "11:00" },
-    { value: "12:00", label: "12:00" },
-    { value: "13:00", label: "13:00" },
-    { value: "14:00", label: "14:00" },
-    { value: "15:00", label: "15:00" },
-    { value: "16:00", label: "16:00" },
-    { value: "17:00", label: "17:00" },
-    { value: "18:00", label: "18:00" },
-    { value: "19:00", label: "19:00" },
-    { value: "20:00", label: "20:00" },
-    { value: "21:00", label: "21:00" },
-    { value: "22:00", label: "22:00" },
-  ];
 
   return (
     <div className="max-w-md mx-auto bg-white min-h-screen">
-      <div className="p-6">
-        <div className="flex items-center mb-6">
+      <div className="p-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setLocation("/")}
-            className="text-sage-600 mr-4"
+            onClick={() => setLocation("/doctor")}
+            className="text-sage-600 hover:text-sage-700"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Indietro
           </Button>
-          <h1 className="text-xl font-bold text-sage-800">Impostazioni App</h1>
+          <h1 className="text-xl font-bold text-sage-800">Impostazioni</h1>
+          <div className="w-20"></div>
         </div>
 
-        <div className="space-y-6">
-          {/* Notification Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg text-sage-800 flex items-center">
-                <Bell className="mr-2 w-5 h-5" />
-                Notifiche
-              </CardTitle>
-              <CardDescription>
-                Configura i promemoria per assumere i farmaci e compilare il diario
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="notifications" className="text-sm font-medium">
-                  Abilita notifiche
-                </Label>
-                <Switch
-                  id="notifications"
-                  checked={notificationsEnabled}
-                  onCheckedChange={setNotificationsEnabled}
-                />
-              </div>
-
-              {notificationsEnabled && (
-                <div className="space-y-4 pt-4 border-t">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-sm font-medium">Promemoria farmaco</Label>
-                      <p className="text-xs text-gray-500">Ricordati di assumere la terapia</p>
+        {/* Settings Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center text-sage-700">
+              <Settings className="w-5 h-5 mr-2" />
+              Visualizzazione Pazienti
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* View Mode Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="view-mode">Modalità di visualizzazione</Label>
+              <Select value={viewMode} onValueChange={setViewMode}>
+                <SelectTrigger className="focus:ring-sage-500">
+                  <SelectValue placeholder="Seleziona modalità" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    <div className="flex items-center">
+                      <Users className="w-4 h-4 mr-2" />
+                      Tutti i pazienti
                     </div>
-                    <Select value={medicationReminderTime} onValueChange={setMedicationReminderTime}>
-                      <SelectTrigger className="w-24 text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {timeOptions.map((time) => (
-                          <SelectItem key={time.value} value={time.value}>
-                            {time.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-sm font-medium">Promemoria sintomi</Label>
-                      <p className="text-xs text-gray-500">Registra i sintomi della giornata</p>
+                  </SelectItem>
+                  <SelectItem value="doctor">
+                    <div className="flex items-center">
+                      <User className="w-4 h-4 mr-2" />
+                      Pazienti di un medico specifico
                     </div>
-                    <Select value={symptomReminderTime} onValueChange={setSymptomReminderTime}>
-                      <SelectTrigger className="w-24 text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {timeOptions.map((time) => (
-                          <SelectItem key={time.value} value={time.value}>
-                            {time.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-sm font-medium">Promemoria diario</Label>
-                      <p className="text-xs text-gray-500">Scrivi le note del giorno</p>
-                    </div>
-                    <Select value={diaryReminderTime} onValueChange={setDiaryReminderTime}>
-                      <SelectTrigger className="w-24 text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {timeOptions.map((time) => (
-                          <SelectItem key={time.value} value={time.value}>
-                            {time.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            {/* Doctor Selection (only shown when doctor mode is selected) */}
+            {viewMode === "doctor" && (
+              <div className="space-y-2">
+                <Label htmlFor="doctor-select">Seleziona medico</Label>
+                <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
+                  <SelectTrigger className="focus:ring-sage-500">
+                    <SelectValue placeholder="Seleziona medico" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {doctors?.map((doctor: any) => (
+                      <SelectItem key={doctor.id} value={doctor.id.toString()}>
+                        Dr. {doctor.firstName} {doctor.lastName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
-          {/* App Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg text-sage-800">Informazioni App</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Versione:</span>
-                <span className="font-medium">1.0.0</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Ultimo aggiornamento:</span>
-                <span className="font-medium">15 Luglio 2025</span>
-              </div>
-              <div className="text-xs text-gray-500 mt-4">
-                App per il monitoraggio dei pazienti in trattamento con inibitori CDK 4/6
-              </div>
-            </CardContent>
-          </Card>
+            {/* Info Text */}
+            <div className="bg-sage-50 p-3 rounded-lg border border-sage-200">
+              <p className="text-sm text-gray-600">
+                {viewMode === "all" 
+                  ? "Visualizzerai tutti i pazienti registrati nel sistema."
+                  : "Visualizzerai solo i pazienti assegnati al medico selezionato."
+                }
+              </p>
+            </div>
 
-          {/* Save Button */}
-          <Button 
-            onClick={handleSaveSettings}
-            className="w-full bg-sage-500 hover:bg-sage-600 text-white"
-          >
-            <Save className="mr-2 w-4 h-4" />
-            Salva impostazioni
-          </Button>
-        </div>
+            {/* Save Button */}
+            <Button 
+              onClick={handleSaveSettings}
+              className="w-full bg-sage-500 hover:bg-sage-600 transition-all duration-200 hover:scale-105"
+              disabled={viewMode === "doctor" && !selectedDoctor}
+            >
+              Salva Impostazioni
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

@@ -24,6 +24,7 @@ export interface IStorage {
   getAllPatients(): Promise<Patient[]>;
   updatePatient(id: number, updates: Partial<InsertPatient>): Promise<Patient>;
   searchPatients(query: string): Promise<Patient[]>;
+  getDoctors(): Promise<User[]>;
 
   // Medication schedule operations
   createMedicationSchedule(schedule: InsertMedicationSchedule): Promise<MedicationSchedule>;
@@ -132,6 +133,13 @@ export class DatabaseStorage implements IStorage {
           )
         )
       );
+  }
+
+  async getDoctors(): Promise<User[]> {
+    return await db
+      .select()
+      .from(users)
+      .where(eq(users.role, "doctor"));
   }
 
   // Medication schedule operations

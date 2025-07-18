@@ -18,6 +18,9 @@ export default function DoctorDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const viewMode = localStorage.getItem("patientViewMode") || "all";
+  const selectedDoctorId = localStorage.getItem("selectedDoctorId") || "";
+
   const { data: patients = [] } = useQuery({
     queryKey: ["/api/patients"],
   });
@@ -60,7 +63,11 @@ export default function DoctorDashboard() {
     const birthDateMatch = birthDateSearch === "" || 
       (patient.birthDate && patient.birthDate.includes(birthDateSearch));
     
-    return firstNameMatch && lastNameMatch && birthDateMatch;
+    // Apply doctor filter if in doctor mode
+    const doctorMatch = viewMode === "all" || 
+      (viewMode === "doctor" && patient.assignedDoctorId && patient.assignedDoctorId.toString() === selectedDoctorId);
+    
+    return firstNameMatch && lastNameMatch && birthDateMatch && doctorMatch;
   });
 
   const urgentAlerts = alerts.filter((alert: any) => alert.severity === "high");
@@ -129,7 +136,12 @@ export default function DoctorDashboard() {
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-xl font-bold text-sage-800">Dashboard Medico</h1>
           <div className="flex space-x-2">
-            <Button variant="ghost" size="sm" className="text-sage-600">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-sage-600 hover:text-sage-700 transition-all duration-200 hover:scale-105"
+              onClick={() => setLocation("/settings")}
+            >
               <Settings className="w-5 h-5" />
             </Button>
             <Button 
