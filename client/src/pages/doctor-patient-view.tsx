@@ -117,7 +117,7 @@ export default function DoctorPatientView() {
               size="sm"
               className="flex flex-col items-center py-2"
             >
-              <Calendar className="w-5 h-5 mb-1" />
+              <Calendar className="w-4 h-4 mb-1" />
               <span className="text-xs">Home</span>
             </Button>
             <Button 
@@ -126,7 +126,7 @@ export default function DoctorPatientView() {
               size="sm"
               className="flex flex-col items-center py-2"
             >
-              <Heart className="w-5 h-5 mb-1" />
+              <Heart className="w-4 h-4 mb-1" />
               <span className="text-xs">Sintomi</span>
             </Button>
             <Button 
@@ -135,7 +135,7 @@ export default function DoctorPatientView() {
               size="sm"
               className="flex flex-col items-center py-2"
             >
-              <Activity className="w-5 h-5 mb-1" />
+              <Activity className="w-4 h-4 mb-1" />
               <span className="text-xs">Storico</span>
             </Button>
             <Button 
@@ -144,7 +144,7 @@ export default function DoctorPatientView() {
               size="sm"
               className="flex flex-col items-center py-2"
             >
-              <Video className="w-5 h-5 mb-1" />
+              <Video className="w-4 h-4 mb-1" />
               <span className="text-xs">Video</span>
             </Button>
             <Button 
@@ -153,7 +153,7 @@ export default function DoctorPatientView() {
               size="sm"
               className="flex flex-col items-center py-2"
             >
-              <User className="w-5 h-5 mb-1" />
+              <User className="w-4 h-4 mb-1" />
               <span className="text-xs">Profilo</span>
             </Button>
           </div>

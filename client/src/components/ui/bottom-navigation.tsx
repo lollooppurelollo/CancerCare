@@ -26,7 +26,7 @@ export default function BottomNavigation() {
             }`}
             onClick={() => setLocation(path)}
           >
-            <Icon className="w-5 h-5 mb-1" />
+            <Icon className="w-4 h-4 mb-1" />
             <span className="text-xs">{label}</span>
           </Button>
         ))}
