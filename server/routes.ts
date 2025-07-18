@@ -188,7 +188,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
-      const doctorData = insertUserSchema.parse(req.body);
+      const { role, firstName, lastName, username, password } = req.body;
+      
+      // Combine role with firstName for the display name
+      const fullFirstName = `${role} ${firstName}`;
+      
+      const doctorData = insertUserSchema.parse({
+        username,
+        password,
+        role: "doctor",
+        firstName: fullFirstName,
+        lastName
+      });
+      
       const doctor = await storage.createUser(doctorData);
       res.json(doctor);
     } catch (error) {

@@ -1,13 +1,15 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Settings, Users, User, UserCog } from "lucide-react";
+import { ArrowLeft, Settings, Users, User, UserCog, Plus, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function AppSettings() {
   const [, setLocation] = useLocation();
@@ -23,11 +25,44 @@ export default function AppSettings() {
   const [selectedDoctor, setSelectedDoctor] = useState<string>(
     localStorage.getItem("selectedDoctorId") || ""
   );
+  const [showAddDoctor, setShowAddDoctor] = useState(false);
+  const [newDoctor, setNewDoctor] = useState({
+    role: "",
+    firstName: "",
+    lastName: "",
+    username: "",
+    password: "",
+  });
 
   // Get all doctors for the dropdown
   const { data: doctors } = useQuery({
     queryKey: ["/api/doctors"],
     enabled: true,
+  });
+
+  const createDoctorMutation = useMutation({
+    mutationFn: async (doctorData: any) => {
+      await apiRequest("POST", "/api/admin/doctors", {
+        ...doctorData,
+        role: "doctor",
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Medico creato",
+        description: "Il nuovo medico è stato aggiunto con successo.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/doctors"] });
+      setNewDoctor({ role: "", firstName: "", lastName: "", username: "", password: "" });
+      setShowAddDoctor(false);
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Impossibile creare il medico. Riprova.",
+        variant: "destructive",
+      });
+    },
   });
 
   const handleSaveSettings = () => {
@@ -43,6 +78,22 @@ export default function AppSettings() {
     });
     
     setLocation("/doctor");
+  };
+
+  const handleCreateDoctor = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newDoctor.role && newDoctor.firstName && newDoctor.lastName && newDoctor.username && newDoctor.password) {
+      createDoctorMutation.mutate(newDoctor);
+    }
+  };
+
+  const generateUsername = () => {
+    if (newDoctor.firstName && newDoctor.lastName) {
+      const firstName = newDoctor.firstName.toLowerCase().replace(/[^a-z]/g, '');
+      const lastName = newDoctor.lastName.toLowerCase().replace(/[^a-z]/g, '');
+      const username = `${firstName}_${lastName}`;
+      setNewDoctor({ ...newDoctor, username });
+    }
   };
 
   return (
@@ -149,14 +200,107 @@ export default function AppSettings() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 bg-sage-50 rounded-lg border">
                   <div>
-                    <p className="font-medium">Gestione Medici</p>
+                    <p className="font-medium">Crea Nuovo Medico</p>
                     <p className="text-sm text-gray-600">
-                      Aggiungi, modifica o elimina account medico
+                      Aggiungi un nuovo account medico al sistema
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => setShowAddDoctor(!showAddDoctor)}
+                    className="bg-sage-500 hover:bg-sage-600 transition-all duration-200 transform hover:scale-105"
+                  >
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    {showAddDoctor ? "Annulla" : "Aggiungi"}
+                  </Button>
+                </div>
+
+                {showAddDoctor && (
+                  <div className="p-4 border rounded-lg bg-white">
+                    <form onSubmit={handleCreateDoctor} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="role">Ruolo</Label>
+                        <Select value={newDoctor.role} onValueChange={(value) => setNewDoctor({ ...newDoctor, role: value })}>
+                          <SelectTrigger className="focus:ring-sage-500">
+                            <SelectValue placeholder="Seleziona ruolo" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Dr.">Dr.</SelectItem>
+                            <SelectItem value="Dr.ssa">Dr.ssa</SelectItem>
+                            <SelectItem value="Prof.">Prof.</SelectItem>
+                            <SelectItem value="Prof.ssa">Prof.ssa</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="firstName">Nome</Label>
+                        <Input
+                          id="firstName"
+                          value={newDoctor.firstName}
+                          onChange={(e) => setNewDoctor({ ...newDoctor, firstName: e.target.value })}
+                          onBlur={generateUsername}
+                          className="focus:ring-sage-500"
+                          placeholder="es. Mario"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="lastName">Cognome</Label>
+                        <Input
+                          id="lastName"
+                          value={newDoctor.lastName}
+                          onChange={(e) => setNewDoctor({ ...newDoctor, lastName: e.target.value })}
+                          onBlur={generateUsername}
+                          className="focus:ring-sage-500"
+                          placeholder="es. Rossi"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="username">Username</Label>
+                        <Input
+                          id="username"
+                          value={newDoctor.username}
+                          onChange={(e) => setNewDoctor({ ...newDoctor, username: e.target.value })}
+                          className="focus:ring-sage-500"
+                          placeholder="es. mario_rossi"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="password">Password</Label>
+                        <Input
+                          id="password"
+                          type="password"
+                          value={newDoctor.password}
+                          onChange={(e) => setNewDoctor({ ...newDoctor, password: e.target.value })}
+                          className="focus:ring-sage-500"
+                          placeholder="Password sicura"
+                        />
+                      </div>
+                      
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-sage-500 hover:bg-sage-600"
+                        disabled={createDoctorMutation.isPending}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        {createDoctorMutation.isPending ? "Creando..." : "Crea Medico"}
+                      </Button>
+                    </form>
+                  </div>
+                )}
+                
+                <div className="flex items-center justify-between p-3 bg-sage-50 rounded-lg border">
+                  <div>
+                    <p className="font-medium">Gestione Completa</p>
+                    <p className="text-sm text-gray-600">
+                      Visualizza tutti i medici e opzioni avanzate
                     </p>
                   </div>
                   <Button
                     onClick={() => setLocation("/admin/doctors")}
-                    className="bg-sage-500 hover:bg-sage-600 transition-all duration-200 transform hover:scale-105"
+                    className="bg-blue-500 hover:bg-blue-600 transition-all duration-200 transform hover:scale-105"
                   >
                     <UserCog className="w-4 h-4 mr-2" />
                     Gestisci
