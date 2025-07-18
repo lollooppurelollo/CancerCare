@@ -174,6 +174,8 @@ Preferred communication style: Simple, everyday language.
     - Enhanced doctor patient detail page with assigned doctor modification capability
     - Patients can only edit personal information: name, age, phone, address
     - Medical data displayed as read-only for patients with explanatory note
+    - **Birth date moved from medical section to personal information section** in patient profile
+    - Improved layout organization with birth date displayed after age field in personal info
 
 ## Data Flow
 

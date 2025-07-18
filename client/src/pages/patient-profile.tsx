@@ -133,6 +133,16 @@ export default function PatientProfile() {
             </div>
 
             <div>
+              <Label>Data di Nascita</Label>
+              <div className="p-2 bg-gray-50 rounded-lg border border-gray-200">
+                <p className="font-medium flex items-center text-gray-700">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  {birthDate}
+                </p>
+              </div>
+            </div>
+
+            <div>
               <Label htmlFor="phone">Telefono</Label>
               <Input
                 id="phone"
@@ -173,14 +183,6 @@ export default function PatientProfile() {
             <div className="p-3 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-600">Dosaggio</p>
               <p className="font-medium">{patient.dosage}</p>
-            </div>
-
-            <div className="p-3 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600">Data di Nascita</p>
-              <p className="font-medium flex items-center">
-                <Calendar className="w-4 h-4 mr-2" />
-                {birthDate}
-              </p>
             </div>
           </CardContent>
         </Card>
