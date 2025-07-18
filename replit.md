@@ -195,6 +195,9 @@ Preferred communication style: Simple, everyday language.
     - Enhanced calendar with hover effects and visual feedback for clickable missed days
     - Confirmation dialog asks for user confirmation before removing missed medication marking
     - Removed modification instructions from calendar legend for cleaner interface
+    - **Fixed symptom display issues**: Added missing "Dolori articolari" label in patient history view
+    - **Enhanced doctor patient view**: Added proper symptom name mapping for all symptom types including joint pain
+    - Improved symptom value display with proper formatting for different symptom types
     - Historical tracking of all missed medications with timestamps and patient notes
 
 ## Data Flow

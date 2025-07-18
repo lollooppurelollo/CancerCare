@@ -65,17 +65,34 @@ export default function DoctorPatientView() {
     });
   };
 
+  const getSymptomName = (symptomType: string) => {
+    const symptomNames: { [key: string]: string } = {
+      'stanchezza': 'Stanchezza',
+      'malessere': 'Malessere',
+      'rash': 'Rash cutaneo',
+      'diarrea': 'Diarrea',
+      'dolore_addominale': 'Dolore addominale',
+      'dolori_articolari': 'Dolori articolari',
+      'febbre': 'Febbre',
+      'sintomi_influenzali': 'Sintomi influenzali',
+    };
+    return symptomNames[symptomType] || symptomType;
+  };
+
   const getSymptomValue = (symptom: any) => {
-    switch (symptom.type) {
-      case 'scale':
-        return `${symptom.value}/10`;
-      case 'boolean':
-        return symptom.value ? 'Sì' : 'No';
-      case 'text':
-        return symptom.value || 'Non specificato';
-      default:
-        return symptom.value?.toString() || 'Non specificato';
+    if (symptom.symptomType === 'diarrea' && symptom.diarrheaCount) {
+      return `${symptom.diarrheaCount} scariche`;
     }
+    if (symptom.intensity) {
+      return `${symptom.intensity}/10`;
+    }
+    if (symptom.present === false) {
+      return 'Assente';
+    }
+    if (symptom.present === true) {
+      return 'Presente';
+    }
+    return 'Non specificato';
   };
 
   return (
@@ -245,7 +262,7 @@ export default function DoctorPatientView() {
                       <CardContent className="p-4">
                         <div className="flex justify-between items-center">
                           <span className="font-medium text-sage-800">
-                            {symptom.name}
+                            {getSymptomName(symptom.symptomType)}
                           </span>
                           <Badge variant="secondary">
                             {getSymptomValue(symptom)}

@@ -114,6 +114,7 @@ export default function PatientHistory() {
                           {symptom.symptomType === "rash" && "Rash cutaneo"}
                           {symptom.symptomType === "diarrea" && "Diarrea"}
                           {symptom.symptomType === "dolore_addominale" && "Dolore addominale"}
+                          {symptom.symptomType === "dolori_articolari" && "Dolori articolari"}
                           {symptom.symptomType === "febbre" && "Febbre"}
                           {symptom.symptomType === "sintomi_influenzali" && "Sintomi influenzali"}
                           : {getSymptomText(symptom)}
