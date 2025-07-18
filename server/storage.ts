@@ -1,10 +1,10 @@
 import { 
-  users, patients, medicationSchedules, diaryEntries, symptoms, messages, alerts, adviceItems,
+  users, patients, medicationSchedules, diaryEntries, symptoms, messages, alerts, adviceItems, missedMedication,
   type User, type InsertUser, type Patient, type InsertPatient,
   type MedicationSchedule, type InsertMedicationSchedule,
   type DiaryEntry, type InsertDiaryEntry, type Symptom, type InsertSymptom,
   type Message, type InsertMessage, type Alert, type InsertAlert,
-  type AdviceItem, type InsertAdviceItem
+  type AdviceItem, type InsertAdviceItem, type MissedMedication, type InsertMissedMedication
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, gte, lte, or } from "drizzle-orm";
@@ -62,6 +62,11 @@ export interface IStorage {
   getAdviceItems(): Promise<AdviceItem[]>;
   createAdviceItem(advice: InsertAdviceItem): Promise<AdviceItem>;
   deleteAdviceItem(id: number): Promise<void>;
+
+  // Missed medication operations
+  createMissedMedication(missedMed: InsertMissedMedication): Promise<MissedMedication>;
+  getMissedMedicationByPatient(patientId: number): Promise<MissedMedication[]>;
+  getMissedMedicationInLastMonth(patientId: number): Promise<MissedMedication[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -349,6 +354,37 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAdviceItem(id: number): Promise<void> {
     await db.delete(adviceItems).where(eq(adviceItems.id, id));
+  }
+
+  // Missed medication operations
+  async createMissedMedication(missedMedData: InsertMissedMedication): Promise<MissedMedication> {
+    const [missedMed] = await db
+      .insert(missedMedication)
+      .values(missedMedData)
+      .returning();
+    return missedMed;
+  }
+
+  async getMissedMedicationByPatient(patientId: number): Promise<MissedMedication[]> {
+    return await db
+      .select()
+      .from(missedMedication)
+      .where(eq(missedMedication.patientId, patientId))
+      .orderBy(desc(missedMedication.createdAt));
+  }
+
+  async getMissedMedicationInLastMonth(patientId: number): Promise<MissedMedication[]> {
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    
+    return await db
+      .select()
+      .from(missedMedication)
+      .where(and(
+        eq(missedMedication.patientId, patientId),
+        gte(missedMedication.createdAt, oneMonthAgo)
+      ))
+      .orderBy(desc(missedMedication.createdAt));
   }
 }
 

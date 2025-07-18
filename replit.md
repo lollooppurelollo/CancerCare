@@ -177,6 +177,21 @@ Preferred communication style: Simple, everyday language.
     - **Birth date moved from medical section to personal information section** in patient profile
     - Improved layout organization with birth date displayed after age field in personal info
 
+15. **Comprehensive Medication Adherence Tracking System (July 2025)**:
+    - Added complete missed medication tracking database schema with `missed_medication` table
+    - Implemented patient-facing interface for reporting missed medications with date selection
+    - Added comprehensive missed medication dialog with last 30 days date selection
+    - Medication calendar now displays missed medication dates in light red pastello color
+    - Doctor dashboard shows missed medication alerts with detailed patient information
+    - Added dedicated missed medication alerts section in doctor dashboard with orange color coding
+    - Enhanced doctor patient detail page with missed medication history display
+    - Implemented full API endpoints for missed medication CRUD operations
+    - Added missed medication monitoring in doctor patient view with calendar integration
+    - Patients can add notes explaining reasons for missing medications
+    - Real-time synchronization between patient reporting and doctor monitoring
+    - **Removed "Calendario Settimanale" text from patient dashboard** as requested
+    - Historical tracking of all missed medications with timestamps and patient notes
+
 ## Data Flow
 
 1. **Patient Registration**: New patients create accounts with medical information

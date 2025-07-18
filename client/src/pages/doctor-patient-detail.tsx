@@ -56,6 +56,11 @@ export default function DoctorPatientDetail() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
+  const { data: missedMedications } = useQuery({
+    queryKey: ["/api/missed-medication", patientId],
+    enabled: !!patientId,
+  });
+
   const updatePatientMutation = useMutation({
     mutationFn: async (data: { medication?: string; dosage?: string; assignedDoctorId?: number }) => {
       await apiRequest("PATCH", `/api/patients/${patientId}`, data);
@@ -484,6 +489,67 @@ export default function DoctorPatientDetail() {
                   ))
                 ) : (
                   <p className="text-gray-500 text-sm">Nessun sintomo riportato</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Missed Medication Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Pill className="w-5 h-5 mr-2" />
+                Terapie Non Assunte
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {missedMedications && missedMedications.length > 0 ? (
+                  missedMedications.map((entry: any) => (
+                    <div key={entry.id} className="border rounded-lg p-3 bg-red-50 border-red-200">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <Badge className="bg-red-100 text-red-800">
+                              {entry.missedDates?.length || 0} {entry.missedDates?.length === 1 ? 'dose mancata' : 'dosi mancate'}
+                            </Badge>
+                            <span className="text-xs text-gray-500">
+                              {new Date(entry.createdAt).toLocaleDateString('it-IT', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+                          {entry.missedDates && entry.missedDates.length > 0 && (
+                            <div className="mb-2">
+                              <p className="text-sm font-medium text-gray-700">Date mancate:</p>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {entry.missedDates.map((date: string) => (
+                                  <span key={date} className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
+                                    {new Date(date).toLocaleDateString('it-IT', {
+                                      day: 'numeric',
+                                      month: 'short'
+                                    })}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {entry.notes && (
+                            <div>
+                              <p className="text-sm font-medium text-gray-700">Note:</p>
+                              <p className="text-sm text-gray-600 italic">"{entry.notes}"</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-sm">Nessuna terapia non assunta segnalata</p>
                 )}
               </div>
             </CardContent>

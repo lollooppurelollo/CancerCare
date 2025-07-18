@@ -109,6 +109,15 @@ export const alerts = pgTable("alerts", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Missed medication tracking
+export const missedMedication = pgTable("missed_medication", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id").notNull().references(() => patients.id),
+  missedDates: jsonb("missed_dates").notNull(), // Array of dates when medication was missed
+  notes: text("notes"), // Patient's notes about why medication was missed
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   patient: one(patients, {
@@ -123,6 +132,7 @@ export const patientsRelations = relations(patients, ({ one, many }) => ({
     fields: [patients.userId],
     references: [users.id],
   }),
+  missedMedications: many(missedMedication),
   medicationSchedules: many(medicationSchedules),
   diaryEntries: many(diaryEntries),
   symptoms: many(symptoms),
@@ -176,6 +186,13 @@ export const adviceItemsRelations = relations(adviceItems, ({ one }) => ({
   }),
 }));
 
+export const missedMedicationRelations = relations(missedMedication, ({ one }) => ({
+  patient: one(patients, {
+    fields: [missedMedication.patientId],
+    references: [patients.id],
+  }),
+}));
+
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertPatientSchema = createInsertSchema(patients).omit({ id: true, createdAt: true });
@@ -185,6 +202,7 @@ export const insertSymptomSchema = createInsertSchema(symptoms).omit({ id: true,
 export const insertMessageSchema = createInsertSchema(messages).omit({ id: true, createdAt: true });
 export const insertAlertSchema = createInsertSchema(alerts).omit({ id: true, createdAt: true });
 export const insertAdviceItemSchema = createInsertSchema(adviceItems).omit({ id: true, createdAt: true });
+export const insertMissedMedicationSchema = createInsertSchema(missedMedication).omit({ id: true, createdAt: true });
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -203,3 +221,5 @@ export type Alert = typeof alerts.$inferSelect;
 export type InsertAlert = z.infer<typeof insertAlertSchema>;
 export type AdviceItem = typeof adviceItems.$inferSelect;
 export type InsertAdviceItem = z.infer<typeof insertAdviceItemSchema>;
+export type MissedMedication = typeof missedMedication.$inferSelect;
+export type InsertMissedMedication = z.infer<typeof insertMissedMedicationSchema>;

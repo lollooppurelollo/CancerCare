@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Search, Settings, TriangleAlert, Eye, Video, MessageCircle, Calendar, BarChart3, CheckCircle, X } from "lucide-react";
+import { Search, Settings, TriangleAlert, Eye, Video, MessageCircle, Calendar, BarChart3, CheckCircle, X, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
@@ -31,6 +31,10 @@ export default function DoctorDashboard() {
 
   const { data: messages = [] } = useQuery({
     queryKey: ["/api/messages"],
+  });
+
+  const { data: allMissedMedications = [] } = useQuery({
+    queryKey: ["/api/missed-medication/all"],
   });
 
   const resolveAlertMutation = useMutation({
@@ -72,6 +76,14 @@ export default function DoctorDashboard() {
 
   const urgentAlerts = alerts.filter((alert: any) => alert.severity === "high");
   const messageAlerts = alerts.filter((alert: any) => alert.type === "message");
+  
+  // Calculate missed medication alerts
+  const missedMedicationAlerts = allMissedMedications.filter((entry: any) => {
+    const createdAt = new Date(entry.createdAt);
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    return createdAt > threeDaysAgo;
+  });
   
   // Conteggio pazienti per farmaco
   const patientsByDrug = patients.reduce((acc: any, patient: any) => {
@@ -397,6 +409,85 @@ export default function DoctorDashboard() {
                               variant="outline"
                               className="bg-purple-500 hover:bg-purple-600 text-white border-purple-500 hover:border-purple-600 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
                               onClick={() => handleVideoCall(alert.patientId)}
+                              title="Avvia videochiamata Google Meet"
+                            >
+                              <Video className="w-4 h-4 mr-2 transition-transform duration-200 hover:scale-110" />
+                              Video
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Missed Medication Alerts */}
+              {missedMedicationAlerts.length > 0 && (
+                <div id="missed-medication-alerts-section">
+                  <h3 className="text-md font-medium text-orange-700 mb-3 flex items-center">
+                    <XCircle className="w-4 h-4 mr-2 transition-transform duration-200 hover:scale-110" />
+                    Terapie non assunte ({missedMedicationAlerts.length})
+                  </h3>
+                  <div className="space-y-3">
+                    {missedMedicationAlerts.map((entry: any, index: number) => (
+                      <div
+                        key={`${entry.id}-${index}`}
+                        className="p-4 rounded-lg border bg-orange-50 border-orange-200 text-orange-800 relative"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 pr-4">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <p className="font-medium">
+                                {entry.missedDates?.length || 0} {entry.missedDates?.length === 1 ? 'dose mancata' : 'dosi mancate'}
+                              </p>
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+                                Terapia
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => setLocation(`/doctor/patient-view/${entry.patientId}`)}
+                              className="text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                            >
+                              {getPatientName(entry.patientId)} {getPatientBirthDate(entry.patientId) && `(nato il ${getPatientBirthDate(entry.patientId)})`}
+                            </button>
+                            <p className="text-xs opacity-75 mt-1">
+                              {formatTimestamp(entry.createdAt)}
+                            </p>
+                            {entry.notes && (
+                              <p className="text-xs mt-1 italic">
+                                "{entry.notes}"
+                              </p>
+                            )}
+                          </div>
+                          
+                          {/* Pulsanti principali a destra */}
+                          <div className="flex flex-col space-y-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="bg-sage-500 hover:bg-sage-600 text-white border-sage-500 hover:border-sage-600 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+                              onClick={() => setLocation(`/doctor/patient-view/${entry.patientId}`)}
+                              title="Visualizza profilo paziente"
+                            >
+                              <Eye className="w-4 h-4 mr-2 transition-transform duration-200 hover:scale-110" />
+                              Profilo
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="bg-blue-500 hover:bg-blue-600 text-white border-blue-500 hover:border-blue-600 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+                              onClick={() => setLocation(`/doctor/chat/${entry.patientId}`)}
+                              title="Chat con paziente"
+                            >
+                              <MessageCircle className="w-4 h-4 mr-2 transition-transform duration-200 hover:scale-110" />
+                              Chat
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="bg-purple-500 hover:bg-purple-600 text-white border-purple-500 hover:border-purple-600 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+                              onClick={() => handleVideoCall(entry.patientId)}
                               title="Avvia videochiamata Google Meet"
                             >
                               <Video className="w-4 h-4 mr-2 transition-transform duration-200 hover:scale-110" />

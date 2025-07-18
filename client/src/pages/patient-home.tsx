@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Settings, Save, AlertTriangle, User, Bell, MoreVertical } from "lucide-react";
+import { Settings, Save, AlertTriangle, User, Bell, MoreVertical, XCircle, Calendar, Plus, X } from "lucide-react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import MedicationCalendar from "@/components/ui/medication-calendar";
@@ -13,6 +15,9 @@ import BottomNavigation from "@/components/ui/bottom-navigation";
 
 export default function PatientHome() {
   const [diaryContent, setDiaryContent] = useState("");
+  const [showMissedMedDialog, setShowMissedMedDialog] = useState(false);
+  const [missedDates, setMissedDates] = useState<string[]>([]);
+  const [missedMedNotes, setMissedMedNotes] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
@@ -68,6 +73,35 @@ export default function PatientHome() {
     },
   });
 
+  const reportMissedMedication = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/missed-medication", {
+        patientId: patient?.id,
+        missedDates: missedDates,
+        notes: missedMedNotes,
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Segnalazione inviata",
+        description: "Il medico è stato informato delle dosi mancate.",
+      });
+      setShowMissedMedDialog(false);
+      setMissedDates([]);
+      setMissedMedNotes("");
+      queryClient.invalidateQueries({ queryKey: ["/api/missed-medication"] });
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Impossibile inviare la segnalazione. Riprova.",
+        variant: "destructive",
+      });
+    },
+  });
+
+
+
   const currentDate = new Date().toLocaleDateString("it-IT", {
     year: "numeric",
     month: "long",
@@ -117,8 +151,7 @@ export default function PatientHome() {
 
       {/* Weekly Calendar */}
       <div className="p-4 bg-white border-b border-gray-200">
-        <h2 className="text-md font-semibold text-gray-800 mb-3">Calendario Settimanale</h2>
-        <MedicationCalendar medication={patient.medication} />
+        <MedicationCalendar medication={patient.medication} patientId={patient.id} />
       </div>
 
       {/* Daily Diary */}
@@ -148,7 +181,7 @@ export default function PatientHome() {
         <SymptomTracker patientId={patient.id} />
 
         {/* Manual Alert */}
-        <div className="mt-6">
+        <div className="mt-6 space-y-3">
           <Button
             onClick={() => sendUrgentAlert.mutate()}
             disabled={sendUrgentAlert.isPending}
@@ -157,10 +190,138 @@ export default function PatientHome() {
             <AlertTriangle className="w-5 h-5 mr-2" />
             {sendUrgentAlert.isPending ? "Invio..." : "Invia Segnalazione Urgente al Medico"}
           </Button>
+
+          {/* Missed Medication Button */}
+          <Dialog open={showMissedMedDialog} onOpenChange={setShowMissedMedDialog}>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
+              >
+                <XCircle className="w-5 h-5 mr-2" />
+                Segnala Terapia Non Assunta
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Segnalazione Terapia Non Assunta</DialogTitle>
+              </DialogHeader>
+              <MissedMedicationDialog
+                missedDates={missedDates}
+                setMissedDates={setMissedDates}
+                notes={missedMedNotes}
+                setNotes={setMissedMedNotes}
+                onSave={() => reportMissedMedication.mutate()}
+                onCancel={() => setShowMissedMedDialog(false)}
+                isLoading={reportMissedMedication.isPending}
+              />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
       <BottomNavigation />
+    </div>
+  );
+}
+
+// Missed Medication Dialog Component
+function MissedMedicationDialog({
+  missedDates,
+  setMissedDates,
+  notes,
+  setNotes,
+  onSave,
+  onCancel,
+  isLoading,
+}: {
+  missedDates: string[];
+  setMissedDates: (dates: string[]) => void;
+  notes: string;
+  setNotes: (notes: string) => void;
+  onSave: () => void;
+  onCancel: () => void;
+  isLoading: boolean;
+}) {
+  const generateLastDays = (days: number) => {
+    const dates = [];
+    for (let i = 0; i < days; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      dates.push(date.toISOString().split('T')[0]);
+    }
+    return dates;
+  };
+
+  const lastThirtyDays = generateLastDays(30);
+
+  const handleDateToggle = (date: string) => {
+    if (missedDates.includes(date)) {
+      setMissedDates(missedDates.filter(d => d !== date));
+    } else {
+      setMissedDates([...missedDates, date]);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('it-IT', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-sm font-medium text-gray-800 mb-3">
+          Seleziona i giorni in cui non hai assunto correttamente la terapia:
+        </h3>
+        <div className="max-h-48 overflow-y-auto space-y-2">
+          {lastThirtyDays.map((date) => (
+            <div key={date} className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded">
+              <Checkbox
+                id={date}
+                checked={missedDates.includes(date)}
+                onCheckedChange={() => handleDateToggle(date)}
+              />
+              <label htmlFor={date} className="text-sm cursor-pointer flex-1">
+                {formatDate(date)}
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-medium text-gray-800 mb-2">
+          Note (opzionale):
+        </h3>
+        <Textarea
+          placeholder="Scrivi qui le motivazioni per cui non hai assunto la terapia..."
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          className="min-h-20"
+        />
+      </div>
+
+      <div className="flex space-x-2">
+        <Button
+          onClick={onCancel}
+          variant="outline"
+          className="flex-1"
+          disabled={isLoading}
+        >
+          Annulla
+        </Button>
+        <Button
+          onClick={onSave}
+          disabled={isLoading || missedDates.length === 0}
+          className="flex-1 bg-sage-500 hover:bg-sage-600"
+        >
+          {isLoading ? "Salvando..." : "Salva"}
+        </Button>
+      </div>
     </div>
   );
 }

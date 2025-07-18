@@ -4,7 +4,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
   insertUserSchema, insertPatientSchema, insertDiaryEntrySchema, 
-  insertSymptomSchema, insertMessageSchema, insertAlertSchema 
+  insertSymptomSchema, insertMessageSchema, insertAlertSchema, insertMissedMedicationSchema 
 } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -844,6 +844,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete advice error:", error);
       res.status(500).json({ message: "Failed to delete advice item" });
+    }
+  });
+
+  // Missed medication routes
+  app.post("/api/missed-medication", async (req, res) => {
+    try {
+      const userId = (req as any).session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const patientId = req.body.patientId ? parseInt(req.body.patientId) : null;
+      if (!patientId) {
+        return res.status(400).json({ message: "PatientId is required" });
+      }
+
+      const missedMedData = insertMissedMedicationSchema.parse({
+        patientId: patientId,
+        missedDates: req.body.missedDates,
+        notes: req.body.notes
+      });
+
+      const missedMed = await storage.createMissedMedication(missedMedData);
+      res.json(missedMed);
+    } catch (error) {
+      console.error("Create missed medication error:", error);
+      res.status(500).json({ message: "Failed to create missed medication entry" });
+    }
+  });
+
+  app.get("/api/missed-medication", async (req, res) => {
+    try {
+      const userId = (req as any).session?.userId;
+      const userRole = (req as any).session?.userRole;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      let missedMedications;
+      if (userRole === "doctor") {
+        // For doctors, we'll handle this in a separate endpoint
+        return res.status(403).json({ message: "Use patient-specific endpoint for doctors" });
+      } else {
+        const patient = await storage.getPatientByUserId(userId);
+        if (!patient) {
+          return res.status(404).json({ message: "Patient not found" });
+        }
+        missedMedications = await storage.getMissedMedicationByPatient(patient.id);
+      }
+
+      res.json(missedMedications);
+    } catch (error) {
+      console.error("Get missed medications error:", error);
+      res.status(500).json({ message: "Failed to get missed medications" });
+    }
+  });
+
+  app.get("/api/missed-medication/:patientId", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const patientId = parseInt(req.params.patientId);
+      const missedMedications = await storage.getMissedMedicationByPatient(patientId);
+      res.json(missedMedications);
+    } catch (error) {
+      console.error("Get patient missed medications error:", error);
+      res.status(500).json({ message: "Failed to get missed medications" });
+    }
+  });
+
+  app.get("/api/missed-medication/all", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const allPatients = await storage.getAllPatients();
+      let allMissedMedications: any[] = [];
+
+      // Get missed medications for all patients
+      for (const patient of allPatients) {
+        const missedMeds = await storage.getMissedMedicationByPatient(patient.id);
+        allMissedMedications.push(...missedMeds);
+      }
+
+      res.json(allMissedMedications);
+    } catch (error) {
+      console.error("Get all missed medications error:", error);
+      res.status(500).json({ message: "Failed to get missed medications" });
     }
   });
 

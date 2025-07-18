@@ -1,16 +1,35 @@
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { Button } from "./button";
 
 interface MedicationCalendarProps {
   medication: string;
+  patientId?: number;
 }
 
-export default function MedicationCalendar({ medication }: MedicationCalendarProps) {
+export default function MedicationCalendar({ medication, patientId }: MedicationCalendarProps) {
   const weekDays = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
   const months = ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"];
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
   const [viewMode, setViewMode] = useState<"week" | "month">("month"); // "week" for single week, "month" for 4 weeks
+
+  // Get missed medication data if patientId is provided
+  const { data: missedMedications = [] } = useQuery({
+    queryKey: patientId ? ["/api/missed-medication", patientId] : ["/api/missed-medication"],
+    enabled: !!patientId,
+  });
+
+  // Create a set of missed dates for quick lookup
+  const missedDatesSet = useMemo(() => {
+    const dates = new Set<string>();
+    missedMedications.forEach((entry: any) => {
+      if (entry.missedDates && Array.isArray(entry.missedDates)) {
+        entry.missedDates.forEach((date: string) => dates.add(date));
+      }
+    });
+    return dates;
+  }, [missedMedications]);
   
   const weeks = useMemo(() => {
     const today = new Date();
@@ -24,6 +43,7 @@ export default function MedicationCalendar({ medication }: MedicationCalendarPro
       return Array.from({ length: 7 }, (_, dayIndex) => {
         const date = new Date(startOfWeek);
         date.setDate(startOfWeek.getDate() + (weekIndex * 7) + dayIndex);
+        const dateString = date.toISOString().split('T')[0];
         return {
           date: date.getDate(),
           month: date.getMonth(),
@@ -31,10 +51,12 @@ export default function MedicationCalendar({ medication }: MedicationCalendarPro
           dayName: weekDays[dayIndex],
           shouldTake: getShouldTake(medication, date),
           isToday: date.toDateString() === today.toDateString(),
+          isMissed: missedDatesSet.has(dateString),
+          fullDate: date,
         };
       });
     });
-  }, [medication, currentWeekOffset, viewMode]);
+  }, [medication, currentWeekOffset, viewMode, missedDatesSet]);
 
   // Logic for medication schedules
   function getShouldTake(medication: string, date: Date): boolean {
@@ -104,9 +126,11 @@ export default function MedicationCalendar({ medication }: MedicationCalendarPro
               <div key={`${weekIndex}-${dayIndex}`} className="text-center">
                 <div 
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium cursor-pointer ${
-                    day.shouldTake 
-                      ? "bg-sage-500 text-white" 
-                      : "bg-gray-300 text-gray-600"
+                    day.isMissed 
+                      ? "bg-red-100 text-red-700 border-2 border-red-200" 
+                      : day.shouldTake 
+                        ? "bg-sage-500 text-white" 
+                        : "bg-gray-300 text-gray-600"
                   } ${
                     day.isToday 
                       ? "ring-2 ring-sage-600" 
