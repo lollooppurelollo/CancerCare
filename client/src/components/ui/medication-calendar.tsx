@@ -2,6 +2,16 @@ import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { Button } from "./button";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from "./alert-dialog";
 import { apiRequest } from "@/lib/queryClient";
 
 interface MedicationCalendarProps {
@@ -14,6 +24,8 @@ export default function MedicationCalendar({ medication, patientId }: Medication
   const months = ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"];
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
   const [viewMode, setViewMode] = useState<"week" | "month">("month"); // "week" for single week, "month" for 4 weeks
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   // Get missed medication data if patientId is provided
@@ -154,10 +166,11 @@ export default function MedicationCalendar({ medication, patientId }: Medication
                       : ""
                   }`}
                   onClick={() => {
-                    // If the day is marked as missed and we have a patientId, remove it
+                    // If the day is marked as missed and we have a patientId, show confirmation dialog
                     if (day.isMissed && patientId) {
                       const dateString = day.fullDate.toISOString().split('T')[0];
-                      removeMissedMedication.mutate(dateString);
+                      setSelectedDate(dateString);
+                      setShowConfirmDialog(true);
                     }
                   }}
                 >
@@ -175,8 +188,35 @@ export default function MedicationCalendar({ medication, patientId }: Medication
         <div className="w-3 h-3 bg-gray-300 rounded-full mr-2"></div>
         <span className="text-gray-600 mr-4">Giorno di pausa</span>
         <div className="w-3 h-3 bg-red-100 border border-red-200 rounded-full mr-2"></div>
-        <span className="text-gray-600">Terapia non assunta (clicca per correggere)</span>
+        <span className="text-gray-600">Terapia non assunta</span>
       </div>
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Conferma Ripristino</AlertDialogTitle>
+            <AlertDialogDescription>
+              Sei sicuro di voler ripristinare questo giorno come "terapia assunta"? 
+              Il giorno tornerà verde e non sarà più contrassegnato come mancato.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                if (selectedDate) {
+                  removeMissedMedication.mutate(selectedDate);
+                  setShowConfirmDialog(false);
+                  setSelectedDate(null);
+                }
+              }}
+            >
+              Ripristina
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
