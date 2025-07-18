@@ -37,15 +37,20 @@ export default function MedicationCalendar({ medication, patientId }: Medication
   // Mutation to remove missed medication
   const removeMissedMedication = useMutation({
     mutationFn: async (dateToRemove: string) => {
-      await apiRequest(`/api/missed-medication/${patientId}/${dateToRemove}`, {
-        method: "DELETE",
-      });
+      console.log(`Attempting to remove missed medication for patient ${patientId} on date ${dateToRemove}`);
+      const response = await apiRequest("DELETE", `/api/missed-medication/${patientId}/${dateToRemove}`);
+      console.log('Remove missed medication response:', response);
+      return response;
     },
     onSuccess: () => {
+      console.log('Successfully removed missed medication, invalidating queries');
       // Invalidate the missed medication query to refresh the data
       queryClient.invalidateQueries({ 
         queryKey: patientId ? ["/api/missed-medication", patientId] : ["/api/missed-medication"]
       });
+    },
+    onError: (error) => {
+      console.error('Error removing missed medication:', error);
     },
   });
 

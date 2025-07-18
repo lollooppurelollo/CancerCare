@@ -963,7 +963,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req as any).session?.userId;
       const userRole = (req as any).session?.userRole;
       
+      console.log(`Delete missed medication attempt: userId=${userId}, userRole=${userRole}, patientId=${req.params.patientId}, date=${req.params.date}`);
+      
       if (!userId) {
+        console.log("Authentication failed: no userId in session");
         return res.status(401).json({ message: "Not authenticated" });
       }
 
