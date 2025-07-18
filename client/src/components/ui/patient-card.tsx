@@ -56,16 +56,6 @@ export default function PatientCard({ patient }: PatientCardProps) {
           <Button 
             size="sm" 
             variant="outline" 
-            className="bg-blue-500 hover:bg-blue-600 text-white border-blue-500 hover:border-blue-600"
-            onClick={() => setLocation(`/doctor/chat/${patient.id}`)}
-            title="Apri chat con paziente"
-          >
-            <MessageCircle className="w-4 h-4 mr-2" />
-            Chat
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline" 
             className="bg-sage-500 hover:bg-sage-600 text-white border-sage-500 hover:border-sage-600"
             onClick={() => setLocation(`/doctor/patient-view/${patient.id}`)}
             title="Visualizza profilo paziente"
@@ -76,7 +66,17 @@ export default function PatientCard({ patient }: PatientCardProps) {
           <Button 
             size="sm" 
             variant="outline" 
-            className="bg-green-500 hover:bg-green-600 text-white border-green-500 hover:border-green-600"
+            className="bg-blue-500 hover:bg-blue-600 text-white border-blue-500 hover:border-blue-600"
+            onClick={() => setLocation(`/doctor/chat/${patient.id}`)}
+            title="Apri chat con paziente"
+          >
+            <MessageCircle className="w-4 h-4 mr-2" />
+            Chat
+          </Button>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="bg-purple-500 hover:bg-purple-600 text-white border-purple-500 hover:border-purple-600"
             onClick={() => handleVideoCall(patient.id)}
             title="Avvia videochiamata Google Meet"
           >

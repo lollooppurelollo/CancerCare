@@ -108,6 +108,13 @@ Preferred communication style: Simple, everyday language.
    - Reorganized button priority: Chat first, then Profile, then Video
    - Improved visual hierarchy and user experience
 
+8. **Navigation Icons and Button Standardization (July 2025)**:
+   - Standardized navigation icon sizes to w-4 h-4 for proper proportions
+   - Fixed bottom navigation in patient interface and doctor-patient-view
+   - Unified button order across all interfaces: 1. Profilo (sage), 2. Chat (blue), 3. Video (purple)
+   - Enhanced color scheme with three distinct, harmonized colors for better UX
+   - Applied consistent styling to urgent alerts and patient list actions
+
 ## Data Flow
 
 1. **Patient Registration**: New patients create accounts with medical information
