@@ -10,7 +10,8 @@ import { apiRequest } from "@/lib/queryClient";
 import PatientCard from "@/components/ui/patient-card";
 
 export default function DoctorDashboard() {
-  const [nameSearch, setNameSearch] = useState("");
+  const [firstNameSearch, setFirstNameSearch] = useState("");
+  const [lastNameSearch, setLastNameSearch] = useState("");
   const [birthDateSearch, setBirthDateSearch] = useState("");
   const [, setLocation] = useLocation();
   const { logout } = useAuth();
@@ -50,14 +51,16 @@ export default function DoctorDashboard() {
   });
 
   const filteredPatients = patients.filter((patient: any) => {
-    const nameMatch = nameSearch === "" || 
-      patient.firstName.toLowerCase().includes(nameSearch.toLowerCase()) ||
-      patient.lastName.toLowerCase().includes(nameSearch.toLowerCase());
+    const firstNameMatch = firstNameSearch === "" || 
+      patient.firstName.toLowerCase().includes(firstNameSearch.toLowerCase());
+    
+    const lastNameMatch = lastNameSearch === "" || 
+      patient.lastName.toLowerCase().includes(lastNameSearch.toLowerCase());
     
     const birthDateMatch = birthDateSearch === "" || 
       (patient.birthDate && patient.birthDate.includes(birthDateSearch));
     
-    return nameMatch && birthDateMatch;
+    return firstNameMatch && lastNameMatch && birthDateMatch;
   });
 
   const urgentAlerts = alerts.filter((alert: any) => alert.severity === "high");
@@ -137,50 +140,6 @@ export default function DoctorDashboard() {
             >
               Logout
             </Button>
-          </div>
-        </div>
-
-        {/* Search Bar */}
-        <div className="mb-6">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Cerca paziente</h3>
-          <div className="space-y-3">
-            {/* Campo nome/cognome */}
-            <div className="relative">
-              <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-              <Input
-                className="pl-10 focus:ring-sage-500 focus:border-sage-500"
-                placeholder="Nome o cognome..."
-                value={nameSearch}
-                onChange={(e) => setNameSearch(e.target.value)}
-              />
-            </div>
-            
-            {/* Campo data di nascita */}
-            <div className="relative">
-              <Calendar className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-              <Input
-                className="pl-10 focus:ring-sage-500 focus:border-sage-500"
-                placeholder="Data di nascita (DD/MM/YYYY)..."
-                value={birthDateSearch}
-                onChange={(e) => setBirthDateSearch(e.target.value)}
-              />
-            </div>
-            
-            {/* Pulsante per pulire i filtri */}
-            {(nameSearch || birthDateSearch) && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setNameSearch("");
-                  setBirthDateSearch("");
-                }}
-                className="w-full"
-              >
-                <X className="w-4 h-4 mr-2" />
-                Pulisci filtri
-              </Button>
-            )}
           </div>
         </div>
 
@@ -442,17 +401,73 @@ export default function DoctorDashboard() {
           )}
         </div>
 
+        {/* Search Bar */}
+        <div className="mb-6">
+          <h3 className="text-sm font-medium text-gray-700 mb-2">Cerca paziente</h3>
+          <div className="space-y-3">
+            {/* Campo nome */}
+            <div className="relative">
+              <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+              <Input
+                className="pl-10 focus:ring-sage-500 focus:border-sage-500"
+                placeholder="Nome..."
+                value={firstNameSearch}
+                onChange={(e) => setFirstNameSearch(e.target.value)}
+              />
+            </div>
+            
+            {/* Campo cognome */}
+            <div className="relative">
+              <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+              <Input
+                className="pl-10 focus:ring-sage-500 focus:border-sage-500"
+                placeholder="Cognome..."
+                value={lastNameSearch}
+                onChange={(e) => setLastNameSearch(e.target.value)}
+              />
+            </div>
+            
+            {/* Campo data di nascita */}
+            <div className="relative">
+              <Calendar className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+              <Input
+                className="pl-10 focus:ring-sage-500 focus:border-sage-500"
+                placeholder="Data di nascita (DD/MM/YYYY)..."
+                value={birthDateSearch}
+                onChange={(e) => setBirthDateSearch(e.target.value)}
+              />
+            </div>
+            
+            {/* Pulsante per pulire i filtri */}
+            {(firstNameSearch || lastNameSearch || birthDateSearch) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setFirstNameSearch("");
+                  setLastNameSearch("");
+                  setBirthDateSearch("");
+                }}
+                className="w-full"
+              >
+                <X className="w-4 h-4 mr-2" />
+                Pulisci filtri
+              </Button>
+            )}
+          </div>
+        </div>
+
         {/* Patient List */}
         <div className="mb-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-3">
-            Pazienti {(nameSearch || birthDateSearch) && `(${filteredPatients.length} risultati)`}
+            Pazienti {(firstNameSearch || lastNameSearch || birthDateSearch) && `(${filteredPatients.length} risultati)`}
           </h2>
           
           <div className="space-y-3">
             {filteredPatients.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-500">
-                  {(nameSearch || birthDateSearch) ? "Nessun paziente trovato con i criteri di ricerca" : "Nessun paziente registrato"}
+                  {(firstNameSearch || lastNameSearch || birthDateSearch) ? "Nessun paziente trovato con i criteri di ricerca" : "Nessun paziente registrato"}
                 </p>
               </div>
             ) : (
