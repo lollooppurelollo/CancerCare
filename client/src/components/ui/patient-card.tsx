@@ -8,7 +8,9 @@ interface PatientCardProps {
     firstName: string;
     lastName: string;
     medication: string;
+    dosage: string;
     phone: string;
+    birthDate: string;
     createdAt: string;
   };
 }
@@ -31,24 +33,21 @@ export default function PatientCard({ patient }: PatientCardProps) {
   };
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+    <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 hover:scale-[1.02] hover:border-sage-200">
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <h3 className="font-semibold text-gray-900 text-lg mb-2">
-            Chat con {patient.firstName} {patient.lastName}
+          <h3 className="font-semibold text-gray-900 text-lg">
+            {patient.firstName} {patient.lastName}
           </h3>
+          <p className="text-sm text-gray-500 mb-2">
+            {patient.birthDate ? `Nato il ${formatDate(patient.birthDate)}` : ''}
+          </p>
           <div className="space-y-1">
             <p className="text-sm text-gray-600">
-              <span className="font-medium">Farmaco:</span> {patient.medication}
-            </p>
-            <p className="text-sm text-gray-600">
-              <span className="font-medium">Stato:</span> In trattamento
+              <span className="font-medium">Farmaco:</span> {patient.medication} - {patient.dosage}
             </p>
             <p className="text-sm text-gray-600">
               <span className="font-medium">Telefono:</span> {patient.phone}
-            </p>
-            <p className="text-xs text-gray-500">
-              Registrato: {formatDate(patient.createdAt)}
             </p>
           </div>
         </div>

@@ -115,45 +115,55 @@ export default function DoctorPatientView() {
               onClick={() => setActiveTab("home")}
               variant={activeTab === "home" ? "default" : "outline"}
               size="sm"
-              className="flex flex-col items-center py-2"
+              className="flex flex-col items-center py-2 transition-all duration-200 hover:scale-105 active:scale-95"
             >
-              <Calendar className="w-4 h-4 mb-1" />
+              <Calendar className={`w-4 h-4 mb-1 transition-all duration-200 ${
+                activeTab === "home" ? "scale-110" : "hover:scale-110"
+              }`} />
               <span className="text-xs">Home</span>
             </Button>
             <Button 
               onClick={() => setActiveTab("symptoms")}
               variant={activeTab === "symptoms" ? "default" : "outline"}
               size="sm"
-              className="flex flex-col items-center py-2"
+              className="flex flex-col items-center py-2 transition-all duration-200 hover:scale-105 active:scale-95"
             >
-              <Heart className="w-4 h-4 mb-1" />
+              <Heart className={`w-4 h-4 mb-1 transition-all duration-200 ${
+                activeTab === "symptoms" ? "scale-110" : "hover:scale-110"
+              }`} />
               <span className="text-xs">Sintomi</span>
             </Button>
             <Button 
               onClick={() => setActiveTab("history")}
               variant={activeTab === "history" ? "default" : "outline"}
               size="sm"
-              className="flex flex-col items-center py-2"
+              className="flex flex-col items-center py-2 transition-all duration-200 hover:scale-105 active:scale-95"
             >
-              <Activity className="w-4 h-4 mb-1" />
+              <Activity className={`w-4 h-4 mb-1 transition-all duration-200 ${
+                activeTab === "history" ? "scale-110" : "hover:scale-110"
+              }`} />
               <span className="text-xs">Storico</span>
             </Button>
             <Button 
               onClick={() => setActiveTab("video")}
               variant={activeTab === "video" ? "default" : "outline"}
               size="sm"
-              className="flex flex-col items-center py-2"
+              className="flex flex-col items-center py-2 transition-all duration-200 hover:scale-105 active:scale-95"
             >
-              <Video className="w-4 h-4 mb-1" />
+              <Video className={`w-4 h-4 mb-1 transition-all duration-200 ${
+                activeTab === "video" ? "scale-110" : "hover:scale-110"
+              }`} />
               <span className="text-xs">Video</span>
             </Button>
             <Button 
               onClick={() => setActiveTab("profile")}
               variant={activeTab === "profile" ? "default" : "outline"}
               size="sm"
-              className="flex flex-col items-center py-2"
+              className="flex flex-col items-center py-2 transition-all duration-200 hover:scale-105 active:scale-95"
             >
-              <User className="w-4 h-4 mb-1" />
+              <User className={`w-4 h-4 mb-1 transition-all duration-200 ${
+                activeTab === "profile" ? "scale-110" : "hover:scale-110"
+              }`} />
               <span className="text-xs">Profilo</span>
             </Button>
           </div>

@@ -152,8 +152,8 @@ export default function DoctorDashboard() {
           
           {/* Pazienti totali - grande in alto */}
           <div className="mb-4">
-            <div className="bg-sage-50 p-6 rounded-lg border border-sage-200 text-center">
-              <div className="text-4xl font-bold text-sage-600 mb-1">{patients.length}</div>
+            <div className="bg-sage-50 p-6 rounded-lg border border-sage-200 text-center hover:bg-sage-100 transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer">
+              <div className="text-4xl font-bold text-sage-600 mb-1 transition-transform duration-200 hover:scale-110">{patients.length}</div>
               <div className="text-lg text-gray-700 font-medium">Pazienti totali</div>
             </div>
           </div>
@@ -162,16 +162,16 @@ export default function DoctorDashboard() {
           <div className="mb-4">
             <h3 className="text-sm font-medium text-gray-700 mb-2">Pazienti per farmaco</h3>
             <div className="grid grid-cols-3 gap-3">
-              <div className="bg-sage-50 p-3 rounded-lg border border-sage-200">
-                <div className="text-xl font-bold text-sage-600">{abemaciclibCount}</div>
+              <div className="bg-sage-50 p-3 rounded-lg border border-sage-200 hover:bg-sage-100 transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer">
+                <div className="text-xl font-bold text-sage-600 transition-transform duration-200 hover:scale-110">{abemaciclibCount}</div>
                 <div className="text-xs text-gray-600">Abemaciclib</div>
               </div>
-              <div className="bg-teal-50 p-3 rounded-lg border border-teal-200">
-                <div className="text-xl font-bold text-teal-600">{ribociclibCount}</div>
+              <div className="bg-teal-50 p-3 rounded-lg border border-teal-200 hover:bg-teal-100 transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer">
+                <div className="text-xl font-bold text-teal-600 transition-transform duration-200 hover:scale-110">{ribociclibCount}</div>
                 <div className="text-xs text-gray-600">Ribociclib</div>
               </div>
-              <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-200">
-                <div className="text-xl font-bold text-indigo-600">{palbociclibCount}</div>
+              <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-200 hover:bg-indigo-100 transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer">
+                <div className="text-xl font-bold text-indigo-600 transition-transform duration-200 hover:scale-110">{palbociclibCount}</div>
                 <div className="text-xs text-gray-600">Palbociclib</div>
               </div>
             </div>
@@ -186,9 +186,9 @@ export default function DoctorDashboard() {
                   const urgentSection = document.getElementById('urgent-alerts-section');
                   urgentSection?.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className="bg-red-50 p-3 rounded-lg border border-red-200 hover:bg-red-100 transition-colors text-left"
+                className="bg-red-50 p-3 rounded-lg border border-red-200 hover:bg-red-100 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95 text-left"
               >
-                <div className="text-xl font-bold text-red-600">{urgentAlerts.length}</div>
+                <div className="text-xl font-bold text-red-600 transition-transform duration-200 hover:scale-110">{urgentAlerts.length}</div>
                 <div className="text-xs text-gray-600">Avvisi urgenti</div>
               </button>
               <button 
@@ -196,9 +196,9 @@ export default function DoctorDashboard() {
                   const messageSection = document.getElementById('message-alerts-section');
                   messageSection?.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className="bg-blue-50 p-3 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors text-left"
+                className="bg-blue-50 p-3 rounded-lg border border-blue-200 hover:bg-blue-100 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95 text-left"
               >
-                <div className="text-xl font-bold text-blue-600">{messageAlerts.length}</div>
+                <div className="text-xl font-bold text-blue-600 transition-transform duration-200 hover:scale-110">{messageAlerts.length}</div>
                 <div className="text-xs text-gray-600">Messaggi pazienti</div>
               </button>
             </div>
@@ -260,12 +260,12 @@ export default function DoctorDashboard() {
                               <Button 
                                 size="sm" 
                                 variant="outline"
-                                className="bg-green-500 hover:bg-green-600 text-white border-green-500 hover:border-green-600 text-xs px-2 py-1"
+                                className="bg-green-500 hover:bg-green-600 text-white border-green-500 hover:border-green-600 text-xs px-2 py-1 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
                                 onClick={() => resolveAlertMutation.mutate(alert.id)}
                                 disabled={resolveAlertMutation.isPending}
                                 title="Contrassegna come risolto"
                               >
-                                <CheckCircle className="w-3 h-3 mr-1" />
+                                <CheckCircle className="w-3 h-3 mr-1 transition-transform duration-200 hover:scale-110" />
                                 Risolto
                               </Button>
                             </div>
@@ -276,31 +276,31 @@ export default function DoctorDashboard() {
                             <Button 
                               size="sm" 
                               variant="outline"
-                              className="bg-sage-500 hover:bg-sage-600 text-white border-sage-500 hover:border-sage-600"
+                              className="bg-sage-500 hover:bg-sage-600 text-white border-sage-500 hover:border-sage-600 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
                               onClick={() => setLocation(`/doctor/patient-view/${alert.patientId}`)}
                               title="Visualizza profilo paziente"
                             >
-                              <Eye className="w-4 h-4 mr-2" />
+                              <Eye className="w-4 h-4 mr-2 transition-transform duration-200 hover:scale-110" />
                               Profilo
                             </Button>
                             <Button 
                               size="sm" 
                               variant="outline"
-                              className="bg-blue-500 hover:bg-blue-600 text-white border-blue-500 hover:border-blue-600"
+                              className="bg-blue-500 hover:bg-blue-600 text-white border-blue-500 hover:border-blue-600 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
                               onClick={() => setLocation(`/doctor/chat/${alert.patientId}`)}
                               title="Chat con paziente"
                             >
-                              <MessageCircle className="w-4 h-4 mr-2" />
+                              <MessageCircle className="w-4 h-4 mr-2 transition-transform duration-200 hover:scale-110" />
                               Chat
                             </Button>
                             <Button 
                               size="sm" 
                               variant="outline"
-                              className="bg-purple-500 hover:bg-purple-600 text-white border-purple-500 hover:border-purple-600"
+                              className="bg-purple-500 hover:bg-purple-600 text-white border-purple-500 hover:border-purple-600 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
                               onClick={() => handleVideoCall(alert.patientId)}
                               title="Avvia videochiamata Google Meet"
                             >
-                              <Video className="w-4 h-4 mr-2" />
+                              <Video className="w-4 h-4 mr-2 transition-transform duration-200 hover:scale-110" />
                               Video
                             </Button>
                           </div>
@@ -315,7 +315,7 @@ export default function DoctorDashboard() {
               {messageAlerts.length > 0 && (
                 <div id="message-alerts-section">
                   <h3 className="text-md font-medium text-blue-700 mb-3 flex items-center">
-                    <MessageCircle className="w-4 h-4 mr-2" />
+                    <MessageCircle className="w-4 h-4 mr-2 transition-transform duration-200 hover:scale-110" />
                     Messaggi pazienti ({messageAlerts.length})
                   </h3>
                   <div className="space-y-3">
@@ -347,12 +347,12 @@ export default function DoctorDashboard() {
                               <Button 
                                 size="sm" 
                                 variant="outline"
-                                className="bg-green-500 hover:bg-green-600 text-white border-green-500 hover:border-green-600 text-xs px-2 py-1"
+                                className="bg-green-500 hover:bg-green-600 text-white border-green-500 hover:border-green-600 text-xs px-2 py-1 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
                                 onClick={() => resolveAlertMutation.mutate(alert.id)}
                                 disabled={resolveAlertMutation.isPending}
                                 title="Contrassegna come risolto"
                               >
-                                <CheckCircle className="w-3 h-3 mr-1" />
+                                <CheckCircle className="w-3 h-3 mr-1 transition-transform duration-200 hover:scale-110" />
                                 Risolto
                               </Button>
                             </div>
@@ -363,31 +363,31 @@ export default function DoctorDashboard() {
                             <Button 
                               size="sm" 
                               variant="outline"
-                              className="bg-sage-500 hover:bg-sage-600 text-white border-sage-500 hover:border-sage-600"
+                              className="bg-sage-500 hover:bg-sage-600 text-white border-sage-500 hover:border-sage-600 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
                               onClick={() => setLocation(`/doctor/patient-view/${alert.patientId}`)}
                               title="Visualizza profilo paziente"
                             >
-                              <Eye className="w-4 h-4 mr-2" />
+                              <Eye className="w-4 h-4 mr-2 transition-transform duration-200 hover:scale-110" />
                               Profilo
                             </Button>
                             <Button 
                               size="sm" 
                               variant="outline"
-                              className="bg-blue-500 hover:bg-blue-600 text-white border-blue-500 hover:border-blue-600"
+                              className="bg-blue-500 hover:bg-blue-600 text-white border-blue-500 hover:border-blue-600 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
                               onClick={() => setLocation(`/doctor/chat/${alert.patientId}`)}
                               title="Chat con paziente"
                             >
-                              <MessageCircle className="w-4 h-4 mr-2" />
+                              <MessageCircle className="w-4 h-4 mr-2 transition-transform duration-200 hover:scale-110" />
                               Chat
                             </Button>
                             <Button 
                               size="sm" 
                               variant="outline"
-                              className="bg-purple-500 hover:bg-purple-600 text-white border-purple-500 hover:border-purple-600"
+                              className="bg-purple-500 hover:bg-purple-600 text-white border-purple-500 hover:border-purple-600 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
                               onClick={() => handleVideoCall(alert.patientId)}
                               title="Avvia videochiamata Google Meet"
                             >
-                              <Video className="w-4 h-4 mr-2" />
+                              <Video className="w-4 h-4 mr-2 transition-transform duration-200 hover:scale-110" />
                               Video
                             </Button>
                           </div>
