@@ -386,6 +386,32 @@ export class DatabaseStorage implements IStorage {
       ))
       .orderBy(desc(missedMedication.createdAt));
   }
+
+  async removeMissedMedication(patientId: number, dateToRemove: string): Promise<void> {
+    // Find all missed medication entries for this patient
+    const entries = await db
+      .select()
+      .from(missedMedication)
+      .where(eq(missedMedication.patientId, patientId));
+
+    // Process each entry to remove the specific date
+    for (const entry of entries) {
+      if (entry.missedDates && Array.isArray(entry.missedDates)) {
+        const updatedDates = entry.missedDates.filter(date => date !== dateToRemove);
+        
+        if (updatedDates.length === 0) {
+          // If no dates left, delete the entire entry
+          await db.delete(missedMedication).where(eq(missedMedication.id, entry.id));
+        } else {
+          // Update the entry with the filtered dates
+          await db
+            .update(missedMedication)
+            .set({ missedDates: updatedDates })
+            .where(eq(missedMedication.id, entry.id));
+        }
+      }
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();

@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { Button } from "./button";
+import { apiRequest } from "@/lib/queryClient";
 
 interface MedicationCalendarProps {
   medication: string;
@@ -13,11 +14,27 @@ export default function MedicationCalendar({ medication, patientId }: Medication
   const months = ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"];
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
   const [viewMode, setViewMode] = useState<"week" | "month">("month"); // "week" for single week, "month" for 4 weeks
+  const queryClient = useQueryClient();
 
   // Get missed medication data if patientId is provided
   const { data: missedMedications = [] } = useQuery({
     queryKey: patientId ? ["/api/missed-medication", patientId] : ["/api/missed-medication"],
     enabled: !!patientId,
+  });
+
+  // Mutation to remove missed medication
+  const removeMissedMedication = useMutation({
+    mutationFn: async (dateToRemove: string) => {
+      await apiRequest(`/api/missed-medication/${patientId}/${dateToRemove}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      // Invalidate the missed medication query to refresh the data
+      queryClient.invalidateQueries({ 
+        queryKey: patientId ? ["/api/missed-medication", patientId] : ["/api/missed-medication"]
+      });
+    },
   });
 
   // Create a set of missed dates for quick lookup
@@ -125,9 +142,9 @@ export default function MedicationCalendar({ medication, patientId }: Medication
             {week.map((day, dayIndex) => (
               <div key={`${weekIndex}-${dayIndex}`} className="text-center">
                 <div 
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium cursor-pointer ${
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                     day.isMissed 
-                      ? "bg-red-100 text-red-700 border-2 border-red-200" 
+                      ? "bg-red-100 text-red-700 border-2 border-red-200 cursor-pointer hover:bg-red-200 transition-colors" 
                       : day.shouldTake 
                         ? "bg-sage-500 text-white" 
                         : "bg-gray-300 text-gray-600"
@@ -137,7 +154,11 @@ export default function MedicationCalendar({ medication, patientId }: Medication
                       : ""
                   }`}
                   onClick={() => {
-                    // TODO: Toggle day functionality
+                    // If the day is marked as missed and we have a patientId, remove it
+                    if (day.isMissed && patientId) {
+                      const dateString = day.fullDate.toISOString().split('T')[0];
+                      removeMissedMedication.mutate(dateString);
+                    }
                   }}
                 >
                   {day.date}
@@ -152,7 +173,9 @@ export default function MedicationCalendar({ medication, patientId }: Medication
         <div className="w-3 h-3 bg-sage-500 rounded-full mr-2"></div>
         <span className="text-gray-600 mr-4">Giorno di assunzione</span>
         <div className="w-3 h-3 bg-gray-300 rounded-full mr-2"></div>
-        <span className="text-gray-600">Giorno di pausa</span>
+        <span className="text-gray-600 mr-4">Giorno di pausa</span>
+        <div className="w-3 h-3 bg-red-100 border border-red-200 rounded-full mr-2"></div>
+        <span className="text-gray-600">Terapia non assunta (clicca per correggere)</span>
       </div>
     </div>
   );

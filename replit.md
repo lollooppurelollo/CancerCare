@@ -190,6 +190,10 @@ Preferred communication style: Simple, everyday language.
     - Patients can add notes explaining reasons for missing medications
     - Real-time synchronization between patient reporting and doctor monitoring
     - **Removed "Calendario Settimanale" text from patient dashboard** as requested
+    - **Moved missed medication button below calendar** for better user experience
+    - **Added click-to-correct functionality**: patients can click on red (missed) days to remove them if marked by mistake
+    - Enhanced calendar with hover effects and visual feedback for clickable missed days
+    - Updated calendar legend to show missed medication correction instructions
     - Historical tracking of all missed medications with timestamps and patient notes
 
 ## Data Flow

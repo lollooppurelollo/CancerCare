@@ -957,6 +957,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete missed medication for a specific date
+  app.delete("/api/missed-medication/:patientId/:date", async (req, res) => {
+    try {
+      const userId = (req as any).session?.userId;
+      const userRole = (req as any).session?.userRole;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const patientId = parseInt(req.params.patientId);
+      const dateToRemove = req.params.date;
+
+      if (userRole === "doctor") {
+        // Doctors can remove missed medications for any patient
+        await storage.removeMissedMedication(patientId, dateToRemove);
+        res.json({ message: "Missed medication date removed successfully" });
+      } else {
+        // Patients can only remove their own missed medications
+        const patient = await storage.getPatientByUserId(userId);
+        if (!patient || patient.id !== patientId) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+        await storage.removeMissedMedication(patientId, dateToRemove);
+        res.json({ message: "Missed medication date removed successfully" });
+      }
+    } catch (error) {
+      console.error("Delete missed medication error:", error);
+      res.status(500).json({ message: "Failed to remove missed medication" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
