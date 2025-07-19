@@ -251,8 +251,18 @@ export default function PatientVideo() {
         {/* Quick Actions */}
         <div className="space-y-3">
           <Button
-            onClick={() => handleSendMessage(true)}
-            disabled={sendMessageMutation.isPending || !newMessage.trim()}
+            onClick={() => {
+              // If no message is written, send a default urgent request
+              if (!newMessage.trim()) {
+                sendMessageMutation.mutate({
+                  content: "Richiesta urgente: La paziente ha richiesto di essere ricontattata dal medico.",
+                  isUrgent: true,
+                });
+              } else {
+                handleSendMessage(true);
+              }
+            }}
+            disabled={sendMessageMutation.isPending}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white"
           >
             <Phone className="w-4 h-4 mr-2" />

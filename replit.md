@@ -198,6 +198,9 @@ Preferred communication style: Simple, everyday language.
     - **Fixed symptom display issues**: Added missing "Dolori articolari" label in patient history view
     - **Enhanced doctor patient view**: Added proper symptom name mapping for all symptom types including joint pain
     - Improved symptom value display with proper formatting for different symptom types
+    - **Fixed video call request button**: "Richiedi di essere ricontattata" now works without requiring text message
+    - Button now sends automatic urgent message to doctor creating proper alerts in dashboard
+    - Enhanced patient-doctor notification system for video call requests
     - Historical tracking of all missed medications with timestamps and patient notes
 
 ## Data Flow
