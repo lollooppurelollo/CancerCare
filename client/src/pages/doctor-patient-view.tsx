@@ -95,6 +95,20 @@ export default function DoctorPatientView() {
     return 'Non specificato';
   };
 
+  // Funzione per determinare se un sintomo è riferito (ha un valore significativo)
+  const hasSymptomValue = (symptom: any) => {
+    if (symptom.symptomType === 'diarrea' && symptom.diarrheaCount && symptom.diarrheaCount > 0) {
+      return true;
+    }
+    if (symptom.intensity && symptom.intensity > 0) {
+      return true;
+    }
+    if (symptom.present === true) {
+      return true;
+    }
+    return false;
+  };
+
   return (
     <div className="max-w-md mx-auto bg-white min-h-screen pb-20">
       <div className="p-4">
@@ -245,36 +259,82 @@ export default function DoctorPatientView() {
                   Monitoraggio Sintomi
                 </h2>
                 <p className="text-sm text-gray-600">
-                  Sintomi registrati oggi
+                  Solo sintomi riferiti dal paziente
                 </p>
               </div>
 
-              {todaySymptoms.length === 0 ? (
-                <Card>
-                  <CardContent className="text-center py-8">
-                    <p className="text-gray-500">Nessun sintomo registrato oggi</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="space-y-3">
-                  {todaySymptoms.map((symptom: any) => (
-                    <Card key={symptom.id}>
+              {/* Storico sintomi e diario per data */}
+              <div className="space-y-4">
+                {diaryEntries.slice().reverse().map((entry: any) => {
+                  const entryDate = entry.date;
+                  const daySymptoms = symptoms.filter((symptom: any) => 
+                    symptom.date === entryDate && hasSymptomValue(symptom)
+                  );
+                  
+                  // Mostra solo giorni con sintomi riferiti o con voce diario
+                  if (daySymptoms.length === 0 && !entry.content.trim()) {
+                    return null;
+                  }
+
+                  return (
+                    <Card key={entry.id} className="border-l-4 border-sage-300">
                       <CardContent className="p-4">
-                        <div className="flex justify-between items-center">
-                          <span className="font-medium text-sage-800">
-                            {getSymptomName(symptom.symptomType)}
+                        <div className="flex justify-between items-center mb-3">
+                          <h3 className="font-semibold text-sage-800">
+                            {new Date(entryDate).toLocaleDateString('it-IT', { 
+                              weekday: 'long', 
+                              day: '2-digit', 
+                              month: 'long',
+                              year: 'numeric'
+                            })}
+                          </h3>
+                          <span className="text-xs text-gray-500">
+                            {formatTimestamp(entry.updatedAt)}
                           </span>
-                          <Badge variant="secondary">
-                            {getSymptomValue(symptom)}
-                          </Badge>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {formatTimestamp(symptom.createdAt)}
-                        </p>
+
+                        {/* Sintomi riferiti per questo giorno */}
+                        {daySymptoms.length > 0 && (
+                          <div className="mb-3">
+                            <h4 className="text-sm font-medium text-red-700 mb-2">Sintomi riferiti:</h4>
+                            <div className="grid grid-cols-2 gap-2">
+                              {daySymptoms.map((symptom: any) => (
+                                <div key={symptom.id} className="bg-red-50 p-2 rounded-lg">
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-xs font-medium text-red-800">
+                                      {getSymptomName(symptom.symptomType)}
+                                    </span>
+                                    <Badge variant="destructive" className="text-xs">
+                                      {getSymptomValue(symptom)}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Voce diario */}
+                        {entry.content.trim() && (
+                          <div className="bg-sage-50 p-3 rounded-lg">
+                            <h4 className="text-sm font-medium text-sage-700 mb-1">Diario:</h4>
+                            <p className="text-sm text-gray-700">{entry.content}</p>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
-                  ))}
-                </div>
+                  );
+                })}
+              </div>
+
+              {/* Messaggio se nessun sintomo riferito */}
+              {symptoms.filter((symptom: any) => hasSymptomValue(symptom)).length === 0 && 
+               diaryEntries.filter((entry: any) => entry.content.trim()).length === 0 && (
+                <Card>
+                  <CardContent className="text-center py-8">
+                    <p className="text-gray-500">Nessun sintomo riferito o voce del diario</p>
+                  </CardContent>
+                </Card>
               )}
             </div>
           )}
@@ -326,12 +386,9 @@ export default function DoctorPatientView() {
                   <h3 className="font-semibold text-sage-800 mb-2">
                     Videoconsulto
                   </h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Prenota una videoconsulenza con il tuo medico
+                  <p className="text-sm text-gray-600">
+                    Comunicazione con il medico
                   </p>
-                  <Button className="bg-sage-500 hover:bg-sage-600">
-                    Prenota Consulto
-                  </Button>
                 </CardContent>
               </Card>
 
