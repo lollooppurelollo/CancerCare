@@ -4,7 +4,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
   insertUserSchema, insertPatientSchema, insertDiaryEntrySchema, 
-  insertSymptomSchema, insertMessageSchema, insertAlertSchema, insertMissedMedicationSchema 
+  insertSymptomSchema, insertMessageSchema, insertAlertSchema, insertMissedMedicationSchema, insertDosageHistorySchema 
 } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -1024,6 +1024,183 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete missed medication error:", error);
       res.status(500).json({ message: "Failed to remove missed medication" });
+    }
+  });
+
+  // Treatment analytics routes
+  app.get("/api/analytics/treatment", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const { medication, treatmentSetting } = req.query;
+      const analytics = await storage.getTreatmentAnalytics(
+        medication as string | undefined,
+        treatmentSetting as string | undefined
+      );
+
+      res.json(analytics);
+    } catch (error) {
+      console.error("Get treatment analytics error:", error);
+      res.status(500).json({ message: "Failed to get treatment analytics" });
+    }
+  });
+
+  app.get("/api/analytics/patient/:patientId/weeks-on-treatment", async (req, res) => {
+    try {
+      const userId = (req as any).session?.userId;
+      const userRole = (req as any).session?.userRole;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const patientId = parseInt(req.params.patientId);
+      
+      // Check permissions
+      if (userRole === "doctor") {
+        // Doctors can access any patient's data
+        const weeks = await storage.calculateWeeksOnTreatment(patientId);
+        res.json({ weeksOnTreatment: weeks });
+      } else {
+        // Patients can only access their own data
+        const patient = await storage.getPatientByUserId(userId);
+        if (!patient || patient.id !== patientId) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+        const weeks = await storage.calculateWeeksOnTreatment(patientId);
+        res.json({ weeksOnTreatment: weeks });
+      }
+    } catch (error) {
+      console.error("Get weeks on treatment error:", error);
+      res.status(500).json({ message: "Failed to calculate weeks on treatment" });
+    }
+  });
+
+  app.get("/api/analytics/patient/:patientId/weeks-on-current-dosage", async (req, res) => {
+    try {
+      const userId = (req as any).session?.userId;
+      const userRole = (req as any).session?.userRole;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const patientId = parseInt(req.params.patientId);
+      
+      // Check permissions
+      if (userRole === "doctor") {
+        // Doctors can access any patient's data
+        const weeks = await storage.calculateWeeksOnCurrentDosage(patientId);
+        res.json({ weeksOnCurrentDosage: weeks });
+      } else {
+        // Patients can only access their own data
+        const patient = await storage.getPatientByUserId(userId);
+        if (!patient || patient.id !== patientId) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+        const weeks = await storage.calculateWeeksOnCurrentDosage(patientId);
+        res.json({ weeksOnCurrentDosage: weeks });
+      }
+    } catch (error) {
+      console.error("Get weeks on current dosage error:", error);
+      res.status(500).json({ message: "Failed to calculate weeks on current dosage" });
+    }
+  });
+
+  app.get("/api/analytics/dosage-stats", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const { medication, treatmentSetting } = req.query;
+      if (!medication || !treatmentSetting) {
+        return res.status(400).json({ message: "Medication and treatmentSetting are required" });
+      }
+
+      const stats = await storage.getDosageStatsByMedication(
+        medication as string,
+        treatmentSetting as string
+      );
+
+      res.json(stats);
+    } catch (error) {
+      console.error("Get dosage stats error:", error);
+      res.status(500).json({ message: "Failed to get dosage statistics" });
+    }
+  });
+
+  app.get("/api/analytics/valid-dosages", async (req, res) => {
+    try {
+      const { medication, treatmentSetting } = req.query;
+      if (!medication || !treatmentSetting) {
+        return res.status(400).json({ message: "Medication and treatmentSetting are required" });
+      }
+
+      const validDosages = await storage.getValidDosagesForTreatment(
+        medication as string,
+        treatmentSetting as string
+      );
+
+      res.json({ validDosages });
+    } catch (error) {
+      console.error("Get valid dosages error:", error);
+      res.status(500).json({ message: "Failed to get valid dosages" });
+    }
+  });
+
+  // Dosage history routes
+  app.post("/api/dosage-history", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const dosageData = insertDosageHistorySchema.parse(req.body);
+      const dosageHistory = await storage.createDosageHistory(dosageData);
+      res.json(dosageHistory);
+    } catch (error) {
+      console.error("Create dosage history error:", error);
+      res.status(500).json({ message: "Failed to create dosage history" });
+    }
+  });
+
+  app.get("/api/dosage-history/:patientId", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const patientId = parseInt(req.params.patientId);
+      const history = await storage.getDosageHistoryByPatientId(patientId);
+      res.json(history);
+    } catch (error) {
+      console.error("Get dosage history error:", error);
+      res.status(500).json({ message: "Failed to get dosage history" });
+    }
+  });
+
+  app.put("/api/dosage-history/:id", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const historyId = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      const updatedHistory = await storage.updateDosageHistory(historyId, updateData);
+      res.json(updatedHistory);
+    } catch (error) {
+      console.error("Update dosage history error:", error);
+      res.status(500).json({ message: "Failed to update dosage history" });
     }
   });
 

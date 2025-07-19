@@ -36,6 +36,12 @@ export const patients = pgTable("patients", {
   medication: text("medication").notNull(), // 'abemaciclib', 'ribociclib', 'palbociclib'
   dosage: text("dosage").notNull(),
   assignedDoctorId: integer("assigned_doctor_id").references(() => users.id),
+  // Treatment setting: 'metastatic' or 'adjuvant'
+  treatmentSetting: text("treatment_setting").notNull().default("metastatic"),
+  // Treatment start date for calculating weeks on therapy
+  treatmentStartDate: date("treatment_start_date"),
+  // Current dosage start date for calculating weeks on current dose
+  currentDosageStartDate: date("current_dosage_start_date"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -118,6 +124,19 @@ export const missedMedication = pgTable("missed_medication", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Dosage history tracking
+export const dosageHistory = pgTable("dosage_history", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id").notNull().references(() => patients.id),
+  medication: text("medication").notNull(), // 'abemaciclib', 'ribociclib', 'palbociclib'
+  dosage: text("dosage").notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date"), // null if current dosage
+  weeksOnDosage: integer("weeks_on_dosage"), // calculated field
+  treatmentSetting: text("treatment_setting").notNull(), // 'metastatic' or 'adjuvant'
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   patient: one(patients, {
@@ -193,6 +212,13 @@ export const missedMedicationRelations = relations(missedMedication, ({ one }) =
   }),
 }));
 
+export const dosageHistoryRelations = relations(dosageHistory, ({ one }) => ({
+  patient: one(patients, {
+    fields: [dosageHistory.patientId],
+    references: [patients.id],
+  }),
+}));
+
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertPatientSchema = createInsertSchema(patients).omit({ id: true, createdAt: true });
@@ -203,6 +229,7 @@ export const insertMessageSchema = createInsertSchema(messages).omit({ id: true,
 export const insertAlertSchema = createInsertSchema(alerts).omit({ id: true, createdAt: true });
 export const insertAdviceItemSchema = createInsertSchema(adviceItems).omit({ id: true, createdAt: true });
 export const insertMissedMedicationSchema = createInsertSchema(missedMedication).omit({ id: true, createdAt: true });
+export const insertDosageHistorySchema = createInsertSchema(dosageHistory).omit({ id: true, createdAt: true });
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -223,3 +250,5 @@ export type AdviceItem = typeof adviceItems.$inferSelect;
 export type InsertAdviceItem = z.infer<typeof insertAdviceItemSchema>;
 export type MissedMedication = typeof missedMedication.$inferSelect;
 export type InsertMissedMedication = z.infer<typeof insertMissedMedicationSchema>;
+export type DosageHistory = typeof dosageHistory.$inferSelect;
+export type InsertDosageHistory = z.infer<typeof insertDosageHistorySchema>;

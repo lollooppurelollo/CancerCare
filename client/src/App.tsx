@@ -14,11 +14,13 @@ import PatientVideo from "@/pages/patient-video";
 import PatientProfile from "@/pages/patient-profile";
 import PatientAdvice from "@/pages/patient-advice";
 import PatientSettings from "@/pages/patient-settings";
+import PatientTreatmentAnalytics from "@/pages/patient-treatment-analytics";
 import AppSettings from "@/pages/app-settings";
 import DoctorDashboard from "@/pages/doctor-dashboard";
 import DoctorPatientDetail from "@/pages/doctor-patient-detail";
 import DoctorPatientView from "@/pages/doctor-patient-view";
 import DoctorChat from "@/pages/doctor-chat";
+import DoctorTreatmentAnalytics from "@/pages/doctor-treatment-analytics";
 import DoctorLogin from "@/pages/doctor-login";
 import DoctorRegistration from "@/pages/doctor-registration";
 import AdminDoctorManagement from "@/pages/admin-doctor-management";
@@ -60,6 +62,7 @@ function Router() {
         <Route path="/doctor/patient/:id" component={DoctorPatientDetail} />
         <Route path="/doctor/patient-view/:patientId" component={DoctorPatientView} />
         <Route path="/doctor/chat/:patientId" component={DoctorChat} />
+        <Route path="/doctor/analytics" component={DoctorTreatmentAnalytics} />
         <Route path="/settings" component={AppSettings} />
         <Route path="/admin/doctors" component={AdminDoctorManagement} />
         <Route component={NotFound} />
@@ -74,6 +77,7 @@ function Router() {
       <Route path="/advice" component={PatientAdvice} />
       <Route path="/video" component={PatientVideo} />
       <Route path="/profile" component={PatientProfile} />
+      <Route path="/analytics" component={PatientTreatmentAnalytics} />
       <Route path="/patient/settings" component={PatientSettings} />
       <Route path="/settings" component={AppSettings} />
       <Route component={NotFound} />

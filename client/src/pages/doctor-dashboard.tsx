@@ -152,6 +152,15 @@ export default function DoctorDashboard() {
               variant="ghost" 
               size="sm" 
               className="text-sage-600 hover:text-sage-700 transition-all duration-200 hover:scale-105"
+              onClick={() => setLocation("/doctor/analytics")}
+              title="Analytics Trattamenti"
+            >
+              <BarChart3 className="w-5 h-5" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-sage-600 hover:text-sage-700 transition-all duration-200 hover:scale-105"
               onClick={() => setLocation("/settings")}
             >
               <Settings className="w-5 h-5" />

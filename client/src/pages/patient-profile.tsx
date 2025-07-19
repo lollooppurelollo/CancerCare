@@ -198,15 +198,7 @@ export default function PatientProfile() {
               <p className="font-medium">{patient.dosage}</p>
             </div>
 
-            <div className="p-3 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600">Medico di Riferimento</p>
-              <p className="font-medium">
-                {patient.doctorFirstName && patient.doctorLastName 
-                  ? `${patient.doctorFirstName} ${patient.doctorLastName}`
-                  : "Non assegnato"
-                }
-              </p>
-            </div>
+
           </CardContent>
         </Card>
 
@@ -216,6 +208,16 @@ export default function PatientProfile() {
             Le informazioni mediche (farmaco, dosaggio, medico di riferimento) possono essere modificate solo dal tuo medico di riferimento.
           </p>
         </div>
+
+        {/* Analytics Button */}
+        <Button 
+          onClick={() => setLocation("/analytics")}
+          variant="outline"
+          className="w-full mb-4 border-sage-200 text-sage-700 hover:bg-sage-50 transition-all duration-200"
+        >
+          <Calendar className="w-4 h-4 mr-2" />
+          Visualizza Statistiche Trattamento
+        </Button>
 
         {/* Save Button */}
         <Button 

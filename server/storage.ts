@@ -1,13 +1,14 @@
 import { 
-  users, patients, medicationSchedules, diaryEntries, symptoms, messages, alerts, adviceItems, missedMedication,
+  users, patients, medicationSchedules, diaryEntries, symptoms, messages, alerts, adviceItems, missedMedication, dosageHistory,
   type User, type InsertUser, type Patient, type InsertPatient,
   type MedicationSchedule, type InsertMedicationSchedule,
   type DiaryEntry, type InsertDiaryEntry, type Symptom, type InsertSymptom,
   type Message, type InsertMessage, type Alert, type InsertAlert,
-  type AdviceItem, type InsertAdviceItem, type MissedMedication, type InsertMissedMedication
+  type AdviceItem, type InsertAdviceItem, type MissedMedication, type InsertMissedMedication,
+  type DosageHistory, type InsertDosageHistory
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, gte, lte, or } from "drizzle-orm";
+import { eq, and, desc, gte, lte, or, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 export interface IStorage {
@@ -108,34 +109,9 @@ export class DatabaseStorage implements IStorage {
     return patient;
   }
 
-  async getPatientByUserId(userId: number): Promise<any> {
-    const [result] = await db
-      .select({
-        id: patients.id,
-        userId: patients.userId,
-        firstName: patients.firstName,
-        lastName: patients.lastName,
-        age: patients.age,
-        birthDate: patients.birthDate,
-        gender: patients.gender,
-        weight: patients.weight,
-        height: patients.height,
-        phone: patients.phone,
-        address: patients.address,
-        medication: patients.medication,
-        dosage: patients.dosage,
-        assignedDoctorId: patients.assignedDoctorId,
-        isActive: patients.isActive,
-        createdAt: patients.createdAt,
-        // Doctor information
-        doctorFirstName: users.firstName,
-        doctorLastName: users.lastName,
-      })
-      .from(patients)
-      .leftJoin(users, eq(patients.assignedDoctorId, users.id))
-      .where(eq(patients.userId, userId));
-    
-    return result;
+  async getPatientByUserId(userId: number): Promise<Patient | undefined> {
+    const [patient] = await db.select().from(patients).where(eq(patients.userId, userId));
+    return patient;
   }
 
   async getPatientById(id: number): Promise<Patient | undefined> {
@@ -455,6 +431,194 @@ export class DatabaseStorage implements IStorage {
         }
       }
     }
+  }
+
+  // Dosage history operations
+  async createDosageHistory(data: InsertDosageHistory): Promise<DosageHistory> {
+    const [result] = await db
+      .insert(dosageHistory)
+      .values(data)
+      .returning();
+    return result;
+  }
+
+  async getDosageHistoryByPatientId(patientId: number): Promise<DosageHistory[]> {
+    return await db
+      .select()
+      .from(dosageHistory)
+      .where(eq(dosageHistory.patientId, patientId))
+      .orderBy(desc(dosageHistory.startDate));
+  }
+
+  async updateDosageHistory(id: number, data: Partial<InsertDosageHistory>): Promise<DosageHistory> {
+    const [result] = await db
+      .update(dosageHistory)
+      .set(data)
+      .where(eq(dosageHistory.id, id))
+      .returning();
+    return result;
+  }
+
+  // Treatment analytics
+  async calculateWeeksOnTreatment(patientId: number): Promise<number> {
+    const patient = await this.getPatientById(patientId);
+    if (!patient?.treatmentStartDate) return 0;
+
+    const startDate = new Date(patient.treatmentStartDate);
+    const currentDate = new Date();
+    const diffTime = Math.abs(currentDate.getTime() - startDate.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7)); // Convert to weeks
+  }
+
+  async calculateWeeksOnCurrentDosage(patientId: number): Promise<number> {
+    const patient = await this.getPatientById(patientId);
+    if (!patient?.currentDosageStartDate) return 0;
+
+    const startDate = new Date(patient.currentDosageStartDate);
+    const currentDate = new Date();
+    const diffTime = Math.abs(currentDate.getTime() - startDate.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7)); // Convert to weeks
+  }
+
+  async getDosageStatsByMedication(medication: string, treatmentSetting: string): Promise<any> {
+    const histories = await db
+      .select()
+      .from(dosageHistory)
+      .where(
+        and(
+          eq(dosageHistory.medication, medication),
+          eq(dosageHistory.treatmentSetting, treatmentSetting)
+        )
+      );
+
+    const dosageStats = {};
+    histories.forEach(history => {
+      if (!dosageStats[history.dosage]) {
+        dosageStats[history.dosage] = {
+          totalWeeks: 0,
+          patientCount: 0,
+          patients: new Set()
+        };
+      }
+      dosageStats[history.dosage].totalWeeks += history.weeksOnDosage || 0;
+      dosageStats[history.dosage].patients.add(history.patientId);
+    });
+
+    // Calculate averages
+    Object.keys(dosageStats).forEach(dosage => {
+      const stat = dosageStats[dosage];
+      stat.patientCount = stat.patients.size;
+      stat.averageWeeks = stat.patientCount > 0 ? stat.totalWeeks / stat.patientCount : 0;
+      delete stat.patients; // Remove Set for JSON serialization
+    });
+
+    return dosageStats;
+  }
+
+  async getValidDosagesForTreatment(medication: string, treatmentSetting: string): Promise<string[]> {
+    const dosageRules = {
+      metastatic: {
+        abemaciclib: ['150mg', '100mg', '50mg'],
+        ribociclib: ['600mg', '400mg', '200mg'],
+        palbociclib: ['125mg', '100mg', '75mg']
+      },
+      adjuvant: {
+        abemaciclib: ['150mg', '100mg', '50mg'],
+        ribociclib: ['400mg', '200mg'], // No 600mg in adjuvant
+        palbociclib: [] // Palbociclib not allowed in adjuvant
+      }
+    };
+
+    return dosageRules[treatmentSetting]?.[medication] || [];
+  }
+
+  async getTreatmentAnalytics(medication?: string, treatmentSetting?: string): Promise<any> {
+    let query = db.select().from(dosageHistory);
+    
+    const conditions = [];
+    if (medication) conditions.push(eq(dosageHistory.medication, medication));
+    if (treatmentSetting) conditions.push(eq(dosageHistory.treatmentSetting, treatmentSetting));
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+
+    const histories = await query;
+
+    const analytics = {
+      totalPatients: new Set(histories.map(h => h.patientId)).size,
+      medicationBreakdown: {},
+      settingBreakdown: {
+        metastatic: { patients: 0, averageWeeksOnTreatment: 0 },
+        adjuvant: { patients: 0, averageWeeksOnTreatment: 0 }
+      }
+    };
+
+    // Group by medication and treatment setting
+    const medicationGroups = {};
+    const settingGroups = { metastatic: [], adjuvant: [] };
+
+    histories.forEach(history => {
+      // Medication breakdown
+      if (!medicationGroups[history.medication]) {
+        medicationGroups[history.medication] = {
+          [history.treatmentSetting]: []
+        };
+      }
+      if (!medicationGroups[history.medication][history.treatmentSetting]) {
+        medicationGroups[history.medication][history.treatmentSetting] = [];
+      }
+      medicationGroups[history.medication][history.treatmentSetting].push(history);
+
+      // Setting groups
+      settingGroups[history.treatmentSetting].push(history);
+    });
+
+    // Process medication breakdown
+    Object.keys(medicationGroups).forEach(med => {
+      analytics.medicationBreakdown[med] = {};
+      
+      Object.keys(medicationGroups[med]).forEach(setting => {
+        const group = medicationGroups[med][setting];
+        const dosageStats = {};
+        
+        group.forEach(h => {
+          if (!dosageStats[h.dosage]) {
+            dosageStats[h.dosage] = { weeks: [], patients: new Set() };
+          }
+          dosageStats[h.dosage].weeks.push(h.weeksOnDosage || 0);
+          dosageStats[h.dosage].patients.add(h.patientId);
+        });
+
+        // Calculate averages for each dosage
+        Object.keys(dosageStats).forEach(dosage => {
+          const stat = dosageStats[dosage];
+          stat.averageWeeks = stat.weeks.length > 0 
+            ? stat.weeks.reduce((a, b) => a + b, 0) / stat.weeks.length 
+            : 0;
+          stat.patientCount = stat.patients.size;
+          delete stat.weeks;
+          delete stat.patients;
+        });
+
+        analytics.medicationBreakdown[med][setting] = dosageStats;
+      });
+    });
+
+    // Process setting breakdown
+    ['metastatic', 'adjuvant'].forEach(setting => {
+      const group = settingGroups[setting];
+      const uniquePatients = new Set(group.map(h => h.patientId));
+      
+      analytics.settingBreakdown[setting].patients = uniquePatients.size;
+      
+      if (group.length > 0) {
+        const totalWeeks = group.reduce((sum, h) => sum + (h.weeksOnDosage || 0), 0);
+        analytics.settingBreakdown[setting].averageWeeksOnTreatment = totalWeeks / group.length;
+      }
+    });
+
+    return analytics;
   }
 }
 
