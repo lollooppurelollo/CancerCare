@@ -108,9 +108,34 @@ export class DatabaseStorage implements IStorage {
     return patient;
   }
 
-  async getPatientByUserId(userId: number): Promise<Patient | undefined> {
-    const [patient] = await db.select().from(patients).where(eq(patients.userId, userId));
-    return patient;
+  async getPatientByUserId(userId: number): Promise<any> {
+    const [result] = await db
+      .select({
+        id: patients.id,
+        userId: patients.userId,
+        firstName: patients.firstName,
+        lastName: patients.lastName,
+        age: patients.age,
+        birthDate: patients.birthDate,
+        gender: patients.gender,
+        weight: patients.weight,
+        height: patients.height,
+        phone: patients.phone,
+        address: patients.address,
+        medication: patients.medication,
+        dosage: patients.dosage,
+        assignedDoctorId: patients.assignedDoctorId,
+        isActive: patients.isActive,
+        createdAt: patients.createdAt,
+        // Doctor information
+        doctorFirstName: users.firstName,
+        doctorLastName: users.lastName,
+      })
+      .from(patients)
+      .leftJoin(users, eq(patients.assignedDoctorId, users.id))
+      .where(eq(patients.userId, userId));
+    
+    return result;
   }
 
   async getPatientById(id: number): Promise<Patient | undefined> {

@@ -197,13 +197,23 @@ export default function PatientProfile() {
               <p className="text-sm text-gray-600">Dosaggio</p>
               <p className="font-medium">{patient.dosage}</p>
             </div>
+
+            <div className="p-3 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600">Medico di Riferimento</p>
+              <p className="font-medium">
+                {patient.doctorFirstName && patient.doctorLastName 
+                  ? `${patient.doctorFirstName} ${patient.doctorLastName}`
+                  : "Non assegnato"
+                }
+              </p>
+            </div>
           </CardContent>
         </Card>
 
         <div className="text-xs text-gray-500 mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
           <p className="font-medium text-yellow-800 mb-1">Nota</p>
           <p className="text-yellow-700">
-            Le informazioni mediche (farmaco, dosaggio) possono essere modificate solo dal tuo medico di riferimento.
+            Le informazioni mediche (farmaco, dosaggio, medico di riferimento) possono essere modificate solo dal tuo medico di riferimento.
           </p>
         </div>
 
