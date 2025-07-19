@@ -204,7 +204,7 @@ Preferred communication style: Simple, everyday language.
     - **Updated medication calendar legend text**: Modified legend descriptions for better clarity
     - Green days: "Giorni di trattamento" (Treatment days)
     - Gray days: "Giorni di pausa dalla terapia" (Therapy pause days)
-    - Red days: "Terapia non assunta erroneamente" (Therapy not taken erroneously)
+    - Red days: "Terapia non assunta" (Therapy not taken)
     - Historical tracking of all missed medications with timestamps and patient notes
 
 ## Data Flow
