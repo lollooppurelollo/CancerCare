@@ -327,28 +327,7 @@ export default function PatientVideo() {
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="space-y-3">
-          <Button
-            onClick={() => setShowUrgentDialog(true)}
-            disabled={sendUrgentAlert.isPending}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white"
-          >
-            <Phone className="w-4 h-4 mr-2" />
-            Richiedi di essere ricontattata
-          </Button>
-          <Button
-            onClick={() => {
-              setNewMessage("Ho dei dubbi sulla terapia. Potresti ricontattarmi?");
-              handleSendMessage(false);
-            }}
-            disabled={sendMessageMutation.isPending}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white"
-          >
-            <HelpCircle className="w-4 h-4 mr-2" />
-            Invia domanda o dubbio
-          </Button>
-        </div>
+
 
         {/* Medical Alert Section */}
         <div className="mt-6 p-4 bg-red-50 rounded-lg border border-red-200">
