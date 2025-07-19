@@ -183,17 +183,17 @@ export default function PatientVideo() {
         <h1 className="text-xl font-bold text-sage-800 mb-4">Contatti</h1>
         
         {/* Video Call Status */}
-        <div className="mb-6 p-4 bg-sage-50 rounded-lg border border-sage-200">
-          <div className="flex items-center mb-3">
-            <div className="w-3 h-3 bg-gray-400 rounded-full mr-3"></div>
-            <span className="text-sm font-medium text-gray-700">Stato videochiamata: Non attiva</span>
+        <div className="mb-4 p-3 bg-sage-50 rounded-lg border border-sage-200">
+          <div className="flex items-center mb-2">
+            <div className="w-2 h-2 bg-gray-400 rounded-full mr-2"></div>
+            <span className="text-xs font-medium text-gray-700">Stato videochiamata: Non attiva</span>
           </div>
-          <p className="text-sm text-gray-600 mb-3">Il medico può avviare una videochiamata quando necessario.</p>
+          <p className="text-xs text-gray-600 mb-2">Il medico può avviare una videochiamata quando necessario.</p>
           <Button 
-            className="w-full bg-gray-300 text-gray-600 cursor-not-allowed" 
+            className="w-full h-8 bg-gray-300 text-gray-600 cursor-not-allowed text-xs" 
             disabled
           >
-            <Video className="w-4 h-4 mr-2" />
+            <Video className="w-3 h-3 mr-1" />
             In attesa di chiamata
           </Button>
         </div>
@@ -202,63 +202,63 @@ export default function PatientVideo() {
         <div className="mb-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-3">Messaggi</h2>
           
-          <div className="space-y-3 max-h-64 overflow-y-auto">
+          <div className="space-y-2 max-h-48 overflow-y-auto">
             {messages.length === 0 ? (
-              <div className="text-center py-4">
-                <p className="text-gray-500">Nessun messaggio</p>
+              <div className="text-center py-3">
+                <p className="text-gray-500 text-sm">Nessun messaggio</p>
               </div>
             ) : (
               messages.map((message: any) => (
                 <div
                   key={message.id}
-                  className={`p-3 rounded-lg ${
+                  className={`p-2 rounded-lg ${
                     message.senderId === patient?.userId
-                      ? "bg-sage-50 ml-8"
+                      ? "bg-sage-50 ml-6"
                       : "bg-white shadow-sm border border-gray-200"
                   }`}
                 >
-                  <div className="flex items-start space-x-3">
+                  <div className="flex items-start space-x-2">
                     {message.senderId !== patient?.userId && (
-                      <div className="w-8 h-8 bg-sage-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                      <div className="w-6 h-6 bg-sage-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
                         Dr
                       </div>
                     )}
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-1">
-                        <span className="text-sm font-medium text-gray-800">
+                        <span className="text-xs font-medium text-gray-800">
                           {message.senderId === patient?.userId ? "Tu" : "Dr. Medico"}
                         </span>
                         <span className="text-xs text-gray-500">
                           {formatTime(message.createdAt)}
                         </span>
                         {message.isUrgent && (
-                          <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
+                          <span className="text-xs bg-red-100 text-red-800 px-1 py-0.5 rounded">
                             Urgente
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600">{message.content}</p>
+                      <p className="text-xs text-gray-600">{message.content}</p>
                       {message.fileUrl && (
-                        <div className="mt-2 p-2 bg-gray-50 rounded-lg flex items-center">
+                        <div className="mt-1 p-1.5 bg-gray-50 rounded flex items-center">
                           {getFileIcon(message.fileName || "")}
-                          <span className="ml-2 text-sm text-blue-600 hover:underline cursor-pointer">
+                          <span className="ml-1 text-xs text-blue-600 hover:underline cursor-pointer">
                             {message.fileName}
                           </span>
                         </div>
                       )}
                     </div>
                     {message.senderId === patient?.userId && (
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-1">
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => deleteMessage.mutate(message.id)}
                           disabled={deleteMessage.isPending}
-                          className="h-6 w-6 p-0 text-red-600 hover:text-red-800"
+                          className="h-5 w-5 p-0 text-red-600 hover:text-red-800"
                         >
-                          <X className="w-3 h-3" />
+                          <X className="w-2.5 h-2.5" />
                         </Button>
-                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                        <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
                           Tu
                         </div>
                       </div>
