@@ -7,50 +7,88 @@ export function useKeyboardVisibility() {
     const element = elementRef.current;
     if (!element) return;
 
-    let timeout: NodeJS.Timeout;
+    let scrollTimeout: NodeJS.Timeout;
+    let resizeTimeout: NodeJS.Timeout;
+    
+    // Detect mobile with more precise detection
+    const isMobile = /Android|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent) || 
+                    (window.innerWidth <= 768 && 'ontouchstart' in window);
+
+    const scrollToElement = () => {
+      if (!isMobile) return;
+      
+      console.log('🔧 Scrolling element into view');
+      
+      // Use the native scrollIntoView API which is more reliable
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+        inline: 'nearest'
+      });
+      
+      // Alternative scroll method as fallback
+      setTimeout(() => {
+        const rect = element.getBoundingClientRect();
+        if (rect.top < 100) { // If still not visible enough
+          const targetY = rect.top + window.pageYOffset - 120;
+          window.scrollTo({
+            top: Math.max(0, targetY),
+            behavior: 'smooth'
+          });
+        }
+      }, 100);
+    };
 
     const handleFocus = () => {
-      // Delay to ensure the keyboard is shown
-      timeout = setTimeout(() => {
-        // Calculate the position to scroll to
-        const rect = element.getBoundingClientRect();
-        const viewportHeight = window.innerHeight;
-        
-        // Assume keyboard takes about 40% of screen height on mobile
-        const keyboardHeight = viewportHeight * 0.4;
-        const availableHeight = viewportHeight - keyboardHeight;
-        
-        // Position the element in the upper part of the available space
-        const targetPosition = rect.top + window.scrollY - (availableHeight * 0.2);
-        
-        // Smooth scroll to position
-        window.scrollTo({
-          top: Math.max(0, targetPosition),
-          behavior: 'smooth'
-        });
-      }, 300); // Wait for keyboard animation
+      if (!isMobile) return;
+      
+      console.log('🔧 Input focused - initiating scroll');
+      
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      
+      // Initial immediate scroll
+      scrollToElement();
+      
+      // Secondary scroll after keyboard appears
+      scrollTimeout = setTimeout(() => {
+        scrollToElement();
+      }, 300);
+      
+      // Final scroll for stubborn keyboards
+      setTimeout(() => {
+        scrollToElement();
+      }, 600);
     };
 
-    const handleBlur = () => {
-      if (timeout) {
-        clearTimeout(timeout);
+    const handleResize = () => {
+      if (!isMobile) return;
+      
+      if (resizeTimeout) clearTimeout(resizeTimeout);
+      
+      // If the element is currently focused and viewport changes (keyboard)
+      if (document.activeElement === element) {
+        resizeTimeout = setTimeout(() => {
+          console.log('🔧 Viewport resized while focused - adjusting scroll');
+          scrollToElement();
+        }, 100);
       }
     };
 
-    // Add focus and blur event listeners
+    // Event listeners
     element.addEventListener('focus', handleFocus);
-    element.addEventListener('blur', handleBlur);
-
-    // Also handle touch events for better mobile support
-    element.addEventListener('touchstart', handleFocus);
+    element.addEventListener('touchstart', handleFocus); // For touch devices
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', () => {
+      setTimeout(handleResize, 100);
+    });
 
     return () => {
-      if (timeout) {
-        clearTimeout(timeout);
-      }
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      if (resizeTimeout) clearTimeout(resizeTimeout);
+      
       element.removeEventListener('focus', handleFocus);
-      element.removeEventListener('blur', handleBlur);
       element.removeEventListener('touchstart', handleFocus);
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 

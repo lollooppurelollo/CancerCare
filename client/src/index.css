@@ -72,3 +72,23 @@
 @layer utilities {
   /* Sage utility classes are now handled by Tailwind config */
 }
+
+/* Mobile keyboard visibility improvements */
+@media (max-width: 768px) and (hover: none) and (pointer: coarse) {
+  input, textarea, select {
+    scroll-margin-top: 120px;
+    scroll-padding-top: 120px;
+  }
+  
+  /* Ensure inputs are visible above virtual keyboard */
+  input:focus, textarea:focus, select:focus {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    scroll-behavior: smooth;
+  }
+
+  /* Prevent zoom on input focus */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
