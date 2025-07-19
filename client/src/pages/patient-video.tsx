@@ -4,6 +4,7 @@ import { Video, Phone, MessageCircle, Send, HelpCircle, Paperclip, FileText, Ima
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import BottomNavigation from "@/components/ui/bottom-navigation";
@@ -11,6 +12,8 @@ import BottomNavigation from "@/components/ui/bottom-navigation";
 export default function PatientVideo() {
   const [newMessage, setNewMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [showUrgentDialog, setShowUrgentDialog] = useState(false);
+  const [urgentMessage, setUrgentMessage] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -70,6 +73,52 @@ export default function PatientVideo() {
       fileName,
     });
   };
+
+  const sendUrgentAlert = useMutation({
+    mutationFn: async (message: string) => {
+      await apiRequest("POST", "/api/messages", {
+        patientId: patient?.id,
+        content: message || "Richiesta urgente: La paziente ha richiesto di essere ricontattata dal medico.",
+        isUrgent: true,
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Segnalazione inviata",
+        description: "Il medico è stato avvisato della tua richiesta urgente.",
+      });
+      setShowUrgentDialog(false);
+      setUrgentMessage("");
+      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Impossibile inviare la segnalazione. Riprova.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteUrgentMessage = useMutation({
+    mutationFn: async (messageId: number) => {
+      await apiRequest("DELETE", `/api/messages/${messageId}`, {});
+    },
+    onSuccess: () => {
+      toast({
+        title: "Messaggio eliminato",
+        description: "La segnalazione urgente è stata eliminata.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Impossibile eliminare il messaggio. Riprova.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -251,18 +300,8 @@ export default function PatientVideo() {
         {/* Quick Actions */}
         <div className="space-y-3">
           <Button
-            onClick={() => {
-              // If no message is written, send a default urgent request
-              if (!newMessage.trim()) {
-                sendMessageMutation.mutate({
-                  content: "Richiesta urgente: La paziente ha richiesto di essere ricontattata dal medico.",
-                  isUrgent: true,
-                });
-              } else {
-                handleSendMessage(true);
-              }
-            }}
-            disabled={sendMessageMutation.isPending}
+            onClick={() => setShowUrgentDialog(true)}
+            disabled={sendUrgentAlert.isPending}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white"
           >
             <Phone className="w-4 h-4 mr-2" />
@@ -280,9 +319,86 @@ export default function PatientVideo() {
             Invia domanda o dubbio
           </Button>
         </div>
+
+        {/* Recent Urgent Messages */}
+        {messages.filter((msg: any) => msg.isUrgent && msg.senderId === patient?.userId).length > 0 && (
+          <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
+            <h3 className="text-sm font-medium text-orange-800 mb-2">Richieste urgenti inviate:</h3>
+            <div className="space-y-2">
+              {messages
+                .filter((msg: any) => msg.isUrgent && msg.senderId === patient?.userId)
+                .slice(0, 3)
+                .map((msg: any) => (
+                  <div key={msg.id} className="flex items-start justify-between bg-white p-2 rounded border">
+                    <div className="flex-1">
+                      <p className="text-xs text-gray-600">{msg.content}</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {new Date(msg.createdAt).toLocaleString('it-IT')}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteUrgentMessage.mutate(msg.id)}
+                      disabled={deleteUrgentMessage.isPending}
+                      className="ml-2 h-6 w-6 p-0 text-red-600 hover:text-red-800"
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <BottomNavigation />
+
+      {/* Urgent Message Dialog */}
+      <Dialog open={showUrgentDialog} onOpenChange={setShowUrgentDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Richiesta Urgente di Ricontatto</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-600 mb-4">
+            Richiedi di essere ricontattata urgentemente dal tuo medico.
+          </p>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Motivo della richiesta (opzionale):
+              </label>
+              <Textarea
+                placeholder="Descrivi brevemente perché hai bisogno di essere ricontattata..."
+                value={urgentMessage}
+                onChange={(e) => setUrgentMessage(e.target.value)}
+                className="w-full h-20 resize-none focus:ring-sage-500 focus:border-sage-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Se non scrivi nulla, verrà inviata una richiesta standard.
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowUrgentDialog(false);
+                setUrgentMessage("");
+              }}
+            >
+              Annulla
+            </Button>
+            <Button
+              onClick={() => sendUrgentAlert.mutate(urgentMessage)}
+              disabled={sendUrgentAlert.isPending}
+              className="bg-blue-500 hover:bg-blue-600"
+            >
+              {sendUrgentAlert.isPending ? "Invio..." : "Invia Richiesta"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

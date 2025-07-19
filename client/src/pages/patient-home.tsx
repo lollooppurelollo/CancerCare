@@ -18,6 +18,8 @@ export default function PatientHome() {
   const [showMissedMedDialog, setShowMissedMedDialog] = useState(false);
   const [missedDates, setMissedDates] = useState<string[]>([]);
   const [missedMedNotes, setMissedMedNotes] = useState("");
+  const [showUrgentDialog, setShowUrgentDialog] = useState(false);
+  const [urgentMessage, setUrgentMessage] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
@@ -50,11 +52,15 @@ export default function PatientHome() {
     },
   });
 
+  const { data: messages = [] } = useQuery({
+    queryKey: ["/api/messages"],
+  });
+
   const sendUrgentAlert = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (message: string) => {
       await apiRequest("POST", "/api/messages", {
         patientId: patient?.id,
-        content: "Segnalazione urgente: La paziente ha richiesto assistenza medica immediata.",
+        content: message || "Segnalazione urgente: La paziente ha richiesto assistenza medica immediata.",
         isUrgent: true,
       });
     },
@@ -63,11 +69,34 @@ export default function PatientHome() {
         title: "Segnalazione inviata",
         description: "Il medico è stato avvisato della tua segnalazione urgente.",
       });
+      setShowUrgentDialog(false);
+      setUrgentMessage("");
+      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
     },
     onError: () => {
       toast({
         title: "Errore",
         description: "Impossibile inviare la segnalazione. Riprova.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteUrgentMessage = useMutation({
+    mutationFn: async (messageId: number) => {
+      await apiRequest("DELETE", `/api/messages/${messageId}`, {});
+    },
+    onSuccess: () => {
+      toast({
+        title: "Messaggio eliminato",
+        description: "La segnalazione urgente è stata eliminata.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Impossibile eliminare il messaggio. Riprova.",
         variant: "destructive",
       });
     },
@@ -140,7 +169,7 @@ export default function PatientHome() {
                 <Settings className="mr-2 h-4 w-4" />
                 Impostazioni
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={sendUrgentAlert.mutate}>
+              <DropdownMenuItem onClick={() => setShowUrgentDialog(true)}>
                 <AlertTriangle className="mr-2 h-4 w-4 text-red-500" />
                 Segnalazione Urgente
               </DropdownMenuItem>
@@ -212,17 +241,94 @@ export default function PatientHome() {
         {/* Manual Alert */}
         <div className="mt-6">
           <Button
-            onClick={() => sendUrgentAlert.mutate()}
+            onClick={() => setShowUrgentDialog(true)}
             disabled={sendUrgentAlert.isPending}
             className="w-full bg-orange-500 hover:bg-orange-600 text-white"
           >
             <AlertTriangle className="w-5 h-5 mr-2" />
-            {sendUrgentAlert.isPending ? "Invio..." : "Invia Segnalazione Urgente al Medico"}
+            Invia Segnalazione Urgente al Medico
           </Button>
         </div>
+
+        {/* Recent Urgent Messages */}
+        {messages.filter((msg: any) => msg.isUrgent && msg.senderId === patient?.userId).length > 0 && (
+          <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
+            <h3 className="text-sm font-medium text-orange-800 mb-2">Segnalazioni urgenti inviate:</h3>
+            <div className="space-y-2">
+              {messages
+                .filter((msg: any) => msg.isUrgent && msg.senderId === patient?.userId)
+                .slice(0, 3)
+                .map((msg: any) => (
+                  <div key={msg.id} className="flex items-start justify-between bg-white p-2 rounded border">
+                    <div className="flex-1">
+                      <p className="text-xs text-gray-600">{msg.content}</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {new Date(msg.createdAt).toLocaleString('it-IT')}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteUrgentMessage.mutate(msg.id)}
+                      disabled={deleteUrgentMessage.isPending}
+                      className="ml-2 h-6 w-6 p-0 text-red-600 hover:text-red-800"
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <BottomNavigation />
+
+      {/* Urgent Message Dialog */}
+      <Dialog open={showUrgentDialog} onOpenChange={setShowUrgentDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Segnalazione Urgente al Medico</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-600 mb-4">
+            Invia una segnalazione urgente al tuo medico per richiedere assistenza immediata.
+          </p>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Messaggio personalizzato (opzionale):
+              </label>
+              <Textarea
+                placeholder="Descrivi brevemente la situazione urgente..."
+                value={urgentMessage}
+                onChange={(e) => setUrgentMessage(e.target.value)}
+                className="w-full h-20 resize-none focus:ring-sage-500 focus:border-sage-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Se non scrivi nulla, verrà inviato un messaggio predefinito.
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowUrgentDialog(false);
+                setUrgentMessage("");
+              }}
+            >
+              Annulla
+            </Button>
+            <Button
+              onClick={() => sendUrgentAlert.mutate(urgentMessage)}
+              disabled={sendUrgentAlert.isPending}
+              className="bg-orange-500 hover:bg-orange-600"
+            >
+              {sendUrgentAlert.isPending ? "Invio..." : "Invia Segnalazione"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

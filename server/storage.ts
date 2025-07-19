@@ -51,6 +51,7 @@ export interface IStorage {
   createMessage(message: InsertMessage): Promise<Message>;
   getMessagesByPatient(patientId: number): Promise<Message[]>;
   getAllMessages(): Promise<Message[]>;
+  deleteMessage(id: number): Promise<void>;
 
   // Alert operations
   createAlert(alert: InsertAlert): Promise<Alert>;
@@ -303,6 +304,24 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(messages)
       .orderBy(desc(messages.createdAt));
+  }
+
+  async deleteMessage(id: number): Promise<void> {
+    // Get the message first to check if it was urgent
+    const [message] = await db.select().from(messages).where(eq(messages.id, id));
+    
+    await db.delete(messages).where(eq(messages.id, id));
+    
+    // If it was an urgent message, also delete related alerts
+    if (message && message.isUrgent) {
+      await db.delete(alerts).where(
+        and(
+          eq(alerts.patientId, message.patientId),
+          eq(alerts.type, "message"),
+          eq(alerts.resolved, false)
+        )
+      );
+    }
   }
 
   // Alert operations

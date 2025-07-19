@@ -735,6 +735,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/messages/:id", async (req, res) => {
+    try {
+      const userId = (req as any).session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const messageId = parseInt(req.params.id);
+      if (!messageId) {
+        return res.status(400).json({ message: "Invalid message ID" });
+      }
+
+      // For security, users can only delete their own messages
+      const allMessages = await storage.getAllMessages();
+      const messageToDelete = allMessages.find(m => m.id === messageId);
+      
+      if (!messageToDelete) {
+        return res.status(404).json({ message: "Message not found" });
+      }
+
+      if (messageToDelete.senderId !== userId) {
+        return res.status(403).json({ message: "You can only delete your own messages" });
+      }
+
+      await storage.deleteMessage(messageId);
+      res.json({ message: "Message deleted successfully" });
+    } catch (error) {
+      console.error("Delete message error:", error);
+      res.status(500).json({ message: "Failed to delete message" });
+    }
+  });
+
   app.get("/api/messages/:patientId", async (req, res) => {
     try {
       const userRole = (req as any).session?.userRole;

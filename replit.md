@@ -207,6 +207,18 @@ Preferred communication style: Simple, everyday language.
     - Red days: "Terapia non assunta" (Therapy not taken)
     - Historical tracking of all missed medications with timestamps and patient notes
 
+16. **Enhanced Urgent Alert System with Custom Messages and Deletion (July 2025)**:
+    - Added customizable urgent message dialog in both patient home and video pages
+    - Patients can now add personal text to urgent alerts or use default messages
+    - Implemented visual display of recent urgent messages with deletion capability
+    - Added X button to delete urgent messages if sent by mistake
+    - Enhanced backend with DELETE endpoint for messages with security validation
+    - Automatic alert cleanup when urgent messages are deleted from database
+    - Improved user experience with confirmation dialogs and Italian language support
+    - Real-time message management with immediate UI updates after operations
+    - Secure message deletion ensures users can only delete their own messages
+    - Enhanced video page "Richiedi di essere ricontattata" with custom message input
+
 ## Data Flow
 
 1. **Patient Registration**: New patients create accounts with medical information
