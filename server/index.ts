@@ -13,8 +13,8 @@ const PgSession = connectPgSimple(session);
 app.use(session({
   store: new PgSession({
     conString: process.env.DATABASE_URL,
-    tableName: 'session',
-    createTableIfMissing: true
+    tableName: 'sessions',
+    createTableIfMissing: false
   }),
   secret: process.env.SESSION_SECRET || 'your-secret-key-here',
   resave: false,
@@ -63,8 +63,9 @@ app.use((req, res, next) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
-    res.status(status).json({ message });
-    throw err;
+    if (!res.headersSent) {
+      res.status(status).json({ message });
+    }
   });
 
   // importantly only setup vite in development and after
