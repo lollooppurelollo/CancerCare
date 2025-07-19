@@ -667,6 +667,211 @@ export class DatabaseStorage implements IStorage {
 
     return analytics;
   }
+
+  async getAdvancedPatientAnalytics(): Promise<any[]> {
+    const patients = await this.getAllPatients();
+    const results = [];
+
+    for (const patient of patients) {
+      // Calculate adherence percentage
+      const missedMedications = await this.getMissedMedicationByPatient(patient.id);
+      const totalMissedDays = missedMedications.reduce((sum, missed) => 
+        sum + (missed.missedDates as string[]).length, 0
+      );
+      
+      const weeksOnTreatment = await this.calculateWeeksOnTreatment(patient.id);
+      const totalTreatmentDays = weeksOnTreatment * 7;
+      const adherencePercentage = totalTreatmentDays > 0 ? 
+        ((totalTreatmentDays - totalMissedDays) / totalTreatmentDays) * 100 : 100;
+
+      // Get symptoms data
+      const symptoms = await db
+        .select()
+        .from(symptoms)
+        .where(eq(symptoms.patientId, patient.id));
+
+      const totalSymptoms = symptoms.length;
+      const highSeveritySymptoms = symptoms.filter(s => 
+        s.intensity && s.intensity >= 7
+      ).length;
+
+      const lastSymptomReport = symptoms.length > 0 ? 
+        symptoms.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())[0].date : 'Mai';
+
+      // Get dosage reductions
+      const dosageHistory = await this.getDosageHistoryByPatientId(patient.id);
+      const dosageReductions = dosageHistory.length - 1; // First entry is initial dosage
+
+      const weeksOnCurrentDosage = await this.calculateWeeksOnCurrentDosage(patient.id);
+
+      results.push({
+        id: patient.id,
+        name: `${patient.firstName} ${patient.lastName}`,
+        age: patient.age,
+        medication: patient.medication,
+        dosage: patient.dosage,
+        treatmentSetting: patient.treatmentSetting,
+        treatmentStartDate: patient.treatmentStartDate,
+        weeksOnTreatment,
+        weeksOnCurrentDosage,
+        adherencePercentage,
+        totalSymptoms,
+        highSeveritySymptoms,
+        lastSymptomReport,
+        dosageReductions,
+        missedDays: totalMissedDays,
+        totalTreatmentDays
+      });
+    }
+
+    return results;
+  }
+
+  async getDosageWeeksAnalytics(medication?: string, treatmentSetting?: string): Promise<any[]> {
+    let query = db.select().from(dosageHistory);
+    
+    const conditions = [];
+    if (medication && medication !== "all") conditions.push(eq(dosageHistory.medication, medication));
+    if (treatmentSetting && treatmentSetting !== "all") conditions.push(eq(dosageHistory.treatmentSetting, treatmentSetting));
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+
+    const histories = await query;
+    
+    // Group by medication, dosage, and treatment setting
+    const grouped = histories.reduce((acc, history) => {
+      const key = `${history.medication}-${history.dosage}-${history.treatmentSetting}`;
+      if (!acc[key]) {
+        acc[key] = {
+          medication: history.medication,
+          dosage: history.dosage,
+          treatmentSetting: history.treatmentSetting,
+          weeks: [],
+          patientIds: new Set()
+        };
+      }
+      if (history.weeksOnDosage) {
+        acc[key].weeks.push(history.weeksOnDosage);
+        acc[key].patientIds.add(history.patientId);
+      }
+      return acc;
+    }, {});
+
+    return Object.values(grouped).map((group: any) => ({
+      medication: group.medication,
+      dosage: group.dosage,
+      treatmentSetting: group.treatmentSetting,
+      averageWeeks: group.weeks.length > 0 ? 
+        group.weeks.reduce((sum, w) => sum + w, 0) / group.weeks.length : 0,
+      patientCount: group.patientIds.size
+    }));
+  }
+
+  async getToxicityAnalytics(medication?: string, treatmentSetting?: string): Promise<any[]> {
+    // Get all patients matching criteria
+    let patientsQuery = db.select().from(patients);
+    const patientConditions = [];
+    
+    if (medication && medication !== "all") patientConditions.push(eq(patients.medication, medication));
+    if (treatmentSetting && treatmentSetting !== "all") patientConditions.push(eq(patients.treatmentSetting, treatmentSetting));
+    
+    if (patientConditions.length > 0) {
+      patientsQuery = patientsQuery.where(and(...patientConditions));
+    }
+
+    const matchingPatients = await patientsQuery;
+    const patientIds = matchingPatients.map(p => p.id);
+
+    if (patientIds.length === 0) return [];
+
+    // Get symptoms for these patients
+    const symptomsData = await db
+      .select()
+      .from(symptoms)
+      .where(or(...patientIds.map(id => eq(symptoms.patientId, id))));
+
+    // Group by symptom type
+    const grouped = symptomsData.reduce((acc, symptom) => {
+      if (!symptom.present) return acc;
+      
+      if (!acc[symptom.symptomType]) {
+        acc[symptom.symptomType] = {
+          count: 0,
+          totalSeverity: 0,
+          severityCount: 0
+        };
+      }
+      
+      acc[symptom.symptomType].count++;
+      
+      if (symptom.intensity) {
+        acc[symptom.symptomType].totalSeverity += symptom.intensity;
+        acc[symptom.symptomType].severityCount++;
+      }
+      
+      return acc;
+    }, {});
+
+    return Object.entries(grouped).map(([symptom, data]: [string, any]) => ({
+      symptom,
+      count: data.count,
+      severity: data.severityCount > 0 ? data.totalSeverity / data.severityCount : 0,
+      medication: medication || "all",
+      treatmentSetting: treatmentSetting || "all"
+    }));
+  }
+
+  async getMedicationComparisonData(): Promise<any[]> {
+    const medications = ['abemaciclib', 'ribociclib', 'palbociclib'];
+    const results = [];
+
+    for (const medication of medications) {
+      const medicationPatients = await db
+        .select()
+        .from(patients)
+        .where(eq(patients.medication, medication));
+
+      if (medicationPatients.length === 0) continue;
+
+      const patientIds = medicationPatients.map(p => p.id);
+
+      // Get toxicities
+      const symptomsData = await db
+        .select()
+        .from(symptoms)
+        .where(and(
+          or(...patientIds.map(id => eq(symptoms.patientId, id))),
+          eq(symptoms.present, true)
+        ));
+
+      const totalToxicities = symptomsData.length;
+      const averageSeverity = symptomsData.length > 0 ? 
+        symptomsData.reduce((sum, s) => sum + (s.intensity || 0), 0) / symptomsData.length : 0;
+
+      // Get dosage reductions
+      const dosageHistories = await db
+        .select()
+        .from(dosageHistory)
+        .where(eq(dosageHistory.medication, medication));
+
+      const dosageReductions = dosageHistories.filter(h => h.endDate !== null).length;
+      const averageWeeksBeforeReduction = dosageReductions > 0 ?
+        dosageHistories.filter(h => h.endDate !== null)
+          .reduce((sum, h) => sum + (h.weeksOnDosage || 0), 0) / dosageReductions : 0;
+
+      results.push({
+        medication,
+        totalToxicities,
+        averageSeverity,
+        dosageReductions,
+        averageWeeksBeforeReduction
+      });
+    }
+
+    return results;
+  }
 }
 
 export const storage = new DatabaseStorage();

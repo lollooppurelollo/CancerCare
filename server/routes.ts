@@ -937,6 +937,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/missed-medication/all", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Get all missed medications directly from database
+      const allMissedMedications = await db.select().from(missedMedication).orderBy(desc(missedMedication.createdAt));
+      
+      res.json(allMissedMedications);
+    } catch (error) {
+      console.error("Get all missed medications error:", error);
+      res.status(500).json({ message: "Failed to get missed medications" });
+    }
+  });
+
   app.get("/api/missed-medication/:patientId", async (req, res) => {
     try {
       const userId = (req as any).session?.userId;
@@ -947,6 +964,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const patientId = parseInt(req.params.patientId);
+      
+      if (isNaN(patientId)) {
+        return res.status(400).json({ message: "Invalid patient ID" });
+      }
       
       if (userRole === "doctor") {
         // Doctors can access any patient's missed medications
@@ -963,31 +984,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       console.error("Get patient missed medications error:", error);
-      res.status(500).json({ message: "Failed to get missed medications" });
-    }
-  });
-
-
-
-  app.get("/api/missed-medication/all", async (req, res) => {
-    try {
-      const userRole = (req as any).session?.userRole;
-      if (userRole !== "doctor") {
-        return res.status(403).json({ message: "Access denied" });
-      }
-
-      const allPatients = await storage.getAllPatients();
-      let allMissedMedications: any[] = [];
-
-      // Get missed medications for all patients
-      for (const patient of allPatients) {
-        const missedMeds = await storage.getMissedMedicationByPatient(patient.id);
-        allMissedMedications.push(...missedMeds);
-      }
-
-      res.json(allMissedMedications);
-    } catch (error) {
-      console.error("Get all missed medications error:", error);
       res.status(500).json({ message: "Failed to get missed medications" });
     }
   });
@@ -1201,6 +1197,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Update dosage history error:", error);
       res.status(500).json({ message: "Failed to update dosage history" });
+    }
+  });
+
+  // Advanced Analytics Endpoints
+  app.get("/api/analytics/advanced-patient-data", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const advancedData = await storage.getAdvancedPatientAnalytics();
+      res.json(advancedData);
+    } catch (error) {
+      console.error("Get advanced patient data error:", error);
+      res.status(500).json({ message: "Failed to get advanced patient data" });
+    }
+  });
+
+  app.get("/api/analytics/dosage-weeks-data", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const { medication, treatmentSetting } = req.query;
+      const dosageWeeksData = await storage.getDosageWeeksAnalytics(
+        medication as string, 
+        treatmentSetting as string
+      );
+      res.json(dosageWeeksData);
+    } catch (error) {
+      console.error("Get dosage weeks data error:", error);
+      res.status(500).json({ message: "Failed to get dosage weeks data" });
+    }
+  });
+
+  app.get("/api/analytics/toxicity-data", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const { medication, treatmentSetting } = req.query;
+      const toxicityData = await storage.getToxicityAnalytics(
+        medication as string,
+        treatmentSetting as string
+      );
+      res.json(toxicityData);
+    } catch (error) {
+      console.error("Get toxicity data error:", error);
+      res.status(500).json({ message: "Failed to get toxicity data" });
+    }
+  });
+
+  app.get("/api/analytics/medication-comparison", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const comparisonData = await storage.getMedicationComparisonData();
+      res.json(comparisonData);
+    } catch (error) {
+      console.error("Get medication comparison error:", error);
+      res.status(500).json({ message: "Failed to get medication comparison data" });
     }
   });
 

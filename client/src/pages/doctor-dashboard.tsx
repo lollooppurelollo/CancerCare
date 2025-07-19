@@ -153,9 +153,27 @@ export default function DoctorDashboard() {
               size="sm" 
               className="text-sage-600 hover:text-sage-700 transition-all duration-200 hover:scale-105"
               onClick={() => setLocation("/doctor/analytics")}
-              title="Analytics Trattamenti"
+              title="Analytics Base"
             >
-              <BarChart3 className="w-5 h-5" />
+              <BarChart3 className="w-4 h-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-blue-600 hover:text-blue-700 transition-all duration-200 hover:scale-105"
+              onClick={() => setLocation("/doctor/advanced-analytics")}
+              title="Statistiche Avanzate"
+            >
+              <BarChart3 className="w-4 h-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-purple-600 hover:text-purple-700 transition-all duration-200 hover:scale-105"
+              onClick={() => setLocation("/doctor/charts-analytics")}
+              title="Grafici Analytics"
+            >
+              <BarChart3 className="w-4 h-4" />
             </Button>
             <Button 
               variant="ghost" 
@@ -359,11 +377,15 @@ export default function DoctorDashboard() {
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1 pr-4">
-                            <div className="flex items-center space-x-2 mb-1">
-                              <p className="font-medium">{alert.message}</p>
-                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                                Messaggio
-                              </span>
+                            <div className="mb-2">
+                              <div className="flex items-center space-x-2 mb-2">
+                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                  Messaggio
+                                </span>
+                              </div>
+                              <div className="bg-white p-3 rounded-md border-l-4 border-blue-400">
+                                <p className="text-sm text-gray-800 leading-relaxed">{alert.message}</p>
+                              </div>
                             </div>
                             <button
                               onClick={() => setLocation(`/doctor/patient-view/${alert.patientId}`)}
