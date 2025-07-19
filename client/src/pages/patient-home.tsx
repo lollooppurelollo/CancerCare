@@ -23,7 +23,7 @@ export default function PatientHome() {
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
 
-  const { data: patient } = useQuery({
+  const { data: patient, isLoading: patientLoading } = useQuery({
     queryKey: ["/api/patients/me"],
   });
 
@@ -55,8 +55,14 @@ export default function PatientHome() {
 
   const reportMissedMedication = useMutation({
     mutationFn: async () => {
+      if (!patient?.id) {
+        throw new Error("Dati paziente non disponibili");
+      }
+      if (missedDates.length === 0) {
+        throw new Error("Seleziona almeno una data");
+      }
       await apiRequest("POST", "/api/missed-medication", {
-        patientId: patient?.id,
+        patientId: patient.id,
         missedDates: missedDates,
         notes: missedMedNotes,
       });

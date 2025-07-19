@@ -17,18 +17,22 @@ export default function PatientVideo() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: patient } = useQuery({
+  const { data: patient, isLoading: patientLoading } = useQuery({
     queryKey: ["/api/patients/me"],
   });
 
-  const { data: messages = [] } = useQuery({
+  const { data: messages = [], isLoading: messagesLoading } = useQuery({
     queryKey: ["/api/messages"],
+    enabled: !!patient?.id, // Solo carica messaggi quando patient è disponibile
   });
 
   const sendMessageMutation = useMutation({
     mutationFn: async ({ content, isUrgent, fileUrl, fileName }: { content: string; isUrgent: boolean; fileUrl?: string; fileName?: string }) => {
+      if (!patient?.id) {
+        throw new Error("Dati paziente non disponibili");
+      }
       await apiRequest("POST", "/api/messages", {
-        patientId: patient?.id,
+        patientId: patient.id,
         content,
         isUrgent,
         fileUrl,
@@ -76,9 +80,12 @@ export default function PatientVideo() {
 
   const sendUrgentAlert = useMutation({
     mutationFn: async (message: string) => {
+      if (!patient?.id) {
+        throw new Error("Dati paziente non disponibili");
+      }
       await apiRequest("POST", "/api/messages", {
-        patientId: patient?.id,
-        content: message || "Richiesta urgente: La paziente ha richiesto di essere ricontattata dal medico.",
+        patientId: patient.id,
+        content: message || "Segnalazione medica urgente: La paziente richiede assistenza immediata dal medico.",
         isUrgent: true,
       });
     },
@@ -157,6 +164,18 @@ export default function PatientVideo() {
       return "";
     }
   };
+
+  // Loading state
+  if (patientLoading) {
+    return (
+      <div className="max-w-md mx-auto bg-white min-h-screen pb-20 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage-600 mx-auto mb-4"></div>
+          <p className="text-sage-600">Caricamento...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-md mx-auto bg-white min-h-screen pb-20">

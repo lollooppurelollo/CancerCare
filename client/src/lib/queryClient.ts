@@ -12,15 +12,28 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
-    method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+  
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: data ? { "Content-Type": "application/json" } : {},
+      body: data ? JSON.stringify(data) : undefined,
+      credentials: "include",
+      signal: controller.signal,
+    });
 
-  await throwIfResNotOk(res);
-  return res;
+    clearTimeout(timeoutId);
+    await throwIfResNotOk(res);
+    return res;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('408: Request timeout');
+    }
+    throw error;
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
@@ -47,11 +60,27 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes instead of Infinity
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+      retry: (failureCount, error) => {
+        // Don't retry on 401, 403, 404 errors
+        if (error instanceof Error && error.message.match(/^(401|403|404):/)) {
+          return false;
+        }
+        // Retry up to 2 times for other errors
+        return failureCount < 2;
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     },
     mutations: {
-      retry: false,
+      retry: (failureCount, error) => {
+        // Don't retry mutations on client errors (4xx)
+        if (error instanceof Error && error.message.match(/^4\d\d:/)) {
+          return false;
+        }
+        // Retry once on server errors (5xx) or network errors
+        return failureCount < 1;
+      },
     },
   },
 });

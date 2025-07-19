@@ -717,7 +717,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Not authenticated" });
       }
 
-      let messages;
+      let messages = [];
       if (userRole === "doctor") {
         messages = await storage.getAllMessages();
       } else {
@@ -727,6 +727,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         messages = await storage.getMessagesByPatient(patient.id);
       }
+
+      // Sort messages by creation date (newest first) to ensure consistency
+      messages.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
       res.json(messages);
     } catch (error) {
