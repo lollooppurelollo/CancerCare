@@ -331,6 +331,61 @@ export default function PatientVideo() {
           </Button>
         </div>
 
+        {/* Medical Alert Section */}
+        <div className="mt-6 p-4 bg-red-50 rounded-lg border border-red-200">
+          <h3 className="text-md font-semibold text-red-800 mb-3">Segnalazione Medica Urgente</h3>
+          <p className="text-sm text-red-700 mb-3">
+            Utilizza questa funzione solo per emergenze mediche che richiedono attenzione immediata.
+          </p>
+          <Button
+            onClick={() => setShowUrgentDialog(true)}
+            disabled={sendUrgentAlert.isPending}
+            className="w-full bg-red-600 hover:bg-red-700 text-white"
+          >
+            <AlertTriangle className="w-5 h-5 mr-2" />
+            Invia Segnalazione Medica Urgente
+          </Button>
+
+          {/* Recent Urgent Messages - Today Only */}
+          {messages.filter((msg: any) => {
+            const today = new Date().toISOString().split('T')[0];
+            const messageDate = new Date(msg.createdAt).toISOString().split('T')[0];
+            return msg.isUrgent && msg.senderId === patient?.userId && messageDate === today;
+          }).length > 0 && (
+            <div className="mt-4 p-3 bg-red-100 rounded-lg border border-red-300">
+              <h4 className="text-sm font-medium text-red-800 mb-2">Segnalazioni urgenti di oggi:</h4>
+              <div className="space-y-2">
+                {messages
+                  .filter((msg: any) => {
+                    const today = new Date().toISOString().split('T')[0];
+                    const messageDate = new Date(msg.createdAt).toISOString().split('T')[0];
+                    return msg.isUrgent && msg.senderId === patient?.userId && messageDate === today;
+                  })
+                  .slice(0, 3)
+                  .map((msg: any) => (
+                    <div key={msg.id} className="flex items-start justify-between bg-white p-2 rounded border">
+                      <div className="flex-1">
+                        <p className="text-xs text-gray-600">{msg.content}</p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {new Date(msg.createdAt).toLocaleString('it-IT')}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteMessage.mutate(msg.id)}
+                        disabled={deleteMessage.isPending}
+                        className="ml-2 h-6 w-6 p-0 text-red-600 hover:text-red-800"
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Recent Urgent Messages - Today Only */}
         {messages.filter((msg: any) => {
           const today = new Date().toISOString().split('T')[0];
@@ -377,24 +432,24 @@ export default function PatientVideo() {
       <Dialog open={showUrgentDialog} onOpenChange={setShowUrgentDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Richiesta Urgente di Ricontatto</DialogTitle>
+            <DialogTitle>Segnalazione Medica Urgente</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-gray-600 mb-4">
-            Richiedi di essere ricontattata urgentemente dal tuo medico.
+            Invia una segnalazione medica urgente al tuo medico per richiedere assistenza immediata.
           </p>
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Motivo della richiesta (opzionale):
+                Descrizione della situazione urgente (opzionale):
               </label>
               <Textarea
-                placeholder="Descrivi brevemente perché hai bisogno di essere ricontattata..."
+                placeholder="Descrivi brevemente i sintomi o la situazione che richiede attenzione medica urgente..."
                 value={urgentMessage}
                 onChange={(e) => setUrgentMessage(e.target.value)}
-                className="w-full h-20 resize-none focus:ring-sage-500 focus:border-sage-500"
+                className="w-full h-24 resize-none focus:ring-red-500 focus:border-red-500"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Se non scrivi nulla, verrà inviata una richiesta standard.
+                Se non scrivi nulla, verrà inviato un messaggio di allerta standard.
               </p>
             </div>
           </div>
@@ -411,9 +466,9 @@ export default function PatientVideo() {
             <Button
               onClick={() => sendUrgentAlert.mutate(urgentMessage)}
               disabled={sendUrgentAlert.isPending}
-              className="bg-blue-500 hover:bg-blue-600"
+              className="bg-red-600 hover:bg-red-700"
             >
-              {sendUrgentAlert.isPending ? "Invio..." : "Invia Richiesta"}
+              {sendUrgentAlert.isPending ? "Invio..." : "Invia Segnalazione Urgente"}
             </Button>
           </div>
         </DialogContent>
