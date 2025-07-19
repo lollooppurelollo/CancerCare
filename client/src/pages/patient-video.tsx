@@ -225,7 +225,7 @@ export default function PatientVideo() {
                     )}
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-1">
-                        <span className="text-xs font-medium text-gray-800">
+                        <span className="text-sm font-medium text-gray-800">
                           {message.senderId === patient?.userId ? "Tu" : "Dr. Medico"}
                         </span>
                         <span className="text-xs text-gray-500">
@@ -237,11 +237,11 @@ export default function PatientVideo() {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-600">{message.content}</p>
+                      <p className="text-sm text-gray-600">{message.content}</p>
                       {message.fileUrl && (
                         <div className="mt-1 p-1.5 bg-gray-50 rounded flex items-center">
                           {getFileIcon(message.fileName || "")}
-                          <span className="ml-1 text-xs text-blue-600 hover:underline cursor-pointer">
+                          <span className="ml-1 text-sm text-blue-600 hover:underline cursor-pointer">
                             {message.fileName}
                           </span>
                         </div>
