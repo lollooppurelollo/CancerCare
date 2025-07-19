@@ -101,12 +101,11 @@ export default function DoctorDashboard() {
   const urgentAlerts = alerts.filter((alert: any) => alert.severity === "high");
   const messageAlerts = alerts.filter((alert: any) => alert.type === "message");
   
-  // Calculate missed medication alerts
+  // Calculate missed medication alerts - only show patients with more than 5 missed days
   const missedMedicationAlerts = allMissedMedications.filter((entry: any) => {
-    const createdAt = new Date(entry.createdAt);
-    const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-    return createdAt > threeDaysAgo;
+    // Count the number of missed dates
+    const missedDatesCount = entry.missedDates ? entry.missedDates.length : 0;
+    return missedDatesCount > 5;
   });
   
   // Conteggio pazienti per farmaco
@@ -547,7 +546,7 @@ export default function DoctorDashboard() {
                 <div id="missed-medication-alerts-section">
                   <h3 className="text-md font-medium text-orange-700 mb-3 flex items-center">
                     <XCircle className="w-4 h-4 mr-2 transition-transform duration-200 hover:scale-110" />
-                    Terapie non assunte ({missedMedicationAlerts.length})
+                    Pazienti con più di 5 terapie mancate ({missedMedicationAlerts.length})
                   </h3>
                   <div className="space-y-3">
                     {missedMedicationAlerts.map((entry: any, index: number) => (

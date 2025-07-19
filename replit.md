@@ -233,6 +233,17 @@ Preferred communication style: Simple, everyday language.
     - Secure message deletion ensures users can only delete their own messages
     - Enhanced video page "Richiedi di essere ricontattata" with custom message input
 
+17. **Enhanced Chat Notification System and Doctor Patient Interface Improvements (July 2025)**:
+    - **Chat notifications for all messages**: Added comprehensive notification system for all patient messages, not just urgent ones
+    - **Dismissible chat notifications**: Implemented X button to remove chat notifications once viewed/resolved
+    - **Streamlined doctor-patient interface**: Removed video tab from doctor's view of patient profile
+    - **Unified history and symptoms view**: Combined symptoms and history tabs into single "Storico Sintomi e Diario" section
+    - **Symptoms filtering**: Modified symptoms display to show only reported symptoms (with values > 0 or present = true)
+    - **Integrated diary visualization**: Combined symptom data with diary entries organized by date
+    - **Selective missed medication alerts**: Changed notification system to only show patients with more than 5 missed medication days
+    - **Mobile-optimized chat layout**: Improved responsive design for doctor chat interface with compact headers and flexible buttons
+    - **Enhanced notification management**: Real-time updates and dismissal functionality for better workflow efficiency
+
 ## Data Flow
 
 1. **Patient Registration**: New patients create accounts with medical information

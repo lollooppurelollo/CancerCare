@@ -154,17 +154,6 @@ export default function DoctorPatientView() {
               <span className="text-xs">Home</span>
             </Button>
             <Button 
-              onClick={() => setActiveTab("symptoms")}
-              variant={activeTab === "symptoms" ? "default" : "outline"}
-              size="sm"
-              className="flex flex-col items-center py-2 transition-all duration-200 hover:scale-105 active:scale-95"
-            >
-              <Heart className={`w-4 h-4 mb-1 transition-all duration-200 ${
-                activeTab === "symptoms" ? "scale-110" : "hover:scale-110"
-              }`} />
-              <span className="text-xs">Sintomi</span>
-            </Button>
-            <Button 
               onClick={() => setActiveTab("history")}
               variant={activeTab === "history" ? "default" : "outline"}
               size="sm"
@@ -174,17 +163,6 @@ export default function DoctorPatientView() {
                 activeTab === "history" ? "scale-110" : "hover:scale-110"
               }`} />
               <span className="text-xs">Storico</span>
-            </Button>
-            <Button 
-              onClick={() => setActiveTab("video")}
-              variant={activeTab === "video" ? "default" : "outline"}
-              size="sm"
-              className="flex flex-col items-center py-2 transition-all duration-200 hover:scale-105 active:scale-95"
-            >
-              <Video className={`w-4 h-4 mb-1 transition-all duration-200 ${
-                activeTab === "video" ? "scale-110" : "hover:scale-110"
-              }`} />
-              <span className="text-xs">Video</span>
             </Button>
             <Button 
               onClick={() => setActiveTab("profile")}
@@ -251,15 +229,15 @@ export default function DoctorPatientView() {
             </div>
           )}
 
-          {/* Symptoms Tab */}
-          {activeTab === "symptoms" && (
+          {/* History Tab - Unisce sintomi e diario */}
+          {activeTab === "history" && (
             <div className="space-y-4">
               <div className="text-center mb-6">
                 <h2 className="text-lg font-semibold text-sage-800">
-                  Monitoraggio Sintomi
+                  Storico Sintomi e Diario
                 </h2>
                 <p className="text-sm text-gray-600">
-                  Solo sintomi riferiti dal paziente
+                  Cronologia completa con sintomi riferiti e note del diario
                 </p>
               </div>
 
@@ -336,80 +314,6 @@ export default function DoctorPatientView() {
                   </CardContent>
                 </Card>
               )}
-            </div>
-          )}
-
-          {/* History Tab */}
-          {activeTab === "history" && (
-            <div className="space-y-4">
-              <div className="text-center mb-6">
-                <h2 className="text-lg font-semibold text-sage-800">
-                  Storico Registrazioni
-                </h2>
-              </div>
-
-              <div className="space-y-3">
-                {diaryEntries.slice(0, 10).map((entry: any) => (
-                  <Card key={entry.id}>
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="font-medium text-sage-800">
-                          {new Date(entry.date).toLocaleDateString('it-IT')}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {formatTimestamp(entry.updatedAt)}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-700">{entry.content}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Video Tab */}
-          {activeTab === "video" && (
-            <div className="space-y-4">
-              <div className="text-center mb-6">
-                <h2 className="text-lg font-semibold text-sage-800">
-                  Teleconsulto
-                </h2>
-                <p className="text-sm text-gray-600">
-                  Comunicazione con il medico
-                </p>
-              </div>
-
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <Video className="w-16 h-16 mx-auto mb-4 text-sage-600" />
-                  <h3 className="font-semibold text-sage-800 mb-2">
-                    Videoconsulto
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Comunicazione con il medico
-                  </p>
-                </CardContent>
-              </Card>
-
-              {/* Recent Messages */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sage-800">Messaggi Recenti</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {messages.slice(0, 3).map((message: any) => (
-                      <div key={message.id} className="p-3 bg-gray-50 rounded-lg">
-                        <p className="text-sm">{message.content}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {formatTimestamp(message.createdAt)}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           )}
 
