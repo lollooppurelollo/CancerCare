@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Bell, Clock, Pill, BookOpen, Heart, Save } from "lucide-react";
+import { ArrowLeft, Bell, Clock, Pill, BookOpen, Heart, Save, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import BottomNavigation from "@/components/ui/bottom-navigation";
 
@@ -21,6 +22,7 @@ interface NotificationSettings {
 export default function PatientSettings() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { logout } = useAuth();
 
   const { data: patient } = useQuery({
     queryKey: ["/api/patients/me"],
@@ -218,6 +220,22 @@ export default function PatientSettings() {
           </p>
           <p className="leading-relaxed">
             Le notifiche ti aiuteranno a ricordare di assumere il farmaco, compilare il diario e registrare i sintomi negli orari impostati.
+          </p>
+        </div>
+
+        {/* Logout Section */}
+        <div className="mt-8 pt-6 border-t border-gray-200">
+          <Button 
+            onClick={logout}
+            variant="outline"
+            className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-all duration-200"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Disconnetti Account
+          </Button>
+          
+          <p className="text-xs text-gray-500 text-center mt-2">
+            Esci dal tuo account in modo sicuro
           </p>
         </div>
       </div>

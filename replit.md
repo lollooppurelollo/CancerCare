@@ -177,7 +177,21 @@ Preferred communication style: Simple, everyday language.
     - **Birth date moved from medical section to personal information section** in patient profile
     - Improved layout organization with birth date displayed after age field in personal info
 
-15. **Comprehensive Medication Adherence Tracking System (July 2025)**:
+15. **Advanced Treatment Analytics System (July 2025)**:
+    - **Database enhancements**: Added treatment_start_date, current_dosage_start_date, treatment_setting columns to patients table
+    - **Dosage history tracking**: New dosage_history table with comprehensive medication timeline data
+    - **Analytics API endpoints**: 7 new routes for treatment analytics including weeks calculations, dosage statistics, and aggregate data
+    - **Patient treatment analytics page**: Mobile-optimized interface showing treatment duration, current dosage weeks, milestones, and progress visualization
+    - **Doctor analytics dashboard**: Comprehensive analytics with interactive charts, medication/setting filters, and detailed statistics
+    - **Metastatic vs Adjuvant classification**: Treatment setting distinction with appropriate medication restrictions
+    - **Treatment counters**: Real-time calculation of total treatment weeks and current dosage duration
+    - **Progress milestones**: Visual tracking of treatment achievements and goals
+    - **Interactive data visualization**: Charts and graphs for treatment patterns and patient distribution
+    - **Dosage-specific statistics**: Detailed breakdown of medication usage by dosage and treatment setting
+    - **Valid dosage validation**: Setting-specific medication availability (no palbociclib/ribociclib 600mg in adjuvant)
+    - **Patient settings logout restoration**: Re-added logout button to patient settings page with proper styling
+
+16. **Comprehensive Medication Adherence Tracking System (July 2025)**:
     - Added complete missed medication tracking database schema with `missed_medication` table
     - Implemented patient-facing interface for reporting missed medications with date selection
     - Added comprehensive missed medication dialog with last 30 days date selection
