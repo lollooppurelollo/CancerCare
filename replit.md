@@ -201,6 +201,10 @@ Preferred communication style: Simple, everyday language.
     - **Fixed video call request button**: "Richiedi di essere ricontattata" now works without requiring text message
     - Button now sends automatic urgent message to doctor creating proper alerts in dashboard
     - Enhanced patient-doctor notification system for video call requests
+    - **Updated medication calendar legend text**: Modified legend descriptions for better clarity
+    - Green days: "Giorni di trattamento" (Treatment days)
+    - Gray days: "Giorni di pausa dalla terapia" (Therapy pause days)
+    - Red days: "Terapia non assunta erroneamente" (Therapy not taken erroneously)
     - Historical tracking of all missed medications with timestamps and patient notes
 
 ## Data Flow

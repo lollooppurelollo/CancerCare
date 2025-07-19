@@ -189,11 +189,11 @@ export default function MedicationCalendar({ medication, patientId }: Medication
       
       <div className="flex items-center mt-3 text-xs">
         <div className="w-3 h-3 bg-sage-500 rounded-full mr-2"></div>
-        <span className="text-gray-600 mr-4">Giorno di assunzione</span>
+        <span className="text-gray-600 mr-4">Giorni di trattamento</span>
         <div className="w-3 h-3 bg-gray-300 rounded-full mr-2"></div>
-        <span className="text-gray-600 mr-4">Giorno di pausa</span>
+        <span className="text-gray-600 mr-4">Giorni di pausa dalla terapia</span>
         <div className="w-3 h-3 bg-red-100 border border-red-200 rounded-full mr-2"></div>
-        <span className="text-gray-600">Terapia non assunta</span>
+        <span className="text-gray-600">Terapia non assunta erroneamente</span>
       </div>
 
       {/* Confirmation Dialog */}
