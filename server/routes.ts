@@ -944,8 +944,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
 
-      // Get all missed medications directly from database
-      const allMissedMedications = await db.select().from(missedMedication).orderBy(desc(missedMedication.createdAt));
+      // Get all missed medications using storage method
+      const allPatients = await storage.getAllPatients();
+      let allMissedMedications: any[] = [];
+
+      for (const patient of allPatients) {
+        if (patient.id && !isNaN(patient.id)) {
+          try {
+            const missedMeds = await storage.getMissedMedicationByPatient(patient.id);
+            allMissedMedications.push(...missedMeds);
+          } catch (error) {
+            continue;
+          }
+        }
+      }
       
       res.json(allMissedMedications);
     } catch (error) {

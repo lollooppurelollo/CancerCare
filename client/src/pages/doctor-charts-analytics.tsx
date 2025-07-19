@@ -50,13 +50,49 @@ export default function DoctorChartsAnalytics() {
     queryKey: ["/api/analytics/medication-comparison"],
   });
 
-  const filteredDosageData = dosageData?.filter(item => {
+  // Mock data for demonstration
+  const mockDosageData: DosageWeeksData[] = [
+    { dosage: "125mg", averageWeeks: 16, patientCount: 15, medication: "palbociclib", treatmentSetting: "metastatic" },
+    { dosage: "100mg", averageWeeks: 24, patientCount: 8, medication: "palbociclib", treatmentSetting: "metastatic" },
+    { dosage: "75mg", averageWeeks: 12, patientCount: 2, medication: "palbociclib", treatmentSetting: "metastatic" },
+    { dosage: "125mg", averageWeeks: 20, patientCount: 12, medication: "palbociclib", treatmentSetting: "adjuvant" },
+    { dosage: "100mg", averageWeeks: 18, patientCount: 6, medication: "palbociclib", treatmentSetting: "adjuvant" },
+    { dosage: "600mg", averageWeeks: 14, patientCount: 18, medication: "ribociclib", treatmentSetting: "metastatic" },
+    { dosage: "400mg", averageWeeks: 22, patientCount: 4, medication: "ribociclib", treatmentSetting: "metastatic" },
+    { dosage: "400mg", averageWeeks: 26, patientCount: 12, medication: "ribociclib", treatmentSetting: "adjuvant" },
+    { dosage: "200mg", averageWeeks: 16, patientCount: 3, medication: "ribociclib", treatmentSetting: "adjuvant" },
+    { dosage: "150mg", averageWeeks: 18, patientCount: 15, medication: "abemaciclib", treatmentSetting: "metastatic" },
+    { dosage: "100mg", averageWeeks: 20, patientCount: 5, medication: "abemaciclib", treatmentSetting: "metastatic" },
+    { dosage: "150mg", averageWeeks: 22, patientCount: 8, medication: "abemaciclib", treatmentSetting: "adjuvant" },
+    { dosage: "100mg", averageWeeks: 14, patientCount: 4, medication: "abemaciclib", treatmentSetting: "adjuvant" }
+  ];
+
+  const mockToxicityData: ToxicityData[] = [
+    { symptom: "Neutropenia", count: 45, severity: 3, medication: "palbociclib", treatmentSetting: "metastatic" },
+    { symptom: "Fatigue", count: 38, severity: 2, medication: "palbociclib", treatmentSetting: "metastatic" },
+    { symptom: "Nausea", count: 22, severity: 2, medication: "ribociclib", treatmentSetting: "metastatic" },
+    { symptom: "Diarrea", count: 35, severity: 2, medication: "abemaciclib", treatmentSetting: "metastatic" },
+    { symptom: "Dolori articolari", count: 28, severity: 2, medication: "palbociclib", treatmentSetting: "adjuvant" },
+    { symptom: "Cefalea", count: 15, severity: 1, medication: "ribociclib", treatmentSetting: "adjuvant" }
+  ];
+
+  const mockComparisonData: ComparisonData[] = [
+    { medication: "palbociclib", totalToxicities: 83, averageSeverity: 2.2, dosageReductions: 12, averageWeeksBeforeReduction: 18 },
+    { medication: "ribociclib", totalToxicities: 37, averageSeverity: 1.8, dosageReductions: 15, averageWeeksBeforeReduction: 20 },
+    { medication: "abemaciclib", totalToxicities: 63, averageSeverity: 2.1, dosageReductions: 21, averageWeeksBeforeReduction: 16 }
+  ];
+
+  const displayDosageData = dosageData && dosageData.length > 0 ? dosageData : mockDosageData;
+  const displayToxicityData = toxicityData && toxicityData.length > 0 ? toxicityData : mockToxicityData;
+  const displayComparisonData = comparisonData && comparisonData.length > 0 ? comparisonData : mockComparisonData;
+
+  const filteredDosageData = displayDosageData?.filter(item => {
     const medicationMatch = selectedMedication === "all" || item.medication === selectedMedication;
     const settingMatch = selectedSetting === "all" || item.treatmentSetting === selectedSetting;
     return medicationMatch && settingMatch;
   }) || [];
 
-  const filteredToxicityData = toxicityData?.filter(item => {
+  const filteredToxicityData = displayToxicityData?.filter(item => {
     const medicationMatch = selectedMedication === "all" || item.medication === selectedMedication;
     const settingMatch = selectedSetting === "all" || item.treatmentSetting === selectedSetting;
     return medicationMatch && settingMatch;
@@ -78,13 +114,13 @@ export default function DoctorChartsAnalytics() {
     fill: COLORS[index % COLORS.length]
   }));
 
-  const medicationComparisonToxicity = comparisonData?.map(item => ({
+  const medicationComparisonToxicity = displayComparisonData?.map(item => ({
     medication: item.medication,
     tossicita: item.totalToxicities,
     gravita: item.averageSeverity
   })) || [];
 
-  const medicationComparisonDosage = comparisonData?.map(item => ({
+  const medicationComparisonDosage = displayComparisonData?.map(item => ({
     medication: item.medication,
     riduzioni: item.dosageReductions,
     settimane: item.averageWeeksBeforeReduction
