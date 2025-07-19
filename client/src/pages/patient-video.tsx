@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Video, Phone, MessageCircle, Send, HelpCircle, Paperclip, FileText, Image, X } from "lucide-react";
+import { Video, Phone, MessageCircle, Send, HelpCircle, Paperclip, FileText, Image, X, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
