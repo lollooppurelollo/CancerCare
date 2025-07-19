@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useKeyboardVisibility } from "@/hooks/use-keyboard-visibility";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function DoctorChat() {
@@ -20,6 +21,9 @@ export default function DoctorChat() {
   const [newMessage, setNewMessage] = useState("");
   const [isUrgent, setIsUrgent] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  
+  // Keyboard visibility hook for text input
+  const messageInputRef = useKeyboardVisibility();
 
   const resolveAlertMutation = useMutation({
     mutationFn: async (alertId: number) => {
@@ -342,6 +346,7 @@ export default function DoctorChat() {
           <CardContent className="p-6">
             <form onSubmit={handleSendMessage} className="space-y-4">
               <Textarea
+                ref={messageInputRef}
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Scrivi il tuo messaggio al paziente..."

@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { useKeyboardVisibility } from "@/hooks/use-keyboard-visibility";
 import { apiRequest } from "@/lib/queryClient";
 import MedicationCalendar from "@/components/ui/medication-calendar";
 import SymptomTracker from "@/components/ui/symptom-tracker";
@@ -22,6 +23,10 @@ export default function PatientHome() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
+  
+  // Keyboard visibility hooks for text inputs
+  const diaryTextareaRef = useKeyboardVisibility();
+  const missedMedNotesRef = useKeyboardVisibility();
 
   const { data: patient, isLoading: patientLoading } = useQuery({
     queryKey: ["/api/patients/me"],
@@ -160,6 +165,7 @@ export default function PatientHome() {
                 onSave={() => reportMissedMedication.mutate()}
                 onCancel={() => setShowMissedMedDialog(false)}
                 isLoading={reportMissedMedication.isPending}
+                notesRef={missedMedNotesRef}
               />
             </DialogContent>
           </Dialog>
@@ -171,6 +177,7 @@ export default function PatientHome() {
         <h2 className="text-md font-semibold text-gray-800 mb-2">Diario del giorno:</h2>
         <p className="text-sm text-gray-500 mb-3">{currentDate}</p>
         <Textarea
+          ref={diaryTextareaRef}
           className="w-full h-20 resize-none focus:ring-sage-500 focus:border-sage-500"
           placeholder="Scrivi qui le tue note del giorno..."
           value={diaryContent}
@@ -209,6 +216,7 @@ function MissedMedicationDialog({
   onSave,
   onCancel,
   isLoading,
+  notesRef,
 }: {
   missedDates: string[];
   setMissedDates: (dates: string[]) => void;
@@ -217,6 +225,7 @@ function MissedMedicationDialog({
   onSave: () => void;
   onCancel: () => void;
   isLoading: boolean;
+  notesRef: React.RefObject<HTMLTextAreaElement>;
 }) {
   const generateLastDays = (days: number) => {
     const dates = [];
@@ -273,6 +282,7 @@ function MissedMedicationDialog({
           Note (opzionale):
         </h3>
         <Textarea
+          ref={notesRef}
           placeholder="Scrivi qui le motivazioni per cui non hai assunto la terapia..."
           value={notes}
           onChange={(e) => setNotes(e.target.value)}

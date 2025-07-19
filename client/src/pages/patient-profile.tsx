@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useKeyboardVisibility } from "@/hooks/use-keyboard-visibility";
 import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import BottomNavigation from "@/components/ui/bottom-navigation";
@@ -14,6 +15,13 @@ export default function PatientProfile() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Keyboard visibility hooks for text inputs
+  const firstNameRef = useKeyboardVisibility();
+  const lastNameRef = useKeyboardVisibility();
+  const ageRef = useKeyboardVisibility();
+  const phoneRef = useKeyboardVisibility();
+  const addressRef = useKeyboardVisibility();
 
   const { data: patient } = useQuery({
     queryKey: ["/api/patients/me"],
@@ -104,6 +112,7 @@ export default function PatientProfile() {
               <div>
                 <Label htmlFor="firstName">Nome</Label>
                 <Input
+                  ref={firstNameRef}
                   id="firstName"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
@@ -113,6 +122,7 @@ export default function PatientProfile() {
               <div>
                 <Label htmlFor="lastName">Cognome</Label>
                 <Input
+                  ref={lastNameRef}
                   id="lastName"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
@@ -124,6 +134,7 @@ export default function PatientProfile() {
             <div>
               <Label htmlFor="age">Età</Label>
               <Input
+                ref={ageRef}
                 id="age"
                 type="number"
                 value={age}
@@ -145,6 +156,7 @@ export default function PatientProfile() {
             <div>
               <Label htmlFor="phone">Telefono</Label>
               <Input
+                ref={phoneRef}
                 id="phone"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -156,6 +168,7 @@ export default function PatientProfile() {
             <div>
               <Label htmlFor="address">Indirizzo</Label>
               <Input
+                ref={addressRef}
                 id="address"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}

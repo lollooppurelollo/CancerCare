@@ -5,6 +5,7 @@ import { Textarea } from "./textarea";
 import { Input } from "./input";
 import { Slider } from "./slider";
 import { useToast } from "@/hooks/use-toast";
+import { useKeyboardVisibility } from "@/hooks/use-keyboard-visibility";
 import { apiRequest } from "@/lib/queryClient";
 
 interface SymptomTrackerProps {
@@ -27,6 +28,11 @@ export default function SymptomTracker({ patientId }: SymptomTrackerProps) {
   const [additionalNotes, setAdditionalNotes] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Keyboard visibility hooks for text inputs
+  const additionalNotesRef = useKeyboardVisibility();
+  const temperatureInputRef = useKeyboardVisibility();
+  const diarrheaCountRef = useKeyboardVisibility();
 
   const saveSymptomsMutation = useMutation({
     mutationFn: async () => {
@@ -134,6 +140,7 @@ export default function SymptomTracker({ patientId }: SymptomTrackerProps) {
                   <div className="flex items-center space-x-2">
                     <span className="text-xs text-gray-500">Scariche/giorno:</span>
                     <Input
+                      ref={diarrheaCountRef}
                       type="number"
                       min="0"
                       max="20"
@@ -149,6 +156,7 @@ export default function SymptomTracker({ patientId }: SymptomTrackerProps) {
                     <div className="flex items-center space-x-2">
                       <span className="text-xs text-gray-500">Temperatura max (°C):</span>
                       <Input
+                        ref={temperatureInputRef}
                         type="number"
                         min="35"
                         max="45"
@@ -209,6 +217,7 @@ export default function SymptomTracker({ patientId }: SymptomTrackerProps) {
           Altri sintomi da segnalare:
         </label>
         <Textarea
+          ref={additionalNotesRef}
           className="w-full h-16 resize-none focus:ring-sage-500 focus:border-sage-500"
           placeholder="Descrivi eventuali altri sintomi..."
           value={additionalNotes}

@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useKeyboardVisibility } from "@/hooks/use-keyboard-visibility";
 import { apiRequest } from "@/lib/queryClient";
 import BottomNavigation from "@/components/ui/bottom-navigation";
 
@@ -16,6 +17,10 @@ export default function PatientVideo() {
   const [urgentMessage, setUrgentMessage] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Keyboard visibility hooks for text inputs
+  const messageTextareaRef = useKeyboardVisibility();
+  const urgentTextareaRef = useKeyboardVisibility();
 
   const { data: patient, isLoading: patientLoading } = useQuery({
     queryKey: ["/api/patients/me"],
@@ -293,6 +298,7 @@ export default function PatientVideo() {
           <h3 className="text-md font-medium text-gray-800 mb-3">Invia messaggio</h3>
           <div className="space-y-3">
             <Textarea
+              ref={messageTextareaRef}
               className="flex-1 resize-none focus:ring-sage-500 focus:border-sage-500"
               rows={3}
               placeholder="Scrivi un messaggio al medico..."
@@ -404,6 +410,7 @@ export default function PatientVideo() {
                 Descrizione della situazione urgente (opzionale):
               </label>
               <Textarea
+                ref={urgentTextareaRef}
                 placeholder="Descrivi brevemente i sintomi o la situazione che richiede attenzione medica urgente..."
                 value={urgentMessage}
                 onChange={(e) => setUrgentMessage(e.target.value)}
