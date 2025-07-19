@@ -183,17 +183,17 @@ export default function PatientVideo() {
         <h1 className="text-xl font-bold text-sage-800 mb-4">Contatti</h1>
         
         {/* Video Call Status */}
-        <div className="mb-4 p-3 bg-sage-50 rounded-lg border border-sage-200">
-          <div className="flex items-center mb-2">
-            <div className="w-2 h-2 bg-gray-400 rounded-full mr-2"></div>
-            <span className="text-xs font-medium text-gray-700">Stato videochiamata: Non attiva</span>
+        <div className="mb-4 p-4 bg-sage-50 rounded-lg border border-sage-200">
+          <div className="flex items-center mb-3">
+            <div className="w-3 h-3 bg-gray-400 rounded-full mr-3"></div>
+            <span className="text-sm font-medium text-gray-700">Stato videochiamata: Non attiva</span>
           </div>
-          <p className="text-xs text-gray-600 mb-2">Il medico può avviare una videochiamata quando necessario.</p>
+          <p className="text-sm text-gray-600 mb-3">Il medico può avviare una videochiamata quando necessario.</p>
           <Button 
-            className="w-full h-8 bg-gray-300 text-gray-600 cursor-not-allowed text-xs" 
+            className="w-full h-10 bg-gray-300 text-gray-600 cursor-not-allowed text-sm" 
             disabled
           >
-            <Video className="w-3 h-3 mr-1" />
+            <Video className="w-4 h-4 mr-2" />
             In attesa di chiamata
           </Button>
         </div>
