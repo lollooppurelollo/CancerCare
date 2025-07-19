@@ -384,44 +384,7 @@ export default function PatientVideo() {
           )}
         </div>
 
-        {/* Recent Urgent Messages - Today Only */}
-        {messages.filter((msg: any) => {
-          const today = new Date().toISOString().split('T')[0];
-          const messageDate = new Date(msg.createdAt).toISOString().split('T')[0];
-          return msg.isUrgent && msg.senderId === patient?.userId && messageDate === today;
-        }).length > 0 && (
-          <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
-            <h3 className="text-sm font-medium text-orange-800 mb-2">Richieste urgenti di oggi:</h3>
-            <div className="space-y-2">
-              {messages
-                .filter((msg: any) => {
-                  const today = new Date().toISOString().split('T')[0];
-                  const messageDate = new Date(msg.createdAt).toISOString().split('T')[0];
-                  return msg.isUrgent && msg.senderId === patient?.userId && messageDate === today;
-                })
-                .slice(0, 3)
-                .map((msg: any) => (
-                  <div key={msg.id} className="flex items-start justify-between bg-white p-2 rounded border">
-                    <div className="flex-1">
-                      <p className="text-xs text-gray-600">{msg.content}</p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {new Date(msg.createdAt).toLocaleString('it-IT')}
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => deleteMessage.mutate(msg.id)}
-                      disabled={deleteMessage.isPending}
-                      className="ml-2 h-6 w-6 p-0 text-red-600 hover:text-red-800"
-                    >
-                      <X className="w-3 h-3" />
-                    </Button>
-                  </div>
-                ))}
-            </div>
-          </div>
-        )}
+
       </div>
 
       <BottomNavigation />
