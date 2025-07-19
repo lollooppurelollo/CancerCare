@@ -24,6 +24,14 @@ export default function PatientSettings() {
   const { toast } = useToast();
   const { logout } = useAuth();
 
+  const handleLogout = () => {
+    logout();
+    // Small delay to ensure logout is processed before redirect
+    setTimeout(() => {
+      setLocation("/");
+    }, 100);
+  };
+
   const { data: patient } = useQuery({
     queryKey: ["/api/patients/me"],
   });
@@ -226,7 +234,7 @@ export default function PatientSettings() {
         {/* Logout Section */}
         <div className="mt-8 pt-6 border-t border-gray-200">
           <Button 
-            onClick={logout}
+            onClick={handleLogout}
             variant="outline"
             className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-all duration-200"
           >

@@ -8,7 +8,7 @@ import {
   type DosageHistory, type InsertDosageHistory
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, gte, lte, or, sql } from "drizzle-orm";
+import { eq, and, desc, gte, lte, or, sql, isNull } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 export interface IStorage {
@@ -472,12 +472,59 @@ export class DatabaseStorage implements IStorage {
 
   async calculateWeeksOnCurrentDosage(patientId: number): Promise<number> {
     const patient = await this.getPatientById(patientId);
-    if (!patient?.currentDosageStartDate) return 0;
+    if (!patient) return 0;
 
-    const startDate = new Date(patient.currentDosageStartDate);
-    const currentDate = new Date();
-    const diffTime = Math.abs(currentDate.getTime() - startDate.getTime());
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7)); // Convert to weeks
+    // Get the maximum dosage for this medication/treatment setting
+    const maxDosageMap = {
+      metastatic: {
+        abemaciclib: '150mg',
+        ribociclib: '600mg',
+        palbociclib: '125mg'
+      },
+      adjuvant: {
+        abemaciclib: '150mg',
+        ribociclib: '400mg',
+        palbociclib: '' // Not used in adjuvant
+      }
+    };
+
+    const maxDosage = maxDosageMap[patient.treatmentSetting]?.[patient.medication];
+    
+    // If patient is still on maximum dosage, weeks on current dosage = total treatment weeks
+    if (patient.dosage === maxDosage) {
+      return await this.calculateWeeksOnTreatment(patientId);
+    }
+
+    // If patient has reduced dosage, calculate from when the reduction happened
+    // Check dosage history for when the current dosage started
+    const currentDosageHistory = await db
+      .select()
+      .from(dosageHistory)
+      .where(
+        and(
+          eq(dosageHistory.patientId, patientId),
+          eq(dosageHistory.dosage, patient.dosage),
+          isNull(dosageHistory.endDate) // Current dosage has no end date
+        )
+      )
+      .limit(1);
+
+    if (currentDosageHistory.length > 0) {
+      const startDate = new Date(currentDosageHistory[0].startDate);
+      const currentDate = new Date();
+      const diffTime = Math.abs(currentDate.getTime() - startDate.getTime());
+      return Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7));
+    }
+
+    // Fallback to current_dosage_start_date if history is missing
+    if (patient.currentDosageStartDate) {
+      const startDate = new Date(patient.currentDosageStartDate);
+      const currentDate = new Date();
+      const diffTime = Math.abs(currentDate.getTime() - startDate.getTime());
+      return Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7));
+    }
+
+    return 0;
   }
 
   async getDosageStatsByMedication(medication: string, treatmentSetting: string): Promise<any> {
