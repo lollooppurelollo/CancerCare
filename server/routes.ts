@@ -738,6 +738,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // New endpoint for unread chat messages from patients
+  app.get("/api/chat-notifications", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Get recent non-urgent messages from patients for notifications
+      const messages = await storage.getAllMessages();
+      const recentMessages = messages.filter(msg => {
+        const hoursSinceCreated = (Date.now() - new Date(msg.createdAt).getTime()) / (1000 * 60 * 60);
+        return (
+          msg.content && 
+          !msg.isUrgent && 
+          hoursSinceCreated < 24 && // Solo messaggi delle ultime 24 ore
+          !msg.content.includes("Richiedi di essere ricontattata") &&
+          !msg.content.includes("richiesta video") &&
+          msg.content.trim().length > 0
+        );
+      });
+      
+      // Group by patient and get latest message per patient
+      const patientMessages = new Map();
+      recentMessages.forEach(msg => {
+        if (!patientMessages.has(msg.patientId) || 
+            new Date(msg.createdAt) > new Date(patientMessages.get(msg.patientId).createdAt)) {
+          patientMessages.set(msg.patientId, msg);
+        }
+      });
+      
+      res.json(Array.from(patientMessages.values()));
+    } catch (error) {
+      console.error("Get chat notifications error:", error);
+      res.status(500).json({ message: "Failed to get chat notifications" });
+    }
+  });
+
+  // Mark chat notification as dismissed
+  app.put("/api/chat-notifications/:patientId/dismiss", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const patientId = parseInt(req.params.patientId);
+      if (isNaN(patientId)) {
+        return res.status(400).json({ message: "Invalid patient ID" });
+      }
+
+      // For now just return success - in a real implementation this would mark messages as read
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Dismiss chat notification error:", error);
+      res.status(500).json({ message: "Failed to dismiss notification" });
+    }
+  });
+
   app.delete("/api/messages/:id", async (req, res) => {
     try {
       const userId = (req as any).session?.userId;

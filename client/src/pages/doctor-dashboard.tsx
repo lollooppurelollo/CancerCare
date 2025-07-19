@@ -37,6 +37,10 @@ export default function DoctorDashboard() {
     queryKey: ["/api/missed-medication/all"],
   });
 
+  const { data: chatNotifications = [] } = useQuery({
+    queryKey: ["/api/chat-notifications"],
+  });
+
   const resolveAlertMutation = useMutation({
     mutationFn: async (alertId: number) => {
       await apiRequest("POST", `/api/alerts/${alertId}/resolve`, {});
@@ -52,6 +56,26 @@ export default function DoctorDashboard() {
       toast({
         title: "Errore",
         description: "Impossibile risolvere l'avviso.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const dismissChatNotificationMutation = useMutation({
+    mutationFn: async (patientId: number) => {
+      await apiRequest("PUT", `/api/chat-notifications/${patientId}/dismiss`, {});
+    },
+    onSuccess: () => {
+      toast({
+        title: "Notifica rimossa",
+        description: "La notifica chat è stata rimossa dalla dashboard.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/chat-notifications"] });
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Impossibile rimuovere la notifica.",
         variant: "destructive",
       });
     },
@@ -444,6 +468,71 @@ export default function DoctorDashboard() {
                             >
                               <Video className="w-4 h-4 mr-2 transition-transform duration-200 hover:scale-110" />
                               Video
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Chat Notifications */}
+              {chatNotifications.length > 0 && (
+                <div id="chat-notifications-section">
+                  <h3 className="text-md font-medium text-blue-700 mb-3 flex items-center">
+                    <MessageCircle className="w-4 h-4 mr-2 transition-transform duration-200 hover:scale-110" />
+                    Nuovi messaggi chat ({chatNotifications.length})
+                  </h3>
+                  <div className="space-y-2">
+                    {chatNotifications.map((notification: any) => (
+                      <div
+                        key={notification.id}
+                        className="p-3 rounded-lg border bg-blue-50 border-blue-200 text-blue-800 relative"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                Chat
+                              </span>
+                            </div>
+                            <div className="bg-white p-2 rounded-md border-l-4 border-blue-400 mb-2">
+                              <p className="text-sm text-gray-800 leading-relaxed truncate">
+                                {notification.content}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => setLocation(`/doctor/patient-view/${notification.patientId}`)}
+                              className="text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium block truncate"
+                            >
+                              {getPatientName(notification.patientId)} {getPatientBirthDate(notification.patientId) && `(nato il ${getPatientBirthDate(notification.patientId)})`}
+                            </button>
+                            <p className="text-xs opacity-75 mt-1">
+                              {formatTimestamp(notification.createdAt)}
+                            </p>
+                          </div>
+                          
+                          {/* Pulsanti compatti */}
+                          <div className="flex flex-col gap-1">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="bg-blue-500 hover:bg-blue-600 text-white border-blue-500 hover:border-blue-600 text-xs px-2 py-1 transition-all duration-200 hover:scale-105"
+                              onClick={() => setLocation(`/doctor/chat/${notification.patientId}`)}
+                              title="Apri chat"
+                            >
+                              <MessageCircle className="w-3 h-3" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="bg-gray-500 hover:bg-gray-600 text-white border-gray-500 hover:border-gray-600 text-xs px-2 py-1 transition-all duration-200 hover:scale-105"
+                              onClick={() => dismissChatNotificationMutation.mutate(notification.patientId)}
+                              disabled={dismissChatNotificationMutation.isPending}
+                              title="Rimuovi notifica"
+                            >
+                              <X className="w-3 h-3" />
                             </Button>
                           </div>
                         </div>

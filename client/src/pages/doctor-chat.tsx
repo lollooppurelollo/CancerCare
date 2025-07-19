@@ -147,52 +147,53 @@ export default function DoctorChat() {
 
   return (
     <div className="max-w-4xl mx-auto bg-white min-h-screen">
-      <div className="p-6">
-        {/* Header */}
-        <div className="bg-sage-50 p-6 rounded-xl mb-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+      <div className="p-2 sm:p-4">
+        {/* Header compatto */}
+        <div className="bg-sage-50 p-3 sm:p-4 rounded-lg mb-4 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
               <Button
                 variant="ghost"
+                size="sm"
                 onClick={() => setLocation("/doctor")}
-                className="flex items-center space-x-2 hover:bg-sage-100"
+                className="flex items-center space-x-2 hover:bg-sage-100 self-start"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>Dashboard</span>
+                <span className="hidden sm:inline">Dashboard</span>
               </Button>
-              <div className="border-l border-sage-200 pl-4">
-                <h1 className="text-2xl font-bold text-sage-800 mb-1">
-                  <MessageSquare className="w-6 h-6 inline mr-2" />
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl font-bold text-sage-800 mb-1 break-words">
+                  <MessageSquare className="w-5 h-5 inline mr-2" />
                   Chat con {patient?.firstName} {patient?.lastName}
                 </h1>
-                <div className="flex items-center space-x-4 text-sm text-gray-600">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-gray-600">
                   <span>Farmaco: {patient?.medication}</span>
                   {patient?.birthDate && (
                     <span>Nato il {new Date(patient.birthDate).toLocaleDateString('it-IT')}</span>
                   )}
                   {recentUrgentMessages.length > 0 && (
-                    <Badge variant="destructive" className="text-xs">
+                    <Badge variant="destructive" className="text-xs self-start">
                       {recentUrgentMessages.length} messaggi urgenti
                     </Badge>
                   )}
                 </div>
               </div>
             </div>
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2">
               <Button 
                 size="sm" 
                 variant="outline"
-                className="bg-sage-500 hover:bg-sage-600 text-white border-sage-500"
+                className="bg-sage-500 hover:bg-sage-600 text-white border-sage-500 text-xs"
                 onClick={() => setLocation(`/doctor/patient-view/${patientId}`)}
                 title="Visualizza interfaccia paziente"
               >
-                <User className="w-4 h-4 mr-2" />
-                Profilo
+                <User className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Profilo</span>
               </Button>
               <Button 
                 size="sm" 
                 variant="outline"
-                className="bg-green-500 hover:bg-green-600 text-white border-green-500"
+                className="bg-green-500 hover:bg-green-600 text-white border-green-500 text-xs"
                 onClick={() => {
                   const meetingTitle = `Consulto con ${patient?.firstName} ${patient?.lastName}`;
                   const meetUrl = `https://meet.google.com/new?title=${encodeURIComponent(meetingTitle)}`;
@@ -200,8 +201,8 @@ export default function DoctorChat() {
                 }}
                 title="Avvia videochiamata Google Meet"
               >
-                <Video className="w-4 h-4 mr-2" />
-                Video
+                <Video className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Video</span>
               </Button>
             </div>
           </div>
