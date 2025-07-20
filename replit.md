@@ -277,6 +277,7 @@ Preferred communication style: Simple, everyday language.
    - **Fixed calendar real-time refresh**: Implemented proper UPSERT logic in backend to prevent duplicate calendar events
    - **Enhanced mutation invalidation**: Added refetchQueries to ensure immediate calendar color updates after changes
    - **Removed duplicate calendar sections**: Eliminated redundant "Calendario Interattivo" and "Aggiungi Evento Manualmente" from doctor treatment profile page
+   - **Removed calendar events list**: Eliminated "Eventi Calendario Esistenti" section from profile settings to streamline interface
    - **Improved dropdown options**: Updated calendar dropdown with correct Italian labels matching user requirements
    - **Database optimization**: Added getCalendarEventByPatientAndDate method to check existing events before creation
    - **UI consistency**: Streamlined doctor interface by removing duplicate functionality and focusing on main calendar component

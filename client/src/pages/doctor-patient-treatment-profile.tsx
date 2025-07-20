@@ -429,43 +429,7 @@ export default function DoctorPatientTreatmentProfile() {
 
 
 
-        {/* Existing Calendar Events */}
-        {calendarEvents.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg text-sage-800">Eventi Calendario Esistenti</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {calendarEvents.map((event: any) => (
-                  <div
-                    key={event.id}
-                    className={`p-3 rounded-lg border ${getEventColor(event.eventType)} flex items-center justify-between`}
-                  >
-                    <div>
-                      <p className="font-medium">
-                        {new Date(event.date).toLocaleDateString('it-IT')}
-                      </p>
-                      <p className="text-sm">{getEventTypeLabel(event.eventType)}</p>
-                      {event.notes && (
-                        <p className="text-xs mt-1 opacity-75">{event.notes}</p>
-                      )}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteEvent(event.id)}
-                      disabled={deleteEventMutation.isPending}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+
       </div>
     </div>
   );
