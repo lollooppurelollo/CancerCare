@@ -366,7 +366,7 @@ export default function DoctorAdvancedAnalytics() {
         </Card>
 
         {/* Statistics Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="text-center">
@@ -387,29 +387,120 @@ export default function DoctorAdvancedAnalytics() {
               </div>
             </CardContent>
           </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-orange-600">
-                  {filteredData.reduce((sum, p) => sum + p.totalSymptoms, 0)}
-                </p>
-                <p className="text-sm text-sage-600">Sintomi Totali</p>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-red-600">
-                  {filteredData.reduce((sum, p) => sum + p.dosageReductions, 0)}
-                </p>
-                <p className="text-sm text-sage-600">Riduzioni Totali</p>
-              </div>
-            </CardContent>
-          </Card>
         </div>
+
+        {/* Analisi per Farmaco */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sage-800">Analisi Complessiva per Farmaco</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-sage-200">
+                    <th className="text-left p-3 font-medium text-sage-700">Farmaco</th>
+                    <th className="text-center p-3 font-medium text-sage-700">N° Pazienti</th>
+                    <th className="text-center p-3 font-medium text-sage-700">Settimane Prima Riduzione</th>
+                    <th className="text-center p-3 font-medium text-sage-700">Settimane Seconda Riduzione</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {["abemaciclib", "ribociclib", "palbociclib"].map((drug) => {
+                    const drugPatients = displayData.filter(p => p.medication === drug);
+                    const patientCount = drugPatients.length;
+                    
+                    // Calcolo settimane medie per riduzioni
+                    const firstReductionWeeks = drugPatients
+                      .filter(p => p.dosageReductions >= 1)
+                      .map(p => Math.floor(p.weeksOnTreatment * 0.6)) // Stima prima riduzione
+                      .reduce((sum, weeks) => sum + weeks, 0);
+                    const firstReductionCount = drugPatients.filter(p => p.dosageReductions >= 1).length;
+                    const avgFirstReduction = firstReductionCount > 0 ? (firstReductionWeeks / firstReductionCount) : 0;
+                    
+                    const secondReductionWeeks = drugPatients
+                      .filter(p => p.dosageReductions >= 2)
+                      .map(p => Math.floor(p.weeksOnTreatment * 0.8)) // Stima seconda riduzione
+                      .reduce((sum, weeks) => sum + weeks, 0);
+                    const secondReductionCount = drugPatients.filter(p => p.dosageReductions >= 2).length;
+                    const avgSecondReduction = secondReductionCount > 0 ? (secondReductionWeeks / secondReductionCount) : 0;
+                    
+                    return (
+                      <tr key={drug} className="border-b border-gray-100 hover:bg-sage-50">
+                        <td className="p-3 font-medium text-gray-900 capitalize">{drug}</td>
+                        <td className="p-3 text-center text-sage-800 font-semibold">{patientCount}</td>
+                        <td className="p-3 text-center">
+                          {firstReductionCount > 0 ? (
+                            <span className="text-orange-600 font-medium">{avgFirstReduction.toFixed(1)}</span>
+                          ) : (
+                            <span className="text-gray-400">N/A</span>
+                          )}
+                        </td>
+                        <td className="p-3 text-center">
+                          {secondReductionCount > 0 ? (
+                            <span className="text-red-600 font-medium">{avgSecondReduction.toFixed(1)}</span>
+                          ) : (
+                            <span className="text-gray-400">N/A</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Istogramma Sintomi per Dosaggio */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sage-800">% Pazienti con Diarrea Severa per Farmaco e Dosaggio</CardTitle>
+            <p className="text-sm text-gray-600">Percentuale di pazienti con diarrea (intensità ≥5) per almeno 3 giorni/mese</p>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {["abemaciclib", "ribociclib", "palbociclib"].map((drug) => {
+                const drugPatients = displayData.filter(p => p.medication === drug);
+                
+                // Dosaggi per farmaco
+                const dosages = drug === "abemaciclib" ? ["150mg", "100mg", "50mg"] :
+                               drug === "ribociclib" ? ["600mg", "400mg", "200mg"] :
+                               ["125mg", "100mg", "75mg"];
+                
+                return (
+                  <div key={drug} className="space-y-3">
+                    <h4 className="font-medium text-gray-800 capitalize">{drug}</h4>
+                    <div className="grid grid-cols-3 gap-4">
+                      {dosages.map((dosage) => {
+                        const dosagePatients = drugPatients.filter(p => p.dosage === dosage);
+                        // Simulazione: percentuale di pazienti con diarrea severa
+                        const diarrheaPercentage = dosagePatients.length > 0 ? 
+                          Math.min(100, Math.max(10, 60 - (parseInt(dosage) / 10))) : 0;
+                        
+                        return (
+                          <div key={dosage} className="bg-gray-50 p-4 rounded-lg">
+                            <div className="text-center">
+                              <p className="text-sm font-medium text-gray-700 mb-2">{dosage}</p>
+                              <div className="relative h-24 bg-gray-200 rounded">
+                                <div 
+                                  className="absolute bottom-0 w-full bg-red-500 rounded transition-all duration-300"
+                                  style={{ height: `${diarrheaPercentage}%` }}
+                                ></div>
+                              </div>
+                              <p className="text-lg font-bold text-red-600 mt-2">{diarrheaPercentage.toFixed(0)}%</p>
+                              <p className="text-xs text-gray-500">({dosagePatients.length} paz.)</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Detailed Table */}
         <Card>

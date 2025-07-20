@@ -685,18 +685,18 @@ export class DatabaseStorage implements IStorage {
         ((totalTreatmentDays - totalMissedDays) / totalTreatmentDays) * 100 : 100;
 
       // Get symptoms data
-      const symptoms = await db
+      const patientSymptoms = await db
         .select()
         .from(symptoms)
         .where(eq(symptoms.patientId, patient.id));
 
-      const totalSymptoms = symptoms.length;
-      const highSeveritySymptoms = symptoms.filter(s => 
+      const totalSymptoms = patientSymptoms.length;
+      const highSeveritySymptoms = patientSymptoms.filter(s => 
         s.intensity && s.intensity >= 7
       ).length;
 
-      const lastSymptomReport = symptoms.length > 0 ? 
-        symptoms.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())[0].date : 'Mai';
+      const lastSymptomReport = patientSymptoms.length > 0 ? 
+        patientSymptoms.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())[0].date : 'Mai';
 
       // Get dosage reductions
       const dosageHistory = await this.getDosageHistoryByPatientId(patient.id);
