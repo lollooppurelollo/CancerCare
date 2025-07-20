@@ -20,9 +20,7 @@ import DoctorDashboard from "@/pages/doctor-dashboard";
 import DoctorPatientDetail from "@/pages/doctor-patient-detail";
 import DoctorPatientView from "@/pages/doctor-patient-view";
 import DoctorChat from "@/pages/doctor-chat";
-import DoctorTreatmentAnalytics from "@/pages/doctor-treatment-analytics";
 import DoctorAdvancedAnalytics from "@/pages/doctor-advanced-analytics";
-import DoctorChartsAnalytics from "@/pages/doctor-charts-analytics";
 import DoctorLogin from "@/pages/doctor-login";
 import DoctorRegistration from "@/pages/doctor-registration";
 import AdminDoctorManagement from "@/pages/admin-doctor-management";
@@ -64,9 +62,7 @@ function Router() {
         <Route path="/doctor/patient/:id" component={DoctorPatientDetail} />
         <Route path="/doctor/patient-view/:patientId" component={DoctorPatientView} />
         <Route path="/doctor/chat/:patientId" component={DoctorChat} />
-        <Route path="/doctor/analytics" component={DoctorTreatmentAnalytics} />
         <Route path="/doctor/advanced-analytics" component={DoctorAdvancedAnalytics} />
-        <Route path="/doctor/charts-analytics" component={DoctorChartsAnalytics} />
         <Route path="/settings" component={AppSettings} />
         <Route path="/admin/doctors" component={AdminDoctorManagement} />
         <Route component={NotFound} />

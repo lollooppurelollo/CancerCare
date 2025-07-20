@@ -216,15 +216,6 @@ export default function DoctorDashboard() {
             <Button 
               variant="ghost" 
               size="sm" 
-              className="text-sage-600 hover:text-sage-700 transition-all duration-200 hover:scale-105"
-              onClick={() => setLocation("/doctor/analytics")}
-              title="Analytics Base"
-            >
-              <BarChart3 className="w-4 h-4" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
               className="text-blue-600 hover:text-blue-700 transition-all duration-200 hover:scale-105"
               onClick={() => setLocation("/doctor/advanced-analytics")}
               title="Statistiche Avanzate"
@@ -289,6 +280,32 @@ export default function DoctorDashboard() {
               <div className="text-lg font-bold text-blue-600 transition-transform duration-200 hover:scale-110">{filteredChatNotifications.length}</div>
               <div className="text-xs text-gray-600">Messaggi chat</div>
             </button>
+          </div>
+        </div>
+
+        {/* Contatori Pazienti */}
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-800 mb-3">
+            Contatori Pazienti
+          </h2>
+          
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-sage-50 p-3 rounded-lg border border-sage-200">
+              <div className="text-xl font-bold text-sage-600">{statisticsPatients.length}</div>
+              <div className="text-xs text-gray-600">Pazienti Totali</div>
+            </div>
+            <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+              <div className="text-xl font-bold text-green-600">{abemaciclibCount}</div>
+              <div className="text-xs text-gray-600">Abemaciclib</div>
+            </div>
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+              <div className="text-xl font-bold text-blue-600">{ribociclibCount}</div>
+              <div className="text-xs text-gray-600">Ribociclib</div>
+            </div>
+            <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
+              <div className="text-xl font-bold text-purple-600">{palbociclibCount}</div>
+              <div className="text-xs text-gray-600">Palbociclib</div>
+            </div>
           </div>
         </div>
 
