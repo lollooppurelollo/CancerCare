@@ -42,6 +42,16 @@ export const patients = pgTable("patients", {
   treatmentStartDate: date("treatment_start_date"),
   // Current dosage start date for calculating weeks on current dose
   currentDosageStartDate: date("current_dosage_start_date"),
+  // When treatment actually started
+  actualTreatmentStartDate: date("actual_treatment_start_date"),
+  // First dosage reduction date
+  firstDosageReductionDate: date("first_dosage_reduction_date"),
+  // Second dosage reduction date
+  secondDosageReductionDate: date("second_dosage_reduction_date"),
+  // Treatment interruption date (null if not interrupted)
+  treatmentInterruptionDate: date("treatment_interruption_date"),
+  // Date from which to calculate adherence (when patient started using the app)
+  adherenceCalculationStartDate: date("adherence_calculation_start_date"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -137,6 +147,17 @@ export const dosageHistory = pgTable("dosage_history", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Calendar events for pause days and missed medication tracking
+export const calendarEvents = pgTable("calendar_events", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id").notNull().references(() => patients.id),
+  date: date("date").notNull(),
+  eventType: text("event_type").notNull(), // 'pause' (grey) or 'missed' (red) or 'normal' (white/green)
+  notes: text("notes"),
+  createdBy: integer("created_by").references(() => users.id), // Doctor who created the event
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   patient: one(patients, {
@@ -219,6 +240,17 @@ export const dosageHistoryRelations = relations(dosageHistory, ({ one }) => ({
   }),
 }));
 
+export const calendarEventsRelations = relations(calendarEvents, ({ one }) => ({
+  patient: one(patients, {
+    fields: [calendarEvents.patientId],
+    references: [patients.id],
+  }),
+  createdByUser: one(users, {
+    fields: [calendarEvents.createdBy],
+    references: [users.id],
+  }),
+}));
+
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertPatientSchema = createInsertSchema(patients).omit({ id: true, createdAt: true });
@@ -230,6 +262,7 @@ export const insertAlertSchema = createInsertSchema(alerts).omit({ id: true, cre
 export const insertAdviceItemSchema = createInsertSchema(adviceItems).omit({ id: true, createdAt: true });
 export const insertMissedMedicationSchema = createInsertSchema(missedMedication).omit({ id: true, createdAt: true });
 export const insertDosageHistorySchema = createInsertSchema(dosageHistory).omit({ id: true, createdAt: true });
+export const insertCalendarEventSchema = createInsertSchema(calendarEvents).omit({ id: true, createdAt: true });
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -252,3 +285,5 @@ export type MissedMedication = typeof missedMedication.$inferSelect;
 export type InsertMissedMedication = z.infer<typeof insertMissedMedicationSchema>;
 export type DosageHistory = typeof dosageHistory.$inferSelect;
 export type InsertDosageHistory = z.infer<typeof insertDosageHistorySchema>;
+export type CalendarEvent = typeof calendarEvents.$inferSelect;
+export type InsertCalendarEvent = z.infer<typeof insertCalendarEventSchema>;

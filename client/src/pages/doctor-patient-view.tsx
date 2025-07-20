@@ -365,6 +365,16 @@ export default function DoctorPatientView() {
                       <span className="font-medium">Dosaggio:</span> {patient.dosage}
                     </p>
                   </div>
+                  <div className="mt-4">
+                    <Button
+                      onClick={() => setLocation(`/doctor/patient-treatment-profile/${patientId}`)}
+                      className="w-full bg-blue-500 hover:bg-blue-600"
+                      size="sm"
+                    >
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Gestisci Trattamento
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </div>

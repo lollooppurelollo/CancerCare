@@ -283,17 +283,22 @@ export default function DoctorDashboard() {
           </div>
         </div>
 
-        {/* Contatori Pazienti */}
+        {/* Numero di pazienti totali */}
         <div className="mb-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-3">
-            Contatori Pazienti
+            Numero di pazienti totali
           </h2>
           
-          <div className="grid grid-cols-2 gap-2">
-            <div className="bg-sage-50 p-3 rounded-lg border border-sage-200">
-              <div className="text-xl font-bold text-sage-600">{statisticsPatients.length}</div>
-              <div className="text-xs text-gray-600">Pazienti Totali</div>
+          {/* Pazienti totali - riga intera */}
+          <div className="mb-3">
+            <div className="bg-sage-50 p-4 rounded-lg border border-sage-200">
+              <div className="text-2xl font-bold text-sage-600">{statisticsPatients.length}</div>
+              <div className="text-sm text-gray-600">Pazienti Totali</div>
             </div>
+          </div>
+          
+          {/* Farmaci - stessa riga */}
+          <div className="grid grid-cols-3 gap-2">
             <div className="bg-green-50 p-3 rounded-lg border border-green-200">
               <div className="text-xl font-bold text-green-600">{abemaciclibCount}</div>
               <div className="text-xs text-gray-600">Abemaciclib</div>

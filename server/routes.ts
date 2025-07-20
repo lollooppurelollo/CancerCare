@@ -4,7 +4,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
   insertUserSchema, insertPatientSchema, insertDiaryEntrySchema, 
-  insertSymptomSchema, insertMessageSchema, insertAlertSchema, insertMissedMedicationSchema, insertDosageHistorySchema 
+  insertSymptomSchema, insertMessageSchema, insertAlertSchema, insertMissedMedicationSchema, insertDosageHistorySchema, insertCalendarEventSchema
 } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -1376,6 +1376,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get medication comparison error:", error);
       res.status(500).json({ message: "Failed to get medication comparison data" });
+    }
+  });
+
+  // Calendar events routes
+  app.post("/api/calendar-events", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const eventData = insertCalendarEventSchema.parse(req.body);
+      eventData.createdBy = (req as any).session.userId;
+      
+      const event = await storage.createCalendarEvent(eventData);
+      res.json(event);
+    } catch (error) {
+      console.error("Create calendar event error:", error);
+      res.status(500).json({ message: "Failed to create calendar event" });
+    }
+  });
+
+  app.get("/api/calendar-events/:patientId", async (req, res) => {
+    try {
+      const patientId = parseInt(req.params.patientId);
+      const events = await storage.getCalendarEventsByPatient(patientId);
+      res.json(events);
+    } catch (error) {
+      console.error("Get calendar events error:", error);
+      res.status(500).json({ message: "Failed to get calendar events" });
+    }
+  });
+
+  app.get("/api/calendar-events/:patientId/range", async (req, res) => {
+    try {
+      const patientId = parseInt(req.params.patientId);
+      const { startDate, endDate } = req.query;
+      
+      if (!startDate || !endDate) {
+        return res.status(400).json({ message: "Start date and end date are required" });
+      }
+
+      const events = await storage.getCalendarEventsByPatientAndDateRange(
+        patientId, 
+        startDate as string, 
+        endDate as string
+      );
+      res.json(events);
+    } catch (error) {
+      console.error("Get calendar events by range error:", error);
+      res.status(500).json({ message: "Failed to get calendar events" });
+    }
+  });
+
+  app.put("/api/calendar-events/:id", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const event = await storage.updateCalendarEvent(id, updates);
+      res.json(event);
+    } catch (error) {
+      console.error("Update calendar event error:", error);
+      res.status(500).json({ message: "Failed to update calendar event" });
+    }
+  });
+
+  app.delete("/api/calendar-events/:id", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const id = parseInt(req.params.id);
+      await storage.deleteCalendarEvent(id);
+      res.json({ message: "Calendar event deleted successfully" });
+    } catch (error) {
+      console.error("Delete calendar event error:", error);
+      res.status(500).json({ message: "Failed to delete calendar event" });
+    }
+  });
+
+  // Patient profile management routes (for treatment tracking)
+  app.put("/api/patients/:id/treatment-profile", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const id = parseInt(req.params.id);
+      const profileSchema = z.object({
+        actualTreatmentStartDate: z.string().optional(),
+        firstDosageReductionDate: z.string().optional(),
+        secondDosageReductionDate: z.string().optional(),
+        treatmentInterruptionDate: z.string().optional(),
+        adherenceCalculationStartDate: z.string().optional(),
+      });
+
+      const profileData = profileSchema.parse(req.body);
+      const patient = await storage.updatePatient(id, profileData);
+      res.json(patient);
+    } catch (error) {
+      console.error("Update patient treatment profile error:", error);
+      res.status(500).json({ message: "Failed to update patient treatment profile" });
     }
   });
 

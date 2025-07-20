@@ -197,10 +197,54 @@ export default function PatientProfile() {
               <p className="text-sm text-gray-600">Dosaggio</p>
               <p className="font-medium">{patient.dosage}</p>
             </div>
-
-
           </CardContent>
         </Card>
+
+        {/* Treatment Information */}
+        {patient.actualTreatmentStartDate && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center text-sage-700">
+                <Calendar className="w-5 h-5 mr-2" />
+                Informazioni Trattamento
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm text-blue-600">Data Inizio Trattamento</p>
+                <p className="font-medium">{new Date(patient.actualTreatmentStartDate).toLocaleDateString("it-IT")}</p>
+              </div>
+
+              {patient.firstDosageReductionDate && (
+                <div className="p-3 bg-orange-50 rounded-lg">
+                  <p className="text-sm text-orange-600">Prima Riduzione Dosaggio</p>
+                  <p className="font-medium">{new Date(patient.firstDosageReductionDate).toLocaleDateString("it-IT")}</p>
+                </div>
+              )}
+
+              {patient.secondDosageReductionDate && (
+                <div className="p-3 bg-red-50 rounded-lg">
+                  <p className="text-sm text-red-600">Seconda Riduzione Dosaggio</p>
+                  <p className="font-medium">{new Date(patient.secondDosageReductionDate).toLocaleDateString("it-IT")}</p>
+                </div>
+              )}
+
+              {patient.treatmentInterruptionDate && (
+                <div className="p-3 bg-gray-100 rounded-lg">
+                  <p className="text-sm text-gray-600">Interruzione Trattamento</p>
+                  <p className="font-medium">{new Date(patient.treatmentInterruptionDate).toLocaleDateString("it-IT")}</p>
+                </div>
+              )}
+
+              {patient.adherenceCalculationStartDate && (
+                <div className="p-3 bg-green-50 rounded-lg">
+                  <p className="text-sm text-green-600">Inizio Calcolo Aderenza</p>
+                  <p className="font-medium">{new Date(patient.adherenceCalculationStartDate).toLocaleDateString("it-IT")}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <div className="text-xs text-gray-500 mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
           <p className="font-medium text-yellow-800 mb-1">Nota</p>

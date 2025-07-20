@@ -1,11 +1,11 @@
 import { 
-  users, patients, medicationSchedules, diaryEntries, symptoms, messages, alerts, adviceItems, missedMedication, dosageHistory,
+  users, patients, medicationSchedules, diaryEntries, symptoms, messages, alerts, adviceItems, missedMedication, dosageHistory, calendarEvents,
   type User, type InsertUser, type Patient, type InsertPatient,
   type MedicationSchedule, type InsertMedicationSchedule,
   type DiaryEntry, type InsertDiaryEntry, type Symptom, type InsertSymptom,
   type Message, type InsertMessage, type Alert, type InsertAlert,
   type AdviceItem, type InsertAdviceItem, type MissedMedication, type InsertMissedMedication,
-  type DosageHistory, type InsertDosageHistory
+  type DosageHistory, type InsertDosageHistory, type CalendarEvent, type InsertCalendarEvent
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, gte, lte, or, sql, isNull } from "drizzle-orm";
@@ -74,6 +74,13 @@ export interface IStorage {
   getAdvancedPatientAnalytics(): Promise<any[]>;
   getSymptomAnalyticsByDosage(symptomType: string, treatmentSetting?: string): Promise<any>;
   getDosageReductionAnalytics(medication?: string, treatmentSetting?: string): Promise<any>;
+
+  // Calendar events operations
+  createCalendarEvent(event: InsertCalendarEvent): Promise<CalendarEvent>;
+  getCalendarEventsByPatient(patientId: number): Promise<CalendarEvent[]>;
+  getCalendarEventsByPatientAndDateRange(patientId: number, startDate: string, endDate: string): Promise<CalendarEvent[]>;
+  updateCalendarEvent(id: number, updates: Partial<InsertCalendarEvent>): Promise<CalendarEvent>;
+  deleteCalendarEvent(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1027,6 +1034,50 @@ export class DatabaseStorage implements IStorage {
     }
 
     return results;
+  }
+
+  // Calendar events operations
+  async createCalendarEvent(eventData: InsertCalendarEvent): Promise<CalendarEvent> {
+    const [event] = await db
+      .insert(calendarEvents)
+      .values(eventData)
+      .returning();
+    return event;
+  }
+
+  async getCalendarEventsByPatient(patientId: number): Promise<CalendarEvent[]> {
+    return await db
+      .select()
+      .from(calendarEvents)
+      .where(eq(calendarEvents.patientId, patientId))
+      .orderBy(calendarEvents.date);
+  }
+
+  async getCalendarEventsByPatientAndDateRange(patientId: number, startDate: string, endDate: string): Promise<CalendarEvent[]> {
+    return await db
+      .select()
+      .from(calendarEvents)
+      .where(
+        and(
+          eq(calendarEvents.patientId, patientId),
+          gte(calendarEvents.date, startDate),
+          lte(calendarEvents.date, endDate)
+        )
+      )
+      .orderBy(calendarEvents.date);
+  }
+
+  async updateCalendarEvent(id: number, updates: Partial<InsertCalendarEvent>): Promise<CalendarEvent> {
+    const [event] = await db
+      .update(calendarEvents)
+      .set(updates)
+      .where(eq(calendarEvents.id, id))
+      .returning();
+    return event;
+  }
+
+  async deleteCalendarEvent(id: number): Promise<void> {
+    await db.delete(calendarEvents).where(eq(calendarEvents.id, id));
   }
 }
 
