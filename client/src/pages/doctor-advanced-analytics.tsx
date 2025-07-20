@@ -39,8 +39,13 @@ export default function DoctorAdvancedAnalytics() {
   });
 
   const { data: symptomData, isLoading: isLoadingSymptoms } = useQuery({
-    queryKey: ["/api/analytics/symptom-by-dosage", selectedSymptom],
+    queryKey: ["/api/analytics/symptom-by-dosage", selectedSymptom, selectedSetting],
     enabled: !!selectedSymptom,
+  });
+
+  const { data: reductionData, isLoading: isLoadingReductions } = useQuery({
+    queryKey: ["/api/analytics/dosage-reduction", selectedMedication, selectedSetting],
+    enabled: true,
   });
 
   // Mock data in case API returns empty
@@ -340,7 +345,7 @@ export default function DoctorAdvancedAnalytics() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="text-sm font-medium text-sage-700 mb-2 block">Farmaco</label>
                 <Select value={selectedMedication} onValueChange={setSelectedMedication}>
@@ -366,6 +371,25 @@ export default function DoctorAdvancedAnalytics() {
                     <SelectItem value="all">Tutti i setting</SelectItem>
                     <SelectItem value="metastatic">Metastatico</SelectItem>
                     <SelectItem value="adjuvant">Adiuvante</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-sage-700 mb-2 block">Tipo Sintomo</label>
+                <Select value={selectedSymptom} onValueChange={setSelectedSymptom}>
+                  <SelectTrigger className="border-sage-200 focus:ring-sage-500">
+                    <SelectValue placeholder="Seleziona sintomo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="diarrea">Diarrea</SelectItem>
+                    <SelectItem value="nausea">Nausea</SelectItem>
+                    <SelectItem value="vomito">Vomito</SelectItem>
+                    <SelectItem value="fatigue">Fatigue</SelectItem>
+                    <SelectItem value="dolori_articolari">Dolori Articolari</SelectItem>
+                    <SelectItem value="febbre">Febbre</SelectItem>
+                    <SelectItem value="rush_cutaneo">Rush Cutaneo</SelectItem>
+                    <SelectItem value="perdita_appetito">Perdita Appetito</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -400,63 +424,68 @@ export default function DoctorAdvancedAnalytics() {
         {/* Analisi per Farmaco */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-sage-800">Analisi Complessiva per Farmaco</CardTitle>
+            <CardTitle className="text-sage-800">Analisi Complessiva per Farmaco (Dati Reali)</CardTitle>
+            <p className="text-sm text-gray-600">
+              Filtri attivi: {selectedMedication === "all" ? "Tutti i farmaci" : selectedMedication} • {selectedSetting === "all" ? "Tutti i setting" : selectedSetting}
+            </p>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-sage-200">
-                    <th className="text-left p-3 font-medium text-sage-700">Farmaco</th>
-                    <th className="text-center p-3 font-medium text-sage-700">N° Pazienti</th>
-                    <th className="text-center p-3 font-medium text-sage-700">Settimane Prima Riduzione</th>
-                    <th className="text-center p-3 font-medium text-sage-700">Settimane Seconda Riduzione</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {["abemaciclib", "ribociclib", "palbociclib"].map((drug) => {
-                    const drugPatients = displayData.filter(p => p.medication === drug);
-                    const patientCount = drugPatients.length;
-                    
-                    // Calcolo settimane medie per riduzioni
-                    const firstReductionWeeks = drugPatients
-                      .filter(p => p.dosageReductions >= 1)
-                      .map(p => Math.floor(p.weeksOnTreatment * 0.6)) // Stima prima riduzione
-                      .reduce((sum, weeks) => sum + weeks, 0);
-                    const firstReductionCount = drugPatients.filter(p => p.dosageReductions >= 1).length;
-                    const avgFirstReduction = firstReductionCount > 0 ? (firstReductionWeeks / firstReductionCount) : 0;
-                    
-                    const secondReductionWeeks = drugPatients
-                      .filter(p => p.dosageReductions >= 2)
-                      .map(p => Math.floor(p.weeksOnTreatment * 0.8)) // Stima seconda riduzione
-                      .reduce((sum, weeks) => sum + weeks, 0);
-                    const secondReductionCount = drugPatients.filter(p => p.dosageReductions >= 2).length;
-                    const avgSecondReduction = secondReductionCount > 0 ? (secondReductionWeeks / secondReductionCount) : 0;
-                    
-                    return (
-                      <tr key={drug} className="border-b border-gray-100 hover:bg-sage-50">
-                        <td className="p-3 font-medium text-gray-900 capitalize">{drug}</td>
-                        <td className="p-3 text-center text-sage-800 font-semibold">{patientCount}</td>
-                        <td className="p-3 text-center">
-                          {firstReductionCount > 0 ? (
-                            <span className="text-orange-600 font-medium">{avgFirstReduction.toFixed(1)}</span>
-                          ) : (
-                            <span className="text-gray-400">N/A</span>
-                          )}
-                        </td>
-                        <td className="p-3 text-center">
-                          {secondReductionCount > 0 ? (
-                            <span className="text-red-600 font-medium">{avgSecondReduction.toFixed(1)}</span>
-                          ) : (
-                            <span className="text-gray-400">N/A</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            {isLoadingReductions ? (
+              <div className="text-center py-8">
+                <RefreshCw className="w-6 h-6 animate-spin text-sage-600 mx-auto mb-2" />
+                <p className="text-sage-600">Caricamento analisi riduzioni...</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-sage-200">
+                      <th className="text-left p-3 font-medium text-sage-700">Farmaco</th>
+                      <th className="text-center p-3 font-medium text-sage-700">N° Pazienti</th>
+                      <th className="text-center p-3 font-medium text-sage-700">Settimane Prima Riduzione</th>
+                      <th className="text-center p-3 font-medium text-sage-700">Settimane Seconda Riduzione</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {["abemaciclib", "ribociclib", "palbociclib"].map((drug) => {
+                      // Filtra i pazienti da displayData se il farmaco specifico è selezionato
+                      const shouldShowDrug = selectedMedication === "all" || selectedMedication === drug;
+                      
+                      if (!shouldShowDrug) return null;
+                      
+                      const drugPatients = displayData.filter(p => p.medication === drug);
+                      const patientCount = drugPatients.length;
+                      
+                      // Ottieni dati reali dalle API
+                      const drugReductionData = reductionData?.[drug];
+                      const avgFirstReduction = drugReductionData?.avgFirstReduction;
+                      const avgSecondReduction = drugReductionData?.avgSecondReduction;
+                      
+                      return (
+                        <tr key={drug} className="border-b border-gray-100 hover:bg-sage-50">
+                          <td className="p-3 font-medium text-gray-900 capitalize">{drug}</td>
+                          <td className="p-3 text-center text-sage-800 font-semibold">{patientCount}</td>
+                          <td className="p-3 text-center">
+                            {avgFirstReduction !== null && avgFirstReduction !== undefined ? (
+                              <span className="text-orange-600 font-medium">{avgFirstReduction.toFixed(1)}</span>
+                            ) : (
+                              <span className="text-gray-400">N/A</span>
+                            )}
+                          </td>
+                          <td className="p-3 text-center">
+                            {avgSecondReduction !== null && avgSecondReduction !== undefined ? (
+                              <span className="text-red-600 font-medium">{avgSecondReduction.toFixed(1)}</span>
+                            ) : (
+                              <span className="text-gray-400">N/A</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -466,24 +495,10 @@ export default function DoctorAdvancedAnalytics() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
                 <CardTitle className="text-sage-800">% Pazienti con Sintomo Severo per Farmaco e Dosaggio</CardTitle>
-                <p className="text-sm text-gray-600">Percentuale di pazienti con {selectedSymptom} (intensità ≥5) dai dati reali</p>
-              </div>
-              <div className="w-full sm:w-48">
-                <Select value={selectedSymptom} onValueChange={setSelectedSymptom}>
-                  <SelectTrigger className="border-sage-200 focus:ring-sage-500">
-                    <SelectValue placeholder="Seleziona sintomo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="diarrea">Diarrea</SelectItem>
-                    <SelectItem value="nausea">Nausea</SelectItem>
-                    <SelectItem value="vomito">Vomito</SelectItem>
-                    <SelectItem value="fatigue">Fatigue</SelectItem>
-                    <SelectItem value="dolori_articolari">Dolori Articolari</SelectItem>
-                    <SelectItem value="febbre">Febbre</SelectItem>
-                    <SelectItem value="rush_cutaneo">Rush Cutaneo</SelectItem>
-                    <SelectItem value="perdita_appetito">Perdita Appetito</SelectItem>
-                  </SelectContent>
-                </Select>
+                <p className="text-sm text-gray-600">
+                  Percentuale di pazienti con {selectedSymptom} (intensità ≥5) dai dati reali • 
+                  Filtri: {selectedSetting === "all" ? "Tutti i setting" : selectedSetting}
+                </p>
               </div>
             </div>
           </CardHeader>

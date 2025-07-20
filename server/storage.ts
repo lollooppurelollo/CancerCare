@@ -72,7 +72,8 @@ export interface IStorage {
 
   // Advanced analytics operations
   getAdvancedPatientAnalytics(): Promise<any[]>;
-  getSymptomAnalyticsByDosage(symptomType: string): Promise<any>;
+  getSymptomAnalyticsByDosage(symptomType: string, treatmentSetting?: string): Promise<any>;
+  getDosageReductionAnalytics(medication?: string, treatmentSetting?: string): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -731,12 +732,18 @@ export class DatabaseStorage implements IStorage {
     return results;
   }
 
-  async getSymptomAnalyticsByDosage(symptomType: string): Promise<any> {
-    // Get all patients with their symptoms
-    const patientsData = await db
+  async getSymptomAnalyticsByDosage(symptomType: string, treatmentSetting?: string): Promise<any> {
+    // Get all patients with their symptoms, with optional treatment setting filter
+    let query = db
       .select()
       .from(patients)
       .leftJoin(symptoms, eq(symptoms.patientId, patients.id));
+
+    if (treatmentSetting && treatmentSetting !== "all") {
+      query = query.where(eq(patients.treatmentSetting, treatmentSetting));
+    }
+
+    const patientsData = await query;
 
     const result = {
       abemaciclib: { "150mg": 0, "100mg": 0, "50mg": 0 },
@@ -788,6 +795,89 @@ export class DatabaseStorage implements IStorage {
           result[medication as keyof typeof result][dosage as keyof typeof result[keyof typeof result]] = Math.round(severePercentage);
         }
       }
+    });
+
+    return result;
+  }
+
+  async getDosageReductionAnalytics(medication?: string, treatmentSetting?: string): Promise<any> {
+    // Get all dosage history records
+    let query = db
+      .select({
+        patientId: dosageHistory.patientId,
+        medication: dosageHistory.medication,
+        treatmentSetting: dosageHistory.treatmentSetting,
+        startDate: dosageHistory.startDate,
+        dosage: dosageHistory.dosage,
+        weeksOnDosage: dosageHistory.weeksOnDosage
+      })
+      .from(dosageHistory)
+      .orderBy(dosageHistory.patientId, dosageHistory.startDate);
+
+    const conditions = [];
+    if (medication && medication !== "all") conditions.push(eq(dosageHistory.medication, medication));
+    if (treatmentSetting && treatmentSetting !== "all") conditions.push(eq(dosageHistory.treatmentSetting, treatmentSetting));
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+
+    const histories = await query;
+    
+    // Group by patient to track their dosage progression
+    const patientProgressions: any = {};
+    
+    histories.forEach(record => {
+      if (!patientProgressions[record.patientId]) {
+        patientProgressions[record.patientId] = {
+          medication: record.medication,
+          treatmentSetting: record.treatmentSetting,
+          dosageHistory: []
+        };
+      }
+      patientProgressions[record.patientId].dosageHistory.push(record);
+    });
+
+    // Calculate reduction timings for each medication
+    const result = {
+      abemaciclib: { patientCount: 0, firstReduction: [], secondReduction: [] },
+      ribociclib: { patientCount: 0, firstReduction: [], secondReduction: [] },
+      palbociclib: { patientCount: 0, firstReduction: [], secondReduction: [] }
+    };
+
+    Object.values(patientProgressions).forEach((patient: any) => {
+      const med = patient.medication;
+      if (!result[med]) return;
+
+      result[med].patientCount++;
+      
+      // Sort by start date to get chronological order
+      const sortedHistory = patient.dosageHistory.sort((a: any, b: any) => 
+        new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+      );
+
+      if (sortedHistory.length >= 2) {
+        // First reduction: weeks from start to first dosage change
+        const weeksToFirstReduction = sortedHistory[0].weeksOnDosage || 0;
+        result[med].firstReduction.push(weeksToFirstReduction);
+      }
+
+      if (sortedHistory.length >= 3) {
+        // Second reduction: cumulative weeks to second dosage change
+        const weeksToSecondReduction = (sortedHistory[0].weeksOnDosage || 0) + (sortedHistory[1].weeksOnDosage || 0);
+        result[med].secondReduction.push(weeksToSecondReduction);
+      }
+    });
+
+    // Calculate averages
+    ["abemaciclib", "ribociclib", "palbociclib"].forEach(med => {
+      const medData = result[med];
+      medData.avgFirstReduction = medData.firstReduction.length > 0 
+        ? medData.firstReduction.reduce((sum: number, weeks: number) => sum + weeks, 0) / medData.firstReduction.length
+        : null;
+      medData.avgSecondReduction = medData.secondReduction.length > 0
+        ? medData.secondReduction.reduce((sum: number, weeks: number) => sum + weeks, 0) / medData.secondReduction.length
+        : null;
     });
 
     return result;

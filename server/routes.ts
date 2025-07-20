@@ -1313,16 +1313,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
 
-      const { symptomType } = req.query;
+      const { symptomType, treatmentSetting } = req.query;
       if (!symptomType || typeof symptomType !== 'string') {
         return res.status(400).json({ message: "symptomType parameter is required" });
       }
 
-      const symptomData = await storage.getSymptomAnalyticsByDosage(symptomType);
+      const symptomData = await storage.getSymptomAnalyticsByDosage(symptomType, treatmentSetting as string);
       res.json(symptomData);
     } catch (error) {
       console.error("Get symptom analytics by dosage error:", error);
       res.status(500).json({ message: "Failed to get symptom analytics by dosage" });
+    }
+  });
+
+  app.get("/api/analytics/dosage-reduction", async (req, res) => {
+    try {
+      const userRole = (req as any).session?.userRole;
+      if (userRole !== "doctor") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const { medication, treatmentSetting } = req.query;
+      const reductionData = await storage.getDosageReductionAnalytics(
+        medication as string, 
+        treatmentSetting as string
+      );
+      res.json(reductionData);
+    } catch (error) {
+      console.error("Get dosage reduction analytics error:", error);
+      res.status(500).json({ message: "Failed to get dosage reduction analytics" });
     }
   });
 
