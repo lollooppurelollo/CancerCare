@@ -13,6 +13,7 @@ export default function DoctorPatientView() {
   const [match, params] = useRoute("/doctor/patient-view/:patientId");
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("home");
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const patientId = params?.patientId ? parseInt(params.patientId) : null;
 
   const { data: patient } = useQuery({
@@ -180,7 +181,6 @@ export default function DoctorPatientView() {
   };
 
   // Interactive calendar functionality for doctors
-  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const getEventForDate = (date: Date) => {
     const dateString = date.toISOString().split('T')[0];
