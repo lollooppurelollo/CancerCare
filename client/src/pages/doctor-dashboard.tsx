@@ -291,7 +291,7 @@ export default function DoctorDashboard() {
           
           {/* Pazienti totali - riga intera */}
           <div className="mb-3">
-            <div className="bg-sage-50 p-4 rounded-lg border border-sage-200">
+            <div className="bg-sage-50 p-4 rounded-lg border border-sage-200 text-center">
               <div className="text-2xl font-bold text-sage-600">{statisticsPatients.length}</div>
               <div className="text-sm text-gray-600">Pazienti Totali</div>
             </div>

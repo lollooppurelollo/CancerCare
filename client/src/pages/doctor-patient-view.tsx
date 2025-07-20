@@ -280,7 +280,7 @@ export default function DoctorPatientView() {
               size="sm"
               className="flex flex-col items-center py-2 transition-all duration-200 hover:scale-105 active:scale-95"
             >
-              <Calendar className={`w-4 h-4 mb-1 transition-all duration-200 ${
+              <Calendar className={`w-3 h-3 mb-1 transition-all duration-200 ${
                 activeTab === "home" ? "scale-110" : "hover:scale-110"
               }`} />
               <span className="text-xs">Home</span>
@@ -291,7 +291,7 @@ export default function DoctorPatientView() {
               size="sm"
               className="flex flex-col items-center py-2 transition-all duration-200 hover:scale-105 active:scale-95"
             >
-              <Activity className={`w-4 h-4 mb-1 transition-all duration-200 ${
+              <Activity className={`w-3 h-3 mb-1 transition-all duration-200 ${
                 activeTab === "history" ? "scale-110" : "hover:scale-110"
               }`} />
               <span className="text-xs">Storico</span>
@@ -302,7 +302,7 @@ export default function DoctorPatientView() {
               size="sm"
               className="flex flex-col items-center py-2 transition-all duration-200 hover:scale-105 active:scale-95"
             >
-              <User className={`w-4 h-4 mb-1 transition-all duration-200 ${
+              <User className={`w-3 h-3 mb-1 transition-all duration-200 ${
                 activeTab === "profile" ? "scale-110" : "hover:scale-110"
               }`} />
               <span className="text-xs">Profilo</span>
