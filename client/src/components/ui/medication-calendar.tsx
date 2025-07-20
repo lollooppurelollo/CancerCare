@@ -100,6 +100,10 @@ export default function MedicationCalendar({ medication, patientId, isDoctorMode
       queryClient.invalidateQueries({ 
         queryKey: patientId ? ["/api/missed-medication", patientId] : ["/api/missed-medication"]
       });
+      // Force immediate re-render by refetching
+      queryClient.refetchQueries({ 
+        queryKey: ["/api/calendar-events", patientId]
+      });
     },
   });
 
@@ -157,6 +161,10 @@ export default function MedicationCalendar({ medication, patientId, isDoctorMode
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ 
+        queryKey: ["/api/calendar-events", patientId]
+      });
+      // Force immediate re-render by refetching
+      queryClient.refetchQueries({ 
         queryKey: ["/api/calendar-events", patientId]
       });
     },
