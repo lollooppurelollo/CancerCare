@@ -79,6 +79,7 @@ export interface IStorage {
   createCalendarEvent(event: InsertCalendarEvent): Promise<CalendarEvent>;
   getCalendarEventsByPatient(patientId: number): Promise<CalendarEvent[]>;
   getCalendarEventsByPatientAndDateRange(patientId: number, startDate: string, endDate: string): Promise<CalendarEvent[]>;
+  getCalendarEventByPatientAndDate(patientId: number, date: string): Promise<CalendarEvent | null>;
   updateCalendarEvent(id: number, updates: Partial<InsertCalendarEvent>): Promise<CalendarEvent>;
   deleteCalendarEvent(id: number): Promise<void>;
 }
@@ -1065,6 +1066,21 @@ export class DatabaseStorage implements IStorage {
         )
       )
       .orderBy(calendarEvents.date);
+  }
+
+  async getCalendarEventByPatientAndDate(patientId: number, date: string): Promise<CalendarEvent | null> {
+    const events = await db
+      .select()
+      .from(calendarEvents)
+      .where(
+        and(
+          eq(calendarEvents.patientId, patientId),
+          eq(calendarEvents.date, date)
+        )
+      )
+      .limit(1);
+    
+    return events[0] || null;
   }
 
   async updateCalendarEvent(id: number, updates: Partial<InsertCalendarEvent>): Promise<CalendarEvent> {

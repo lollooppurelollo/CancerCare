@@ -1390,7 +1390,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const eventData = insertCalendarEventSchema.parse(req.body);
       eventData.createdBy = (req as any).session.userId;
       
-      const event = await storage.createCalendarEvent(eventData);
+      // Check if event already exists for this patient and date
+      const existingEvent = await storage.getCalendarEventByPatientAndDate(
+        eventData.patientId, 
+        eventData.date
+      );
+      
+      let event;
+      if (existingEvent) {
+        // Update existing event
+        event = await storage.updateCalendarEvent(existingEvent.id, {
+          eventType: eventData.eventType,
+          notes: eventData.notes,
+          createdBy: eventData.createdBy
+        });
+      } else {
+        // Create new event
+        event = await storage.createCalendarEvent(eventData);
+      }
+      
       res.json(event);
     } catch (error) {
       console.error("Create calendar event error:", error);
