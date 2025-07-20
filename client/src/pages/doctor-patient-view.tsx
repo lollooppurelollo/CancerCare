@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
-import { ArrowLeft, Calendar, MessageCircle, Heart, Activity, Settings, Video, User } from "lucide-react";
+import { ArrowLeft, Calendar, MessageCircle, Heart, Activity, Settings, Video, User, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -180,197 +180,65 @@ export default function DoctorPatientView() {
     return false;
   };
 
-  // Interactive calendar functionality for doctors
+  // Doctor calendar with slider functionality
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [sliderValue, setSliderValue] = useState(0);
 
   const getEventForDate = (date: Date) => {
     const dateString = date.toISOString().split('T')[0];
     return calendarEvents.find((event: any) => event.date === dateString);
   };
 
-  const getShouldTake = (medication: string, date: Date): boolean => {
-    const cycleStart = new Date('2024-01-01');
-    const daysSinceStart = Math.floor((date.getTime() - cycleStart.getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (medication === "abemaciclib") {
-      return true;
-    } else if (medication === "ribociclib" || medication === "palbociclib") {
-      const cycleDay = daysSinceStart % 28;
-      return cycleDay < 21;
-    }
-    
-    return false;
-  };
-
   const handleDayClick = (date: Date) => {
     const dateString = date.toISOString().split('T')[0];
     const existingEvent = getEventForDate(date);
-
+    
+    setSelectedDate(dateString);
+    
+    // Set slider value based on current state
     if (existingEvent) {
-      // Cycle through states: taken -> pause -> missed -> (delete) -> taken
-      let newEventType: "taken" | "pause" | "missed" | null;
-      
       switch (existingEvent.eventType) {
-        case "taken":
-          newEventType = "pause";
-          break;
-        case "pause":
-          newEventType = "missed";
-          break;
-        case "missed":
-          // Delete the event to return to default state
-          deleteEventMutation.mutate(existingEvent.id);
-          return;
-        default:
-          newEventType = "taken";
+        case "taken": setSliderValue(1); break;
+        case "pause": setSliderValue(2); break;
+        case "missed": setSliderValue(3); break;
+        default: setSliderValue(0);
       }
-
-      updateEventMutation.mutate({
-        eventId: existingEvent.id,
-        eventType: newEventType,
-      });
     } else {
-      // Create new event as "taken" (green)
-      createEventMutation.mutate({
+      setSliderValue(0); // Default state
+    }
+  };
+
+  const handleSaveChanges = () => {
+    if (!selectedDate) return;
+
+    const existingEvent = calendarEvents.find((event: any) => event.date === selectedDate);
+    
+    if (sliderValue === 0) {
+      // Delete event if exists (return to default)
+      if (existingEvent) {
+        deleteEventMutation.mutate(existingEvent.id);
+      }
+    } else {
+      // Create or update event
+      const eventTypes = ["", "taken", "pause", "missed"];
+      const eventData = {
         patientId: parseInt(patientId!.toString()),
-        date: dateString,
-        eventType: "taken",
+        date: selectedDate,
+        eventType: eventTypes[sliderValue],
         notes: "Modificato dal medico",
-      });
-    }
-  };
+      };
 
-  const generateCalendarDays = () => {
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const startDate = new Date(firstDay);
-    startDate.setDate(startDate.getDate() - firstDay.getDay()); // Start from Sunday
-
-    const days = [];
-    const current = new Date(startDate);
-    
-    // Generate 42 days (6 weeks)
-    for (let i = 0; i < 42; i++) {
-      if (current.getMonth() === month) {
-        days.push(new Date(current));
+      if (existingEvent) {
+        updateEventMutation.mutate({
+          eventId: existingEvent.id,
+          eventType: eventTypes[sliderValue],
+        });
       } else {
-        days.push(null);
+        createEventMutation.mutate(eventData);
       }
-      current.setDate(current.getDate() + 1);
     }
     
-    return days;
-  };
-
-  const renderCalendarDay = (date: Date) => {
-    const event = getEventForDate(date);
-    const shouldTakeNormally = getShouldTake(patient.medication, date);
-    const isToday = date.toDateString() === new Date().toDateString();
-    
-    let bgColor = "bg-white hover:bg-gray-50";
-    let textColor = "text-gray-400";
-    
-    if (event) {
-      switch (event.eventType) {
-        case "taken":
-          bgColor = "bg-green-200 hover:bg-green-300";
-          textColor = "text-green-800";
-          break;
-        case "pause":
-          bgColor = "bg-gray-200 hover:bg-gray-300";
-          textColor = "text-gray-800";
-          break;
-        case "missed":
-          bgColor = "bg-red-200 hover:bg-red-300";
-          textColor = "text-red-800";
-          break;
-      }
-    } else if (shouldTakeNormally) {
-      bgColor = "bg-sage-200 hover:bg-sage-300";
-      textColor = "text-sage-800";
-    }
-
-    return (
-      <button
-        onClick={() => handleDayClick(date)}
-        className={`
-          w-full h-10 flex items-center justify-center text-sm border rounded
-          ${bgColor} ${textColor}
-          ${isToday ? 'ring-2 ring-blue-500' : 'border-gray-200'}
-          cursor-pointer transition-all duration-150 hover:scale-105 active:scale-95
-        `}
-      >
-        {date.getDate()}
-      </button>
-    );
-  };
-
-  const renderInteractiveCalendar = () => {
-    return (
-      <div>
-        {/* Calendar Navigation */}
-        <div className="flex items-center justify-between mb-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              const newMonth = new Date(currentMonth);
-              newMonth.setMonth(newMonth.getMonth() - 1);
-              setCurrentMonth(newMonth);
-            }}
-          >
-            ←
-          </Button>
-          <h3 className="font-medium">
-            {currentMonth.toLocaleDateString('it-IT', { 
-              month: 'long', 
-              year: 'numeric' 
-            })}
-          </h3>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              const newMonth = new Date(currentMonth);
-              newMonth.setMonth(newMonth.getMonth() + 1);
-              setCurrentMonth(newMonth);
-            }}
-          >
-            →
-          </Button>
-        </div>
-
-        {/* Calendar Grid */}
-        <div className="grid grid-cols-7 gap-1 mb-4">
-          {['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'].map(day => (
-            <div key={day} className="text-center text-xs font-medium text-gray-500 p-2">
-              {day}
-            </div>
-          ))}
-          {generateCalendarDays().map((day, index) => (
-            <div key={index} className="aspect-square">
-              {day ? renderCalendarDay(day) : <div className="w-full h-full"></div>}
-            </div>
-          ))}
-        </div>
-
-        {/* Legend */}
-        <div className="text-xs text-gray-600 space-y-1">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-sage-300 rounded"></div>
-            <span>Giorni di trattamento</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-gray-300 rounded"></div>
-            <span>Giorni di pausa dalla terapia</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-red-300 rounded"></div>
-            <span>Terapia non assunta</span>
-          </div>
-        </div>
-      </div>
-    );
+    setSelectedDate(null);
   };
 
   return (
@@ -456,16 +324,108 @@ export default function DoctorPatientView() {
               </p>
             </div>
 
-            {/* Interactive Calendar for Doctors */}
+            {/* Medication Calendar with Doctor Controls */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-sage-800">Calendario Terapia</CardTitle>
                 <p className="text-xs text-gray-600">Clicca su un giorno per modificarlo</p>
               </CardHeader>
               <CardContent>
-                {renderInteractiveCalendar()}
+                <div className="relative">
+                  <MedicationCalendar 
+                    medication={patient.medication}
+                    patientId={patient.id}
+                  />
+                  <div 
+                    className="absolute inset-0 cursor-pointer z-10"
+                    onClick={(e) => {
+                      // Get clicked position and determine which day was clicked
+                      const target = e.target as HTMLElement;
+                      const dayElement = target.closest('button');
+                      if (dayElement) {
+                        const dayText = dayElement.textContent;
+                        if (dayText && !isNaN(parseInt(dayText))) {
+                          const today = new Date();
+                          const clickedDate = new Date(today.getFullYear(), today.getMonth(), parseInt(dayText));
+                          handleDayClick(clickedDate);
+                        }
+                      }
+                    }}
+                  />
+                </div>
               </CardContent>
             </Card>
+
+            {/* Slider Dialog for Doctor Calendar Modifications */}
+            {selectedDate && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white p-6 rounded-lg max-w-sm w-full mx-4">
+                  <h3 className="text-lg font-semibold mb-4">
+                    Modifica giorno {new Date(selectedDate).toLocaleDateString('it-IT')}
+                  </h3>
+                  
+                  <div className="mb-4">
+                    <input
+                      type="range"
+                      min="0"
+                      max="3"
+                      value={sliderValue}
+                      onChange={(e) => setSliderValue(parseInt(e.target.value))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <div className="flex justify-between text-xs text-gray-600 mt-2">
+                      <span>Default</span>
+                      <span>Assunta</span>
+                      <span>Pausa</span>
+                      <span>Non assunta</span>
+                    </div>
+                  </div>
+
+                  <div className="mb-4 p-3 rounded-lg text-center">
+                    {sliderValue === 0 && (
+                      <div className="text-sage-700">
+                        <div className="w-6 h-6 bg-sage-200 rounded mx-auto mb-2"></div>
+                        Stato normale del calendario
+                      </div>
+                    )}
+                    {sliderValue === 1 && (
+                      <div className="text-green-700">
+                        <div className="w-6 h-6 bg-green-200 rounded mx-auto mb-2"></div>
+                        Terapia assunta
+                      </div>
+                    )}
+                    {sliderValue === 2 && (
+                      <div className="text-gray-700">
+                        <div className="w-6 h-6 bg-gray-200 rounded mx-auto mb-2"></div>
+                        Pausa dalla terapia
+                      </div>
+                    )}
+                    {sliderValue === 3 && (
+                      <div className="text-red-700">
+                        <div className="w-6 h-6 bg-red-300 rounded mx-auto mb-2"></div>
+                        Terapia non assunta
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex space-x-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => setSelectedDate(null)}
+                      className="flex-1"
+                    >
+                      Annulla
+                    </Button>
+                    <Button
+                      onClick={handleSaveChanges}
+                      className="flex-1 bg-sage-500 hover:bg-sage-600"
+                    >
+                      Salva
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Today's Entry */}
             <Card>
