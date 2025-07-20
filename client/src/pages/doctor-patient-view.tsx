@@ -1,11 +1,13 @@
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
 import { ArrowLeft, Calendar, MessageCircle, Heart, Activity, Settings, Video, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import MedicationCalendar from "@/components/ui/medication-calendar";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function DoctorPatientView() {
   const [match, params] = useRoute("/doctor/patient-view/:patientId");
@@ -36,6 +38,74 @@ export default function DoctorPatientView() {
   const { data: messages = [] } = useQuery({
     queryKey: ["/api/messages", patientId],
     enabled: !!patientId,
+  });
+
+  const { data: calendarEvents = [] } = useQuery({
+    queryKey: ["/api/calendar-events", patientId],
+    enabled: !!patientId,
+  });
+
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const createEventMutation = useMutation({
+    mutationFn: async (eventData: any) => {
+      return await apiRequest("POST", "/api/calendar-events", eventData);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Giorno modificato",
+        description: "Lo stato del giorno è stato aggiornato.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/calendar-events", patientId] });
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Impossibile modificare il giorno.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateEventMutation = useMutation({
+    mutationFn: async ({ eventId, eventType }: { eventId: number; eventType: string }) => {
+      return await apiRequest("PUT", `/api/calendar-events/${eventId}`, { eventType });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Giorno modificato",
+        description: "Lo stato del giorno è stato aggiornato.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/calendar-events", patientId] });
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Impossibile modificare il giorno.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteEventMutation = useMutation({
+    mutationFn: async (eventId: number) => {
+      return await apiRequest("DELETE", `/api/calendar-events/${eventId}`, {});
+    },
+    onSuccess: () => {
+      toast({
+        title: "Giorno ripristinato",
+        description: "Il giorno è tornato al suo stato normale.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/calendar-events", patientId] });
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Impossibile ripristinare il giorno.",
+        variant: "destructive",
+      });
+    },
   });
 
   if (!patient) {
@@ -107,6 +177,200 @@ export default function DoctorPatientView() {
       return true;
     }
     return false;
+  };
+
+  // Interactive calendar functionality for doctors
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  const getEventForDate = (date: Date) => {
+    const dateString = date.toISOString().split('T')[0];
+    return calendarEvents.find((event: any) => event.date === dateString);
+  };
+
+  const getShouldTake = (medication: string, date: Date): boolean => {
+    const cycleStart = new Date('2024-01-01');
+    const daysSinceStart = Math.floor((date.getTime() - cycleStart.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (medication === "abemaciclib") {
+      return true;
+    } else if (medication === "ribociclib" || medication === "palbociclib") {
+      const cycleDay = daysSinceStart % 28;
+      return cycleDay < 21;
+    }
+    
+    return false;
+  };
+
+  const handleDayClick = (date: Date) => {
+    const dateString = date.toISOString().split('T')[0];
+    const existingEvent = getEventForDate(date);
+
+    if (existingEvent) {
+      // Cycle through states: taken -> pause -> missed -> (delete) -> taken
+      let newEventType: "taken" | "pause" | "missed" | null;
+      
+      switch (existingEvent.eventType) {
+        case "taken":
+          newEventType = "pause";
+          break;
+        case "pause":
+          newEventType = "missed";
+          break;
+        case "missed":
+          // Delete the event to return to default state
+          deleteEventMutation.mutate(existingEvent.id);
+          return;
+        default:
+          newEventType = "taken";
+      }
+
+      updateEventMutation.mutate({
+        eventId: existingEvent.id,
+        eventType: newEventType,
+      });
+    } else {
+      // Create new event as "taken" (green)
+      createEventMutation.mutate({
+        patientId: parseInt(patientId!.toString()),
+        date: dateString,
+        eventType: "taken",
+        notes: "Modificato dal medico",
+      });
+    }
+  };
+
+  const generateCalendarDays = () => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay()); // Start from Sunday
+
+    const days = [];
+    const current = new Date(startDate);
+    
+    // Generate 42 days (6 weeks)
+    for (let i = 0; i < 42; i++) {
+      if (current.getMonth() === month) {
+        days.push(new Date(current));
+      } else {
+        days.push(null);
+      }
+      current.setDate(current.getDate() + 1);
+    }
+    
+    return days;
+  };
+
+  const renderCalendarDay = (date: Date) => {
+    const event = getEventForDate(date);
+    const shouldTakeNormally = getShouldTake(patient.medication, date);
+    const isToday = date.toDateString() === new Date().toDateString();
+    
+    let bgColor = "bg-white hover:bg-gray-50";
+    let textColor = "text-gray-400";
+    
+    if (event) {
+      switch (event.eventType) {
+        case "taken":
+          bgColor = "bg-green-200 hover:bg-green-300";
+          textColor = "text-green-800";
+          break;
+        case "pause":
+          bgColor = "bg-gray-200 hover:bg-gray-300";
+          textColor = "text-gray-800";
+          break;
+        case "missed":
+          bgColor = "bg-red-200 hover:bg-red-300";
+          textColor = "text-red-800";
+          break;
+      }
+    } else if (shouldTakeNormally) {
+      bgColor = "bg-sage-200 hover:bg-sage-300";
+      textColor = "text-sage-800";
+    }
+
+    return (
+      <button
+        onClick={() => handleDayClick(date)}
+        className={`
+          w-full h-10 flex items-center justify-center text-sm border rounded
+          ${bgColor} ${textColor}
+          ${isToday ? 'ring-2 ring-blue-500' : 'border-gray-200'}
+          cursor-pointer transition-all duration-150 hover:scale-105 active:scale-95
+        `}
+      >
+        {date.getDate()}
+      </button>
+    );
+  };
+
+  const renderInteractiveCalendar = () => {
+    return (
+      <div>
+        {/* Calendar Navigation */}
+        <div className="flex items-center justify-between mb-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const newMonth = new Date(currentMonth);
+              newMonth.setMonth(newMonth.getMonth() - 1);
+              setCurrentMonth(newMonth);
+            }}
+          >
+            ←
+          </Button>
+          <h3 className="font-medium">
+            {currentMonth.toLocaleDateString('it-IT', { 
+              month: 'long', 
+              year: 'numeric' 
+            })}
+          </h3>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const newMonth = new Date(currentMonth);
+              newMonth.setMonth(newMonth.getMonth() + 1);
+              setCurrentMonth(newMonth);
+            }}
+          >
+            →
+          </Button>
+        </div>
+
+        {/* Calendar Grid */}
+        <div className="grid grid-cols-7 gap-1 mb-4">
+          {['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'].map(day => (
+            <div key={day} className="text-center text-xs font-medium text-gray-500 p-2">
+              {day}
+            </div>
+          ))}
+          {generateCalendarDays().map((day, index) => (
+            <div key={index} className="aspect-square">
+              {day ? renderCalendarDay(day) : <div className="w-full h-full"></div>}
+            </div>
+          ))}
+        </div>
+
+        {/* Legend */}
+        <div className="text-xs text-gray-600 space-y-1">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-sage-300 rounded"></div>
+            <span>Giorni di trattamento</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-gray-300 rounded"></div>
+            <span>Giorni di pausa dalla terapia</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-red-300 rounded"></div>
+            <span>Terapia non assunta</span>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -192,16 +456,14 @@ export default function DoctorPatientView() {
               </p>
             </div>
 
-            {/* Medication Calendar */}
+            {/* Interactive Calendar for Doctors */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-sage-800">Calendario Terapia</CardTitle>
+                <p className="text-xs text-gray-600">Clicca su un giorno per modificarlo</p>
               </CardHeader>
               <CardContent>
-                <MedicationCalendar 
-                  medication={patient.medication}
-                  patientId={patient.id}
-                />
+                {renderInteractiveCalendar()}
               </CardContent>
             </Card>
 
