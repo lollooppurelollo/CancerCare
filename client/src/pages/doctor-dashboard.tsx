@@ -254,26 +254,36 @@ export default function DoctorDashboard() {
           {/* Avvisi e messaggi */}
           <div>
             <h3 className="text-sm font-medium text-gray-700 mb-2">Avvisi e messaggi</h3>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               <button 
                 onClick={() => {
                   const urgentSection = document.getElementById('urgent-alerts-section');
                   urgentSection?.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className="bg-red-50 p-3 rounded-lg border border-red-200 hover:bg-red-100 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95 text-left"
+                className="bg-red-50 p-2 rounded-lg border border-red-200 hover:bg-red-100 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95 text-left"
               >
-                <div className="text-xl font-bold text-red-600 transition-transform duration-200 hover:scale-110">{urgentAlerts.length}</div>
-                <div className="text-xs text-gray-600">Avvisi urgenti</div>
+                <div className="text-lg font-bold text-red-600 transition-transform duration-200 hover:scale-110">{urgentAlerts.length}</div>
+                <div className="text-xs text-gray-600">Messaggi urgenti</div>
               </button>
               <button 
                 onClick={() => {
                   const messageSection = document.getElementById('message-alerts-section');
                   messageSection?.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className="bg-blue-50 p-3 rounded-lg border border-blue-200 hover:bg-blue-100 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95 text-left"
+                className="bg-orange-50 p-2 rounded-lg border border-orange-200 hover:bg-orange-100 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95 text-left"
               >
-                <div className="text-xl font-bold text-blue-600 transition-transform duration-200 hover:scale-110">{messageAlerts.length}</div>
+                <div className="text-lg font-bold text-orange-600 transition-transform duration-200 hover:scale-110">{messageAlerts.length}</div>
                 <div className="text-xs text-gray-600">Messaggi pazienti</div>
+              </button>
+              <button 
+                onClick={() => {
+                  const chatSection = document.getElementById('chat-notifications-section');
+                  chatSection?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="bg-blue-50 p-2 rounded-lg border border-blue-200 hover:bg-blue-100 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95 text-left"
+              >
+                <div className="text-lg font-bold text-blue-600 transition-transform duration-200 hover:scale-110">{chatNotifications.length}</div>
+                <div className="text-xs text-gray-600">Messaggi chat</div>
               </button>
             </div>
           </div>
@@ -303,7 +313,7 @@ export default function DoctorDashboard() {
                 <div id="urgent-alerts-section">
                   <h3 className="text-md font-medium text-red-700 mb-3 flex items-center">
                     <TriangleAlert className="w-4 h-4 mr-2" />
-                    Avvisi urgenti ({urgentAlerts.length})
+                    Nuovi messaggi urgenti ({urgentAlerts.length})
                   </h3>
                   <div className="space-y-3">
                     {urgentAlerts.map((alert: any) => (
@@ -481,7 +491,7 @@ export default function DoctorDashboard() {
                 <div id="chat-notifications-section">
                   <h3 className="text-md font-medium text-blue-700 mb-3 flex items-center">
                     <MessageCircle className="w-4 h-4 mr-2 transition-transform duration-200 hover:scale-110" />
-                    Nuovi messaggi chat ({chatNotifications.length})
+                    Nuovi messaggi in Chat ({chatNotifications.length})
                   </h3>
                   <div className="space-y-2">
                     {chatNotifications.map((notification: any) => (
