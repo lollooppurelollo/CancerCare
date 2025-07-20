@@ -287,6 +287,15 @@ Preferred communication style: Simple, everyday language.
    - **Real-time calendar updates**: Fixed immediate color changes after patient interactions without page refresh
    - **Removed airplane emoji**: Cleaned up messaging interface by removing airplane emoji from "Invia Messaggio" button in patient video page
 
+22. **Enhanced Patient Calendar Missed Medication Functionality (July 2025)**:
+   - **Added missing mutation for patient calendar**: Implemented addMissedMedication mutation for patients to mark therapy days as missed
+   - **Made therapy days clickable**: Green therapy days now have hover effects and cursor pointer for patient interaction
+   - **Enhanced confirmation dialog**: Updated dialog to handle both adding and removing missed medication days with different titles and actions
+   - **Real-time calendar updates**: Added refetchQueries to ensure immediate calendar refresh after patient changes
+   - **No doctor notifications**: Patient calendar interactions only save to database without creating alerts for doctors
+   - **Improved UX**: Clear visual feedback with red button for marking as missed and standard button for restoring as taken
+   - **Clean messaging interface**: Removed conversation emoji (💬) from "Conversazione" title, keeping only styled MessageSquare icon
+
 ## Data Flow
 
 1. **Patient Registration**: New patients create accounts with medical information
