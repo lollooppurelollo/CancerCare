@@ -182,9 +182,6 @@ export default function DoctorPatientView() {
           {activeTab === "home" && (
             <div className="space-y-4">
             <div className="text-center mb-6">
-              <h2 className="text-lg font-semibold text-sage-800 mb-2">
-                Ciao {patient.firstName}!
-              </h2>
               <p className="text-sm text-gray-600">
                 Oggi, {new Date().toLocaleDateString('it-IT', { 
                   weekday: 'long', 

@@ -26,7 +26,7 @@ export default function DoctorPatientTreatmentProfile() {
   });
 
   const [selectedDate, setSelectedDate] = useState("");
-  const [eventType, setEventType] = useState<"pause" | "missed">("pause");
+  const [eventType, setEventType] = useState<"pause" | "missed" | "taken">("taken");
   const [eventNotes, setEventNotes] = useState("");
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
@@ -115,6 +115,26 @@ export default function DoctorPatientTreatmentProfile() {
     },
   });
 
+  const updateEventMutation = useMutation({
+    mutationFn: async ({ eventId, eventType }: { eventId: number; eventType: string }) => {
+      return await apiRequest("PUT", `/api/calendar-events/${eventId}`, { eventType });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Evento aggiornato",
+        description: "Lo stato del giorno è stato modificato.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/calendar-events", patientId] });
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Impossibile aggiornare l'evento.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleProfileUpdate = () => {
     updateProfileMutation.mutate(treatmentProfile);
   };
@@ -143,6 +163,8 @@ export default function DoctorPatientTreatmentProfile() {
 
   const getEventColor = (eventType: string) => {
     switch (eventType) {
+      case "taken":
+        return "bg-green-100 text-green-800 border-green-300";
       case "pause":
         return "bg-gray-100 text-gray-800 border-gray-300";
       case "missed":
@@ -154,13 +176,118 @@ export default function DoctorPatientTreatmentProfile() {
 
   const getEventTypeLabel = (eventType: string) => {
     switch (eventType) {
+      case "taken":
+        return "Giorno di terapia";
       case "pause":
         return "Pausa terapia";
       case "missed":
         return "Mancata assunzione";
       default:
-        return "Normale";
+        return "Giorno di terapia";
     }
+  };
+
+  // Calendar helper functions
+  const generateCalendarDays = () => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay()); // Start from Sunday
+
+    const days = [];
+    const current = new Date(startDate);
+    
+    // Generate 42 days (6 weeks)
+    for (let i = 0; i < 42; i++) {
+      if (current.getMonth() === month) {
+        days.push(new Date(current));
+      } else {
+        days.push(null);
+      }
+      current.setDate(current.getDate() + 1);
+    }
+    
+    return days;
+  };
+
+  const getEventForDate = (date: Date) => {
+    const dateString = date.toISOString().split('T')[0];
+    return calendarEvents.find((event: any) => event.date === dateString);
+  };
+
+  const handleDayClick = (date: Date) => {
+    const dateString = date.toISOString().split('T')[0];
+    const existingEvent = getEventForDate(date);
+
+    if (existingEvent) {
+      // Cycle through states: taken -> pause -> missed -> (delete) -> taken
+      let newEventType: "taken" | "pause" | "missed" | null;
+      
+      switch (existingEvent.eventType) {
+        case "taken":
+          newEventType = "pause";
+          break;
+        case "pause":
+          newEventType = "missed";
+          break;
+        case "missed":
+          // Delete the event to return to default state
+          handleDeleteEvent(existingEvent.id);
+          return;
+        default:
+          newEventType = "taken";
+      }
+
+      // Update existing event
+      updateEventMutation.mutate({
+        eventId: existingEvent.id,
+        eventType: newEventType,
+      });
+    } else {
+      // Create new event as "taken"
+      createEventMutation.mutate({
+        patientId: parseInt(patientId!),
+        date: dateString,
+        eventType: "taken",
+        notes: "",
+      });
+    }
+  };
+
+  const renderCalendarDay = (date: Date) => {
+    const event = getEventForDate(date);
+    const isToday = date.toDateString() === new Date().toDateString();
+    
+    let bgColor = "bg-white hover:bg-gray-50";
+    if (event) {
+      switch (event.eventType) {
+        case "taken":
+          bgColor = "bg-green-200 hover:bg-green-300";
+          break;
+        case "pause":
+          bgColor = "bg-gray-200 hover:bg-gray-300";
+          break;
+        case "missed":
+          bgColor = "bg-red-200 hover:bg-red-300";
+          break;
+      }
+    }
+
+    return (
+      <button
+        onClick={() => handleDayClick(date)}
+        className={`
+          w-full h-full flex items-center justify-center text-sm border rounded
+          ${bgColor}
+          ${isToday ? 'ring-2 ring-blue-500' : 'border-gray-200'}
+          cursor-pointer transition-colors duration-150
+        `}
+      >
+        {date.getDate()}
+      </button>
+    );
   };
 
   if (!patient) {
@@ -298,10 +425,83 @@ export default function DoctorPatientTreatmentProfile() {
           </CardContent>
         </Card>
 
-        {/* Calendar Management */}
+        {/* Interactive Calendar */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-lg text-sage-800">Gestione Calendario</CardTitle>
+            <CardTitle className="text-lg text-sage-800">Calendario Interattivo</CardTitle>
+            <p className="text-sm text-gray-600">
+              Clicca su un giorno per modificare il suo stato
+            </p>
+          </CardHeader>
+          <CardContent>
+            {/* Calendar Navigation */}
+            <div className="flex items-center justify-between mb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const newMonth = new Date(currentMonth);
+                  newMonth.setMonth(newMonth.getMonth() - 1);
+                  setCurrentMonth(newMonth);
+                }}
+              >
+                ←
+              </Button>
+              <h3 className="font-medium">
+                {currentMonth.toLocaleDateString('it-IT', { 
+                  month: 'long', 
+                  year: 'numeric' 
+                })}
+              </h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const newMonth = new Date(currentMonth);
+                  newMonth.setMonth(newMonth.getMonth() + 1);
+                  setCurrentMonth(newMonth);
+                }}
+              >
+                →
+              </Button>
+            </div>
+
+            {/* Calendar Grid */}
+            <div className="grid grid-cols-7 gap-1 mb-4">
+              {['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'].map(day => (
+                <div key={day} className="text-center text-sm font-medium text-gray-500 p-2">
+                  {day}
+                </div>
+              ))}
+              {generateCalendarDays().map((day, index) => (
+                <div key={index} className="aspect-square">
+                  {day ? renderCalendarDay(day) : <div className="w-full h-full"></div>}
+                </div>
+              ))}
+            </div>
+
+            {/* Legend */}
+            <div className="text-xs text-gray-600 space-y-1">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-300 rounded"></div>
+                <span>Giorno di terapia</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-gray-300 rounded"></div>
+                <span>Pausa terapeutica</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-red-300 rounded"></div>
+                <span>Terapia non assunta</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Manual Event Addition (fallback) */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-lg text-sage-800">Aggiungi Evento Manualmente</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -316,11 +516,12 @@ export default function DoctorPatientTreatmentProfile() {
 
             <div>
               <Label htmlFor="eventType">Tipo evento</Label>
-              <Select value={eventType} onValueChange={(value: "pause" | "missed") => setEventType(value)}>
+              <Select value={eventType} onValueChange={(value: "pause" | "missed" | "taken") => setEventType(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="taken">Giorno di terapia (verde)</SelectItem>
                   <SelectItem value="pause">Pausa terapia (grigio)</SelectItem>
                   <SelectItem value="missed">Mancata assunzione (rosso)</SelectItem>
                 </SelectContent>
