@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Calendar, Save } from "lucide-react";
 import { Button } from "./button";
-import { Slider } from "./slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
 import { 
   AlertDialog, 
   AlertDialogAction, 
@@ -37,10 +37,10 @@ export default function MedicationCalendar({ medication, patientId, isDoctorMode
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   
-  // Doctor-specific state for slider popup
-  const [showSliderDialog, setShowSliderDialog] = useState(false);
-  const [sliderSelectedDate, setSliderSelectedDate] = useState<string | null>(null);
-  const [sliderValue, setSliderValue] = useState(0);
+  // Doctor-specific state for dropdown popup
+  const [showDropdownDialog, setShowDropdownDialog] = useState(false);
+  const [dropdownSelectedDate, setDropdownSelectedDate] = useState<string | null>(null);
+  const [selectedEventType, setSelectedEventType] = useState("normal");
   
   const queryClient = useQueryClient();
 
@@ -210,19 +210,19 @@ export default function MedicationCalendar({ medication, patientId, isDoctorMode
               let dayColor = "";
               let cursorClass = "";
               
-              if (isDoctorMode && day.calendarEventType !== null) {
+              if (isDoctorMode && day.calendarEventType) {
                 // Doctor mode with calendar event override
                 switch (day.calendarEventType) {
                   case 'normal': // Normal (follow normal schedule)
                     dayColor = day.shouldTake ? "bg-sage-500 text-white" : "bg-gray-300 text-gray-600";
                     break;
-                  case 'taken': // Taken (green)
+                  case 'taken': // Taken (green sage)
                     dayColor = "bg-sage-500 text-white";
                     break;
                   case 'pause': // Pause (gray)
                     dayColor = "bg-gray-300 text-gray-600";
                     break;
-                  case 'missed': // Missed (red)
+                  case 'missed': // Missed (light red)
                     dayColor = "bg-red-100 text-red-700 border-2 border-red-200";
                     break;
                 }
@@ -248,19 +248,12 @@ export default function MedicationCalendar({ medication, patientId, isDoctorMode
                     }`}
                     onClick={() => {
                       if (isDoctorMode && patientId) {
-                        // Doctor mode: show slider dialog
-                        setSliderSelectedDate(day.dateString);
-                        // Convert eventType to slider value
-                        let currentSliderValue = 0; // default
-                        switch (day.calendarEventType) {
-                          case 'normal': currentSliderValue = 0; break;
-                          case 'taken': currentSliderValue = 1; break;
-                          case 'pause': currentSliderValue = 2; break;
-                          case 'missed': currentSliderValue = 3; break;
-                          default: currentSliderValue = day.shouldTake ? 1 : 2;
-                        }
-                        setSliderValue(currentSliderValue);
-                        setShowSliderDialog(true);
+                        // Doctor mode: show dropdown dialog
+                        setDropdownSelectedDate(day.dateString);
+                        // Set current eventType or default based on schedule
+                        const currentEventType = day.calendarEventType || (day.shouldTake ? 'taken' : 'pause');
+                        setSelectedEventType(currentEventType);
+                        setShowDropdownDialog(true);
                       } else if (day.isMissed && patientId) {
                         // Patient mode: show confirmation dialog for missed days
                         setSelectedDate(day.dateString);
@@ -313,66 +306,46 @@ export default function MedicationCalendar({ medication, patientId, isDoctorMode
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Doctor Slider Dialog */}
-      <Dialog open={showSliderDialog} onOpenChange={setShowSliderDialog}>
+      {/* Doctor Dropdown Dialog */}
+      <Dialog open={showDropdownDialog} onOpenChange={setShowDropdownDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Modifica Status Giorno</DialogTitle>
             <DialogDescription>
-              Seleziona lo status per questo giorno utilizzando il cursore.
+              Seleziona lo status per questo giorno dal menu a tendina.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-6 py-4">
-            <div className="space-y-3">
-              <div className="text-center">
-                <span className="text-sm font-medium">
-                  {sliderValue === 0 && "Default - Segue calendario normale"}
-                  {sliderValue === 1 && "Assunta - Terapia presa (Verde)"}
-                  {sliderValue === 2 && "Pausa - Giorno di pausa (Grigio)"}
-                  {sliderValue === 3 && "Non assunta - Terapia non presa (Rosso)"}
-                </span>
-              </div>
-              
-              <Slider
-                value={[sliderValue]}
-                onValueChange={(value) => setSliderValue(value[0])}
-                max={3}
-                min={0}
-                step={1}
-                className="w-full"
-              />
-              
-              <div className="flex justify-between text-xs text-gray-500">
-                <span>Default</span>
-                <span>Assunta</span>
-                <span>Pausa</span>
-                <span>Non assunta</span>
-              </div>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Status del giorno:</label>
+              <Select value={selectedEventType} onValueChange={setSelectedEventType}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="normal">Default - Segue calendario normale</SelectItem>
+                  <SelectItem value="taken">Assunta - Terapia presa (Verde salvia)</SelectItem>
+                  <SelectItem value="pause">Pausa - Giorno di pausa (Grigio)</SelectItem>
+                  <SelectItem value="missed">Non assunta - Terapia non presa (Rosso chiaro)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowSliderDialog(false)}>
+            <Button variant="outline" onClick={() => setShowDropdownDialog(false)}>
               Annulla
             </Button>
             <Button 
               onClick={() => {
-                if (sliderSelectedDate && patientId) {
-                  // Convert slider value to eventType
-                  let eventType = 'normal';
-                  switch (sliderValue) {
-                    case 0: eventType = 'normal'; break;
-                    case 1: eventType = 'taken'; break;
-                    case 2: eventType = 'pause'; break;
-                    case 3: eventType = 'missed'; break;
-                  }
+                if (dropdownSelectedDate && patientId) {
                   updateCalendarEvent.mutate({
-                    date: sliderSelectedDate,
-                    eventType,
+                    date: dropdownSelectedDate,
+                    eventType: selectedEventType,
                   });
-                  setShowSliderDialog(false);
-                  setSliderSelectedDate(null);
+                  setShowDropdownDialog(false);
+                  setDropdownSelectedDate(null);
                 }
               }}
               disabled={updateCalendarEvent.isPending}
