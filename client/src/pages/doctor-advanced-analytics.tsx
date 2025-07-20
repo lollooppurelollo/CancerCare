@@ -31,7 +31,7 @@ export default function DoctorAdvancedAnalytics() {
   const [selectedMedication, setSelectedMedication] = useState<string>("all");
   const [selectedSetting, setSelectedSetting] = useState<string>("all");
   const [filteredData, setFilteredData] = useState<PatientAnalytics[]>([]);
-  const [selectedSymptom, setSelectedSymptom] = useState<string>("diarrea");
+  const [selectedSymptom, setSelectedSymptom] = useState<string>("stanchezza");
 
   const { data: analyticsData, isLoading, refetch } = useQuery<PatientAnalytics[]>({
     queryKey: ["/api/analytics/advanced-patient-data"],
@@ -488,14 +488,14 @@ export default function DoctorAdvancedAnalytics() {
                     <SelectValue placeholder="Seleziona sintomo" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="stanchezza">Stanchezza</SelectItem>
+                    <SelectItem value="malessere">Malessere</SelectItem>
+                    <SelectItem value="rash">Rash cutaneo</SelectItem>
                     <SelectItem value="diarrea">Diarrea</SelectItem>
-                    <SelectItem value="nausea">Nausea</SelectItem>
-                    <SelectItem value="vomito">Vomito</SelectItem>
-                    <SelectItem value="fatigue">Fatigue</SelectItem>
-                    <SelectItem value="dolori_articolari">Dolori Articolari</SelectItem>
+                    <SelectItem value="dolore_addominale">Dolore addominale</SelectItem>
+                    <SelectItem value="dolori_articolari">Dolori articolari</SelectItem>
                     <SelectItem value="febbre">Febbre</SelectItem>
-                    <SelectItem value="rush_cutaneo">Rush Cutaneo</SelectItem>
-                    <SelectItem value="perdita_appetito">Perdita Appetito</SelectItem>
+                    <SelectItem value="sintomi_influenzali">Sintomi influenzali</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

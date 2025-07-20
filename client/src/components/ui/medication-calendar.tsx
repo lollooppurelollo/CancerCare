@@ -119,6 +119,35 @@ export default function MedicationCalendar({ medication, patientId, isDoctorMode
         );
       }
       
+      // For ribociclib and palbociclib, we need to recalculate the 3-on-1-off cycle
+      // after the added pause week. For abemaciclib, only add the pause week.
+      if (medication === 'ribociclib' || medication === 'palbociclib') {
+        // Add logic to recalculate the cycle starting from the end of the pause week
+        const endOfPauseDate = new Date(startDate);
+        endOfPauseDate.setDate(endOfPauseDate.getDate() + 7);
+        
+        // Calculate next cycles: 3 weeks treatment, 1 week pause
+        for (let cycle = 0; cycle < 8; cycle++) { // Add 8 more cycles (32 weeks)
+          for (let week = 0; week < 4; week++) {
+            const isTherapyWeek = week < 3; // First 3 weeks are therapy, 4th week is pause
+            
+            for (let day = 0; day < 7; day++) {
+              const cycleDate = new Date(endOfPauseDate);
+              cycleDate.setDate(endOfPauseDate.getDate() + (cycle * 28) + (week * 7) + day);
+              const cycleDateString = cycleDate.toISOString().split('T')[0];
+              
+              promises.push(
+                apiRequest("POST", `/api/calendar-events`, {
+                  patientId,
+                  date: cycleDateString,
+                  eventType: isTherapyWeek ? 'taken' : 'pause',
+                })
+              );
+            }
+          }
+        }
+      }
+      
       return await Promise.all(promises);
     },
     onSuccess: () => {
@@ -131,18 +160,23 @@ export default function MedicationCalendar({ medication, patientId, isDoctorMode
   // Create a set of missed dates for quick lookup
   const missedDatesSet = useMemo(() => {
     const dates = new Set<string>();
-    missedMedications.forEach((entry: any) => {
-      if (entry.missedDates && Array.isArray(entry.missedDates)) {
-        entry.missedDates.forEach((date: string) => dates.add(date));
-      }
-    });
+    if (Array.isArray(missedMedications)) {
+      (missedMedications as any[]).forEach((entry: any) => {
+        if (entry.missedDates && Array.isArray(entry.missedDates)) {
+          entry.missedDates.forEach((date: string) => dates.add(date));
+        }
+      });
+    }
     return dates;
   }, [missedMedications]);
 
   // Helper function to get calendar event type for a date
   const getCalendarEventType = (dateString: string) => {
-    const event = calendarEvents.find((event: any) => event.date === dateString);
-    return event?.eventType ?? null;
+    if (Array.isArray(calendarEvents)) {
+      const event = (calendarEvents as any[]).find((event: any) => event.date === dateString);
+      return event?.eventType ?? null;
+    }
+    return null;
   };
   
   const weeks = useMemo(() => {
