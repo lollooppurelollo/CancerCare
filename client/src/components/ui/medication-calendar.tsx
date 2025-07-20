@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Calendar, Save } from "lucide-react";
 import { Button } from "./button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
+import { Input } from "./input";
 import { 
   AlertDialog, 
   AlertDialogAction, 
@@ -40,7 +41,11 @@ export default function MedicationCalendar({ medication, patientId, isDoctorMode
   // Doctor-specific state for dropdown popup
   const [showDropdownDialog, setShowDropdownDialog] = useState(false);
   const [dropdownSelectedDate, setDropdownSelectedDate] = useState<string | null>(null);
-  const [selectedEventType, setSelectedEventType] = useState("normal");
+  const [selectedEventType, setSelectedEventType] = useState("taken");
+  
+  // State for therapy week pause dialog
+  const [showTherapyPauseDialog, setShowTherapyPauseDialog] = useState(false);
+  const [startDate, setStartDate] = useState("");
   
   const queryClient = useQueryClient();
 
@@ -85,6 +90,36 @@ export default function MedicationCalendar({ medication, patientId, isDoctorMode
         date,
         eventType,
       });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/calendar-events", patientId]
+      });
+    },
+  });
+
+  // Mutation to add a therapy pause week
+  const addTherapyPauseWeek = useMutation({
+    mutationFn: async ({ startDate }: { startDate: string }) => {
+      if (!patientId) throw new Error("Patient ID required");
+      
+      // Create pause events for 7 consecutive days starting from startDate
+      const promises = [];
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(startDate);
+        date.setDate(date.getDate() + i);
+        const dateString = date.toISOString().split('T')[0];
+        
+        promises.push(
+          apiRequest("POST", `/api/calendar-events`, {
+            patientId,
+            date: dateString,
+            eventType: 'pause',
+          })
+        );
+      }
+      
+      return await Promise.all(promises);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ 
@@ -324,10 +359,10 @@ export default function MedicationCalendar({ medication, patientId, isDoctorMode
                   <SelectValue placeholder="Seleziona status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="normal">Default - Segue calendario normale</SelectItem>
                   <SelectItem value="taken">Assunta - Terapia presa (Verde salvia)</SelectItem>
                   <SelectItem value="pause">Pausa - Giorno di pausa (Grigio)</SelectItem>
                   <SelectItem value="missed">Non assunta - Terapia non presa (Rosso chiaro)</SelectItem>
+                  <SelectItem value="therapy_week_pause">Aggiungi settimana pausa terapeutica</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -340,18 +375,74 @@ export default function MedicationCalendar({ medication, patientId, isDoctorMode
             <Button 
               onClick={() => {
                 if (dropdownSelectedDate && patientId) {
-                  updateCalendarEvent.mutate({
-                    date: dropdownSelectedDate,
-                    eventType: selectedEventType,
-                  });
-                  setShowDropdownDialog(false);
-                  setDropdownSelectedDate(null);
+                  if (selectedEventType === "therapy_week_pause") {
+                    // Open therapy pause dialog
+                    setShowDropdownDialog(false);
+                    setShowTherapyPauseDialog(true);
+                    // Set the selected date as start date for therapy pause
+                    setStartDate(dropdownSelectedDate);
+                  } else {
+                    // Normal single day update
+                    updateCalendarEvent.mutate({
+                      date: dropdownSelectedDate,
+                      eventType: selectedEventType,
+                    });
+                    setShowDropdownDialog(false);
+                    setDropdownSelectedDate(null);
+                  }
                 }
               }}
               disabled={updateCalendarEvent.isPending}
             >
               <Save className="w-4 h-4 mr-2" />
-              Salva
+              {selectedEventType === "therapy_week_pause" ? "Continua" : "Salva"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Therapy Pause Week Dialog */}
+      <Dialog open={showTherapyPauseDialog} onOpenChange={setShowTherapyPauseDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Aggiungi Settimana Pausa Terapeutica</DialogTitle>
+            <DialogDescription>
+              Inserisci la data di inizio per aggiungere una settimana di pausa dalla terapia (7 giorni consecutivi).
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Data di inizio pausa:</label>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full"
+              />
+              <p className="text-xs text-gray-500">
+                Verrà aggiunta una settimana completa di pausa (7 giorni) a partire da questa data.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTherapyPauseDialog(false)}>
+              Annulla
+            </Button>
+            <Button 
+              onClick={() => {
+                if (startDate && patientId) {
+                  addTherapyPauseWeek.mutate({ startDate });
+                  setShowTherapyPauseDialog(false);
+                  setStartDate("");
+                  setDropdownSelectedDate(null);
+                }
+              }}
+              disabled={addTherapyPauseWeek.isPending || !startDate}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Aggiungi Pausa
             </Button>
           </DialogFooter>
         </DialogContent>
