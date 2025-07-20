@@ -283,6 +283,9 @@ Preferred communication style: Simple, everyday language.
    - **UI consistency**: Streamlined doctor interface by removing duplicate functionality and focusing on main calendar component
    - **Icon size optimization**: Reduced navigation tab icons in doctor patient view from w-4 h-4 to w-3 h-3 for better button proportions
    - **Dashboard centering**: Centered total patient count number in doctor dashboard for improved visual alignment
+   - **Patient calendar functionality restored**: Re-implemented ability for patients to mark therapy days as missed (red) and restore missed days as taken (green)
+   - **Real-time calendar updates**: Fixed immediate color changes after patient interactions without page refresh
+   - **Removed airplane emoji**: Cleaned up messaging interface by removing airplane emoji from "Invia Messaggio" button in patient video page
 
 ## Data Flow
 
