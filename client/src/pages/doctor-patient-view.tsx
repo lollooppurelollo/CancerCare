@@ -14,6 +14,8 @@ export default function DoctorPatientView() {
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("home");
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [sliderValue, setSliderValue] = useState(0);
   const patientId = params?.patientId ? parseInt(params.patientId) : null;
 
   const { data: patient } = useQuery({
@@ -181,8 +183,6 @@ export default function DoctorPatientView() {
   };
 
   // Doctor calendar with slider functionality
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [sliderValue, setSliderValue] = useState(0);
 
   const getEventForDate = (date: Date) => {
     const dateString = date.toISOString().split('T')[0];
@@ -331,101 +331,15 @@ export default function DoctorPatientView() {
                 <p className="text-xs text-gray-600">Clicca su un giorno per modificarlo</p>
               </CardHeader>
               <CardContent>
-                <div className="relative">
-                  <MedicationCalendar 
-                    medication={patient.medication}
-                    patientId={patient.id}
-                  />
-                  <div 
-                    className="absolute inset-0 cursor-pointer z-10"
-                    onClick={(e) => {
-                      // Get clicked position and determine which day was clicked
-                      const target = e.target as HTMLElement;
-                      const dayElement = target.closest('button');
-                      if (dayElement) {
-                        const dayText = dayElement.textContent;
-                        if (dayText && !isNaN(parseInt(dayText))) {
-                          const today = new Date();
-                          const clickedDate = new Date(today.getFullYear(), today.getMonth(), parseInt(dayText));
-                          handleDayClick(clickedDate);
-                        }
-                      }
-                    }}
-                  />
-                </div>
+                <MedicationCalendar 
+                  medication={patient.medication}
+                  patientId={patient.id}
+                  isDoctorMode={true}
+                />
               </CardContent>
             </Card>
 
-            {/* Slider Dialog for Doctor Calendar Modifications */}
-            {selectedDate && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white p-6 rounded-lg max-w-sm w-full mx-4">
-                  <h3 className="text-lg font-semibold mb-4">
-                    Modifica giorno {new Date(selectedDate).toLocaleDateString('it-IT')}
-                  </h3>
-                  
-                  <div className="mb-4">
-                    <input
-                      type="range"
-                      min="0"
-                      max="3"
-                      value={sliderValue}
-                      onChange={(e) => setSliderValue(parseInt(e.target.value))}
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                    />
-                    <div className="flex justify-between text-xs text-gray-600 mt-2">
-                      <span>Default</span>
-                      <span>Assunta</span>
-                      <span>Pausa</span>
-                      <span>Non assunta</span>
-                    </div>
-                  </div>
 
-                  <div className="mb-4 p-3 rounded-lg text-center">
-                    {sliderValue === 0 && (
-                      <div className="text-sage-700">
-                        <div className="w-6 h-6 bg-sage-200 rounded mx-auto mb-2"></div>
-                        Stato normale del calendario
-                      </div>
-                    )}
-                    {sliderValue === 1 && (
-                      <div className="text-green-700">
-                        <div className="w-6 h-6 bg-green-200 rounded mx-auto mb-2"></div>
-                        Terapia assunta
-                      </div>
-                    )}
-                    {sliderValue === 2 && (
-                      <div className="text-gray-700">
-                        <div className="w-6 h-6 bg-gray-200 rounded mx-auto mb-2"></div>
-                        Pausa dalla terapia
-                      </div>
-                    )}
-                    {sliderValue === 3 && (
-                      <div className="text-red-700">
-                        <div className="w-6 h-6 bg-red-300 rounded mx-auto mb-2"></div>
-                        Terapia non assunta
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex space-x-3">
-                    <Button
-                      variant="outline"
-                      onClick={() => setSelectedDate(null)}
-                      className="flex-1"
-                    >
-                      Annulla
-                    </Button>
-                    <Button
-                      onClick={handleSaveChanges}
-                      className="flex-1 bg-sage-500 hover:bg-sage-600"
-                    >
-                      Salva
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Today's Entry */}
             <Card>

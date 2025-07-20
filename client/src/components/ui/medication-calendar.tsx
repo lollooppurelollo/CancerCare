@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, Save } from "lucide-react";
 import { Button } from "./button";
+import { Slider } from "./slider";
 import { 
   AlertDialog, 
   AlertDialogAction, 
@@ -12,26 +13,47 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle 
 } from "./alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./dialog";
 import { apiRequest } from "@/lib/queryClient";
 
 interface MedicationCalendarProps {
   medication: string;
   patientId?: number;
+  isDoctorMode?: boolean;
 }
 
-export default function MedicationCalendar({ medication, patientId }: MedicationCalendarProps) {
+export default function MedicationCalendar({ medication, patientId, isDoctorMode = false }: MedicationCalendarProps) {
   const weekDays = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
   const months = ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"];
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
   const [viewMode, setViewMode] = useState<"week" | "month">("month"); // "week" for single week, "month" for 4 weeks
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  
+  // Doctor-specific state for slider popup
+  const [showSliderDialog, setShowSliderDialog] = useState(false);
+  const [sliderSelectedDate, setSliderSelectedDate] = useState<string | null>(null);
+  const [sliderValue, setSliderValue] = useState(0);
+  
   const queryClient = useQueryClient();
 
   // Get missed medication data if patientId is provided
   const { data: missedMedications = [] } = useQuery({
     queryKey: patientId ? ["/api/missed-medication", patientId] : ["/api/missed-medication"],
     enabled: !!patientId,
+  });
+
+  // Get calendar events for doctor mode
+  const { data: calendarEvents = [] } = useQuery({
+    queryKey: ["/api/calendar-events", patientId],
+    enabled: !!(patientId && isDoctorMode),
   });
 
   // Mutation to remove missed medication
@@ -54,6 +76,23 @@ export default function MedicationCalendar({ medication, patientId }: Medication
     },
   });
 
+  // Doctor mutation to update calendar events
+  const updateCalendarEvent = useMutation({
+    mutationFn: async ({ date, eventType }: { date: string; eventType: string }) => {
+      if (!patientId) throw new Error("Patient ID required");
+      return await apiRequest("POST", `/api/calendar-events`, {
+        patientId,
+        date,
+        eventType,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/calendar-events", patientId]
+      });
+    },
+  });
+
   // Create a set of missed dates for quick lookup
   const missedDatesSet = useMemo(() => {
     const dates = new Set<string>();
@@ -64,6 +103,12 @@ export default function MedicationCalendar({ medication, patientId }: Medication
     });
     return dates;
   }, [missedMedications]);
+
+  // Helper function to get calendar event type for a date
+  const getCalendarEventType = (dateString: string) => {
+    const event = calendarEvents.find((event: any) => event.date === dateString);
+    return event?.eventType ?? null;
+  };
   
   const weeks = useMemo(() => {
     const today = new Date();
@@ -78,6 +123,8 @@ export default function MedicationCalendar({ medication, patientId }: Medication
         const date = new Date(startOfWeek);
         date.setDate(startOfWeek.getDate() + (weekIndex * 7) + dayIndex);
         const dateString = date.toISOString().split('T')[0];
+        const calendarEventType = isDoctorMode ? getCalendarEventType(dateString) : null;
+        
         return {
           date: date.getDate(),
           month: date.getMonth(),
@@ -87,6 +134,8 @@ export default function MedicationCalendar({ medication, patientId }: Medication
           isToday: date.toDateString() === today.toDateString(),
           isMissed: missedDatesSet.has(dateString),
           fullDate: date,
+          dateString,
+          calendarEventType,
         };
       });
     });
@@ -156,33 +205,74 @@ export default function MedicationCalendar({ medication, patientId }: Medication
         {/* Calendar weeks */}
         {weeks.map((week, weekIndex) => (
           <div key={weekIndex} className="grid grid-cols-7 gap-1">
-            {week.map((day, dayIndex) => (
-              <div key={`${weekIndex}-${dayIndex}`} className="text-center">
-                <div 
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    day.isMissed 
-                      ? "bg-red-100 text-red-700 border-2 border-red-200 cursor-pointer hover:bg-red-200 transition-colors" 
-                      : day.shouldTake 
-                        ? "bg-sage-500 text-white" 
-                        : "bg-gray-300 text-gray-600"
-                  } ${
-                    day.isToday 
-                      ? "ring-2 ring-sage-600" 
-                      : ""
-                  }`}
-                  onClick={() => {
-                    // If the day is marked as missed and we have a patientId, show confirmation dialog
-                    if (day.isMissed && patientId) {
-                      const dateString = day.fullDate.toISOString().split('T')[0];
-                      setSelectedDate(dateString);
-                      setShowConfirmDialog(true);
-                    }
-                  }}
-                >
-                  {day.date}
+            {week.map((day, dayIndex) => {
+              // Determine day color based on mode and status
+              let dayColor = "";
+              let cursorClass = "";
+              
+              if (isDoctorMode && day.calendarEventType !== null) {
+                // Doctor mode with calendar event override
+                switch (day.calendarEventType) {
+                  case 'normal': // Normal (follow normal schedule)
+                    dayColor = day.shouldTake ? "bg-sage-500 text-white" : "bg-gray-300 text-gray-600";
+                    break;
+                  case 'taken': // Taken (green)
+                    dayColor = "bg-sage-500 text-white";
+                    break;
+                  case 'pause': // Pause (gray)
+                    dayColor = "bg-gray-300 text-gray-600";
+                    break;
+                  case 'missed': // Missed (red)
+                    dayColor = "bg-red-100 text-red-700 border-2 border-red-200";
+                    break;
+                }
+                cursorClass = "cursor-pointer hover:scale-105 transition-all duration-200";
+              } else {
+                // Patient mode or no doctor override
+                if (day.isMissed) {
+                  dayColor = "bg-red-100 text-red-700 border-2 border-red-200 cursor-pointer hover:bg-red-200 transition-colors";
+                } else if (day.shouldTake) {
+                  dayColor = "bg-sage-500 text-white";
+                  if (isDoctorMode) cursorClass = "cursor-pointer hover:scale-105 transition-all duration-200";
+                } else {
+                  dayColor = "bg-gray-300 text-gray-600";
+                  if (isDoctorMode) cursorClass = "cursor-pointer hover:scale-105 transition-all duration-200";
+                }
+              }
+
+              return (
+                <div key={`${weekIndex}-${dayIndex}`} className="text-center">
+                  <div 
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${dayColor} ${cursorClass} ${
+                      day.isToday ? "ring-2 ring-sage-600" : ""
+                    }`}
+                    onClick={() => {
+                      if (isDoctorMode && patientId) {
+                        // Doctor mode: show slider dialog
+                        setSliderSelectedDate(day.dateString);
+                        // Convert eventType to slider value
+                        let currentSliderValue = 0; // default
+                        switch (day.calendarEventType) {
+                          case 'normal': currentSliderValue = 0; break;
+                          case 'taken': currentSliderValue = 1; break;
+                          case 'pause': currentSliderValue = 2; break;
+                          case 'missed': currentSliderValue = 3; break;
+                          default: currentSliderValue = day.shouldTake ? 1 : 2;
+                        }
+                        setSliderValue(currentSliderValue);
+                        setShowSliderDialog(true);
+                      } else if (day.isMissed && patientId) {
+                        // Patient mode: show confirmation dialog for missed days
+                        setSelectedDate(day.dateString);
+                        setShowConfirmDialog(true);
+                      }
+                    }}
+                  >
+                    {day.date}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ))}
       </div>
@@ -222,6 +312,77 @@ export default function MedicationCalendar({ medication, patientId }: Medication
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Doctor Slider Dialog */}
+      <Dialog open={showSliderDialog} onOpenChange={setShowSliderDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Modifica Status Giorno</DialogTitle>
+            <DialogDescription>
+              Seleziona lo status per questo giorno utilizzando il cursore.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            <div className="space-y-3">
+              <div className="text-center">
+                <span className="text-sm font-medium">
+                  {sliderValue === 0 && "Default - Segue calendario normale"}
+                  {sliderValue === 1 && "Assunta - Terapia presa (Verde)"}
+                  {sliderValue === 2 && "Pausa - Giorno di pausa (Grigio)"}
+                  {sliderValue === 3 && "Non assunta - Terapia non presa (Rosso)"}
+                </span>
+              </div>
+              
+              <Slider
+                value={[sliderValue]}
+                onValueChange={(value) => setSliderValue(value[0])}
+                max={3}
+                min={0}
+                step={1}
+                className="w-full"
+              />
+              
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>Default</span>
+                <span>Assunta</span>
+                <span>Pausa</span>
+                <span>Non assunta</span>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSliderDialog(false)}>
+              Annulla
+            </Button>
+            <Button 
+              onClick={() => {
+                if (sliderSelectedDate && patientId) {
+                  // Convert slider value to eventType
+                  let eventType = 'normal';
+                  switch (sliderValue) {
+                    case 0: eventType = 'normal'; break;
+                    case 1: eventType = 'taken'; break;
+                    case 2: eventType = 'pause'; break;
+                    case 3: eventType = 'missed'; break;
+                  }
+                  updateCalendarEvent.mutate({
+                    date: sliderSelectedDate,
+                    eventType,
+                  });
+                  setShowSliderDialog(false);
+                  setSliderSelectedDate(null);
+                }
+              }}
+              disabled={updateCalendarEvent.isPending}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Salva
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

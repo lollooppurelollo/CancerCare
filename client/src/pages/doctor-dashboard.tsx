@@ -258,7 +258,7 @@ export default function DoctorDashboard() {
               className="bg-red-50 p-2 rounded-lg border border-red-200 hover:bg-red-100 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95 text-left"
             >
               <div className="text-lg font-bold text-red-600 transition-transform duration-200 hover:scale-110">{urgentAlerts.length}</div>
-              <div className="text-xs text-gray-600">Messaggi urgenti</div>
+              <div className="text-xs text-gray-600">Avvisi urgenti</div>
             </button>
             <button 
               onClick={() => {
@@ -268,7 +268,7 @@ export default function DoctorDashboard() {
               className="bg-orange-50 p-2 rounded-lg border border-orange-200 hover:bg-orange-100 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95 text-left"
             >
               <div className="text-lg font-bold text-orange-600 transition-transform duration-200 hover:scale-110">{messageAlerts.length}</div>
-              <div className="text-xs text-gray-600">Messaggi pazienti</div>
+              <div className="text-xs text-gray-600">Messaggi importanti</div>
             </button>
             <button 
               onClick={() => {
@@ -328,7 +328,7 @@ export default function DoctorDashboard() {
                 <div id="urgent-alerts-section">
                   <h3 className="text-md font-medium text-red-700 mb-3 flex items-center">
                     <TriangleAlert className="w-4 h-4 mr-2" />
-                    Nuovi messaggi urgenti ({urgentAlerts.length})
+                    Avvisi urgenti ({urgentAlerts.length})
                   </h3>
                   <div className="space-y-3">
                     {urgentAlerts.map((alert: any) => (
@@ -416,9 +416,9 @@ export default function DoctorDashboard() {
               {/* Messaggi pazienti */}
               {messageAlerts.length > 0 && (
                 <div id="message-alerts-section">
-                  <h3 className="text-md font-medium text-blue-700 mb-3 flex items-center">
+                  <h3 className="text-md font-medium text-orange-700 mb-3 flex items-center">
                     <MessageCircle className="w-4 h-4 mr-2 transition-transform duration-200 hover:scale-110" />
-                    Messaggi pazienti ({messageAlerts.length})
+                    Messaggi importanti ({messageAlerts.length})
                   </h3>
                   <div className="space-y-3">
                     {messageAlerts.map((alert: any) => (
@@ -512,7 +512,7 @@ export default function DoctorDashboard() {
                 <div id="chat-notifications-section">
                   <h3 className="text-md font-medium text-blue-700 mb-3 flex items-center">
                     <MessageCircle className="w-4 h-4 mr-2 transition-transform duration-200 hover:scale-110" />
-                    Nuovi messaggi in Chat ({filteredChatNotifications.length})
+                    Messaggi chat ({filteredChatNotifications.length})
                   </h3>
                   <div className="space-y-2">
                     {filteredChatNotifications.map((notification: any) => (
