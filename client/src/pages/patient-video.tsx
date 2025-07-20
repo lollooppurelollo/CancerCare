@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Video, Phone, MessageCircle, Send, HelpCircle, Paperclip, FileText, Image, X, AlertTriangle } from "lucide-react";
+import { Video, Phone, MessageCircle, Send, HelpCircle, Paperclip, FileText, Image, X, AlertTriangle, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useKeyboardVisibility } from "@/hooks/use-keyboard-visibility";
 import { apiRequest } from "@/lib/queryClient";
@@ -185,77 +187,90 @@ export default function PatientVideo() {
   return (
     <div className="max-w-md mx-auto bg-white min-h-screen pb-20">
       <div className="p-4">
-        {/* Messages Section */}
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-3">Messaggi</h2>
-          
-          <div className="space-y-2 max-h-48 overflow-y-auto">
-            {messages.length === 0 ? (
-              <div className="text-center py-3">
-                <p className="text-gray-500 text-sm">Nessun messaggio</p>
-              </div>
-            ) : (
-              messages.map((message: any) => (
-                <div
-                  key={message.id}
-                  className={`p-2 rounded-lg ${
-                    message.senderId === patient?.userId
-                      ? "bg-sage-50 ml-6"
-                      : "bg-white shadow-sm border border-gray-200"
-                  }`}
-                >
-                  <div className="flex items-start space-x-2">
-                    {message.senderId !== patient?.userId && (
-                      <div className="w-6 h-6 bg-sage-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                        Dr
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <span className="text-sm font-medium text-gray-800">
-                          {message.senderId === patient?.userId ? "Tu" : "Dr. Medico"}
+        {/* Conversazione - usando lo stesso stile del medico */}
+        <Card className="mb-6 shadow-sm">
+          <CardHeader className="bg-sage-50 rounded-t-lg">
+            <CardTitle className="text-sage-800 flex items-center">
+              <MessageSquare className="w-5 h-5 mr-2" />
+              💬 Conversazione
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="space-y-3 max-h-96 overflow-y-auto p-4">
+              {messages.length === 0 ? (
+                <div className="text-center text-gray-500 py-12">
+                  <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p className="text-lg">Nessun messaggio ancora</p>
+                  <p className="text-sm">Inizia la conversazione con il medico!</p>
+                </div>
+              ) : (
+                messages.map((message: any) => (
+                  <div
+                    key={message.id}
+                    className={`flex ${
+                      message.senderId === patient?.userId
+                        ? "justify-end"
+                        : "justify-start"
+                    }`}
+                  >
+                    <div
+                      className={`max-w-xs lg:max-w-md px-4 py-3 rounded-lg ${
+                        message.senderId === patient?.userId
+                          ? "bg-sage-500 text-white"
+                          : "bg-gray-100 text-gray-900"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-medium text-xs">
+                          {message.senderId === patient?.userId
+                            ? "Tu"
+                            : "Medico"
+                          }
                         </span>
-                        <span className="text-xs text-gray-500">
-                          {formatTime(message.createdAt)}
-                        </span>
-                        {message.isUrgent && (
-                          <span className="text-xs bg-red-100 text-red-800 px-1 py-0.5 rounded">
-                            Urgente
+                        <div className="flex items-center space-x-1">
+                          {message.isUrgent && (
+                            <Badge variant="destructive" className="text-xs px-1 py-0">
+                              ⚠️
+                            </Badge>
+                          )}
+                          <span className={`text-xs ${
+                            message.senderId === patient?.userId
+                              ? "text-sage-200"
+                              : "text-gray-500"
+                          }`}>
+                            {formatTime(message.createdAt)}
                           </span>
-                        )}
+                          {message.senderId === patient?.userId && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteMessage.mutate(message.id)}
+                              disabled={deleteMessage.isPending}
+                              className="h-4 w-4 p-0 text-red-500 hover:text-red-700 ml-1"
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-600">{message.content}</p>
+                      <p className="text-sm">{message.content}</p>
                       {message.fileUrl && (
-                        <div className="mt-1 p-1.5 bg-gray-50 rounded flex items-center">
-                          {getFileIcon(message.fileName || "")}
-                          <span className="ml-1 text-sm text-blue-600 hover:underline cursor-pointer">
-                            {message.fileName}
-                          </span>
+                        <div className="mt-2 p-2 bg-white/20 rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            {getFileIcon(message.fileName || "")}
+                            <span className="text-xs text-blue-600 hover:underline cursor-pointer">
+                              {message.fileName}
+                            </span>
+                          </div>
                         </div>
                       )}
                     </div>
-                    {message.senderId === patient?.userId && (
-                      <div className="flex items-center space-x-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteMessage.mutate(message.id)}
-                          disabled={deleteMessage.isPending}
-                          className="h-5 w-5 p-0 text-red-600 hover:text-red-800"
-                        >
-                          <X className="w-2.5 h-2.5" />
-                        </Button>
-                        <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                          Tu
-                        </div>
-                      </div>
-                    )}
                   </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* File Preview */}
         {selectedFile && (
@@ -275,45 +290,87 @@ export default function PatientVideo() {
           </div>
         )}
 
-        {/* New Message */}
-        <div className="mb-6">
-          <h3 className="text-md font-medium text-gray-800 mb-3">Invia messaggio</h3>
-          <div className="space-y-3">
-            <Textarea
-              ref={messageTextareaRef}
-              className="flex-1 resize-none focus:ring-sage-500 focus:border-sage-500"
-              rows={3}
-              placeholder="Scrivi un messaggio al medico..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-            />
-            <div className="flex items-center space-x-2">
-              <Input
-                type="file"
-                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif"
-                onChange={handleFileSelect}
-                className="hidden"
-                id="file-upload"
+        {/* Invia Messaggio - usando lo stesso stile del medico */}
+        <Card className="mb-6 shadow-sm">
+          <CardHeader className="bg-sage-50 rounded-t-lg">
+            <CardTitle className="text-sage-800 flex items-center">
+              <Send className="w-5 h-5 mr-2" />
+              ✈️ Invia Messaggio
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <Textarea
+                ref={messageTextareaRef}
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="Scrivi il tuo messaggio al medico..."
+                rows={3}
+                className="w-full border-sage-200 focus:border-sage-400 focus:ring-sage-400"
               />
-              <Button
-                variant="outline"
-                onClick={() => document.getElementById('file-upload')?.click()}
-                className="flex items-center"
-              >
-                <Paperclip className="w-4 h-4 mr-2" />
-                Allega file
-              </Button>
-              <Button
-                onClick={() => handleSendMessage(false)}
-                disabled={sendMessageMutation.isPending || (!newMessage.trim() && !selectedFile)}
-                className="flex-1 bg-sage-500 hover:bg-sage-600"
-              >
-                <Send className="w-4 h-4 mr-2" />
-                {sendMessageMutation.isPending ? "Invio..." : "Invia"}
-              </Button>
+              {selectedFile && (
+                <div className="p-3 bg-sage-50 rounded-lg mb-3 border border-sage-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-sage-700">
+                      📎 {selectedFile.name}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedFile(null)}
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                    >
+                      ✕
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
+              <div className="space-y-3">
+                <div className="flex space-x-3">
+                  <div className="flex-1">
+                    <Input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      id="file-upload"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => document.getElementById('file-upload')?.click()}
+                      className="w-full flex items-center justify-center space-x-2 border-sage-200 hover:bg-sage-50 hover:border-sage-300"
+                    >
+                      <Paperclip className="w-4 h-4" />
+                      <span>Allega File</span>
+                    </Button>
+                  </div>
+                  
+                  <div className="flex-1">
+                    <Button
+                      onClick={() => handleSendMessage(false)}
+                      disabled={sendMessageMutation.isPending || (!newMessage.trim() && !selectedFile)}
+                      className="w-full flex items-center justify-center space-x-2 bg-sage-600 hover:bg-sage-700 text-white"
+                    >
+                      {sendMessageMutation.isPending ? (
+                        <>
+                          <span className="animate-spin">⏳</span>
+                          <span>Invio...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4" />
+                          <span>Invia</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
 
 

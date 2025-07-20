@@ -189,15 +189,7 @@ export default function DoctorDashboard() {
             >
               <BarChart3 className="w-4 h-4" />
             </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-purple-600 hover:text-purple-700 transition-all duration-200 hover:scale-105"
-              onClick={() => setLocation("/doctor/charts-analytics")}
-              title="Grafici Analytics"
-            >
-              <BarChart3 className="w-4 h-4" />
-            </Button>
+
             <Button 
               variant="ghost" 
               size="sm" 

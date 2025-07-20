@@ -372,21 +372,22 @@ export default function DoctorChat() {
                   </div>
                 </div>
               )}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="urgent"
-                      checked={isUrgent}
-                      onChange={(e) => setIsUrgent(e.target.checked)}
-                      className="rounded border-gray-300 text-red-600 focus:ring-red-500"
-                    />
-                    <label htmlFor="urgent" className="text-sm text-gray-700 cursor-pointer">
-                      ⚠️ Messaggio urgente
-                    </label>
-                  </div>
-                  <div>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="urgent"
+                    checked={isUrgent}
+                    onChange={(e) => setIsUrgent(e.target.checked)}
+                    className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                  />
+                  <label htmlFor="urgent" className="text-sm text-gray-700 cursor-pointer">
+                    ⚠️ Messaggio urgente
+                  </label>
+                </div>
+                
+                <div className="flex space-x-3">
+                  <div className="flex-1">
                     <input
                       type="file"
                       id="fileInput"
@@ -399,30 +400,33 @@ export default function DoctorChat() {
                       variant="outline"
                       size="sm"
                       onClick={() => document.getElementById('fileInput')?.click()}
-                      className="flex items-center space-x-2 border-sage-200 hover:bg-sage-50 hover:border-sage-300"
+                      className="w-full flex items-center justify-center space-x-2 border-sage-200 hover:bg-sage-50 hover:border-sage-300"
                     >
                       <span>📎</span>
                       <span>Allega File</span>
                     </Button>
                   </div>
+                  
+                  <div className="flex-1">
+                    <Button
+                      type="submit"
+                      disabled={(!newMessage.trim() && !selectedFile) || sendMessageMutation.isPending}
+                      className="w-full flex items-center justify-center space-x-2 bg-sage-600 hover:bg-sage-700 text-white"
+                    >
+                      {sendMessageMutation.isPending ? (
+                        <>
+                          <span className="animate-spin">⏳</span>
+                          <span>Invio...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4" />
+                          <span>Invia</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
-                <Button
-                  type="submit"
-                  disabled={(!newMessage.trim() && !selectedFile) || sendMessageMutation.isPending}
-                  className="flex items-center space-x-2 bg-sage-600 hover:bg-sage-700 text-white"
-                >
-                  {sendMessageMutation.isPending ? (
-                    <>
-                      <span className="animate-spin">⏳</span>
-                      <span>Invio...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4" />
-                      <span>Invia</span>
-                    </>
-                  )}
-                </Button>
               </div>
             </form>
           </CardContent>
