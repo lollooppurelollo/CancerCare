@@ -92,8 +92,13 @@ export default function MedicationCalendar({ medication, patientId, isDoctorMode
       });
     },
     onSuccess: () => {
+      // Invalidate calendar events to refresh colors
       queryClient.invalidateQueries({ 
         queryKey: ["/api/calendar-events", patientId]
+      });
+      // Also invalidate missed medication in case we set a day as missed
+      queryClient.invalidateQueries({ 
+        queryKey: patientId ? ["/api/missed-medication", patientId] : ["/api/missed-medication"]
       });
     },
   });
@@ -282,17 +287,17 @@ export default function MedicationCalendar({ medication, patientId, isDoctorMode
               if (isDoctorMode && day.calendarEventType) {
                 // Doctor mode with calendar event override
                 switch (day.calendarEventType) {
-                  case 'normal': // Normal (follow normal schedule)
-                    dayColor = day.shouldTake ? "bg-sage-500 text-white" : "bg-gray-300 text-gray-600";
-                    break;
-                  case 'taken': // Taken (green sage)
+                  case 'taken': // Giorno di terapia (green sage)
                     dayColor = "bg-sage-500 text-white";
                     break;
-                  case 'pause': // Pause (gray)
+                  case 'pause': // Giorno di pausa (gray)
                     dayColor = "bg-gray-300 text-gray-600";
                     break;
-                  case 'missed': // Missed (light red)
+                  case 'missed': // Terapia non assunta erroneamente (light red)
                     dayColor = "bg-red-100 text-red-700 border-2 border-red-200";
+                    break;
+                  default: // Fallback to normal schedule
+                    dayColor = day.shouldTake ? "bg-sage-500 text-white" : "bg-gray-300 text-gray-600";
                     break;
                 }
                 cursorClass = "cursor-pointer hover:scale-105 transition-all duration-200";
@@ -393,10 +398,10 @@ export default function MedicationCalendar({ medication, patientId, isDoctorMode
                   <SelectValue placeholder="Seleziona status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="taken">Assunta - Terapia presa (Verde salvia)</SelectItem>
-                  <SelectItem value="pause">Pausa - Giorno di pausa (Grigio)</SelectItem>
-                  <SelectItem value="missed">Non assunta - Terapia non presa (Rosso chiaro)</SelectItem>
-                  <SelectItem value="therapy_week_pause">Aggiungi settimana pausa terapeutica</SelectItem>
+                  <SelectItem value="taken">Giorno di terapia</SelectItem>
+                  <SelectItem value="pause">Giorno di pausa</SelectItem>
+                  <SelectItem value="missed">Terapia non assunta erroneamente</SelectItem>
+                  <SelectItem value="therapy_week_pause">Imposta settimana di pausa</SelectItem>
                 </SelectContent>
               </Select>
             </div>
