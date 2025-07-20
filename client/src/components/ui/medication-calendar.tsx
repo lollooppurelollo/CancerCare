@@ -37,6 +37,7 @@ export default function MedicationCalendar({ medication, patientId, isDoctorMode
   const [viewMode, setViewMode] = useState<"week" | "month">("month"); // "week" for single week, "month" for 4 weeks
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<"add" | "remove">("remove");
   
   // Doctor-specific state for dropdown popup
   const [showDropdownDialog, setShowDropdownDialog] = useState(false);
@@ -75,9 +76,41 @@ export default function MedicationCalendar({ medication, patientId, isDoctorMode
       queryClient.invalidateQueries({ 
         queryKey: patientId ? ["/api/missed-medication", patientId] : ["/api/missed-medication"]
       });
+      // Force immediate re-render by refetching
+      queryClient.refetchQueries({ 
+        queryKey: patientId ? ["/api/missed-medication", patientId] : ["/api/missed-medication"]
+      });
     },
     onError: (error) => {
       console.error('Error removing missed medication:', error);
+    },
+  });
+
+  // Mutation to add missed medication (for patient mode)
+  const addMissedMedication = useMutation({
+    mutationFn: async (dateToAdd: string) => {
+      console.log(`Adding missed medication for patient ${patientId} on date ${dateToAdd}`);
+      const response = await apiRequest("POST", `/api/missed-medication`, {
+        patientId,
+        missedDates: [dateToAdd],
+        notes: "Segnalato dal paziente via calendario"
+      });
+      console.log('Add missed medication response:', response);
+      return response;
+    },
+    onSuccess: () => {
+      console.log('Successfully added missed medication, invalidating queries');
+      // Invalidate the missed medication query to refresh the data
+      queryClient.invalidateQueries({ 
+        queryKey: patientId ? ["/api/missed-medication", patientId] : ["/api/missed-medication"]
+      });
+      // Force immediate re-render by refetching
+      queryClient.refetchQueries({ 
+        queryKey: patientId ? ["/api/missed-medication", patientId] : ["/api/missed-medication"]
+      });
+    },
+    onError: (error) => {
+      console.error('Error adding missed medication:', error);
     },
   });
 
@@ -315,7 +348,12 @@ export default function MedicationCalendar({ medication, patientId, isDoctorMode
                   dayColor = "bg-red-100 text-red-700 border-2 border-red-200 cursor-pointer hover:bg-red-200 transition-colors";
                 } else if (day.shouldTake) {
                   dayColor = "bg-sage-500 text-white";
-                  if (isDoctorMode) cursorClass = "cursor-pointer hover:scale-105 transition-all duration-200";
+                  // Make therapy days clickable for patients to mark as missed
+                  if (!isDoctorMode && patientId) {
+                    dayColor += " cursor-pointer hover:bg-sage-600 transition-colors";
+                  } else if (isDoctorMode) {
+                    cursorClass = "cursor-pointer hover:scale-105 transition-all duration-200";
+                  }
                 } else {
                   dayColor = "bg-gray-300 text-gray-600";
                   if (isDoctorMode) cursorClass = "cursor-pointer hover:scale-105 transition-all duration-200";
@@ -336,10 +374,19 @@ export default function MedicationCalendar({ medication, patientId, isDoctorMode
                         const currentEventType = day.calendarEventType || (day.shouldTake ? 'taken' : 'pause');
                         setSelectedEventType(currentEventType);
                         setShowDropdownDialog(true);
-                      } else if (day.isMissed && patientId) {
-                        // Patient mode: show confirmation dialog for missed days
-                        setSelectedDate(day.dateString);
-                        setShowConfirmDialog(true);
+                      } else if (!isDoctorMode && patientId) {
+                        // Patient mode: handle both missed days and therapy days
+                        if (day.isMissed) {
+                          // Show confirmation dialog to remove missed day
+                          setSelectedDate(day.dateString);
+                          setConfirmAction("remove");
+                          setShowConfirmDialog(true);
+                        } else if (day.shouldTake) {
+                          // Show confirmation dialog to add missed day
+                          setSelectedDate(day.dateString);
+                          setConfirmAction("add");
+                          setShowConfirmDialog(true);
+                        }
                       }
                     }}
                   >
@@ -365,10 +412,14 @@ export default function MedicationCalendar({ medication, patientId, isDoctorMode
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Conferma Ripristino</AlertDialogTitle>
+            <AlertDialogTitle>
+              {confirmAction === "add" ? "Segnala Mancata Assunzione" : "Conferma Ripristino"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Sei sicuro di voler ripristinare questo giorno come "terapia assunta"? 
-              Il giorno tornerà verde e non sarà più contrassegnato come mancato.
+              {confirmAction === "add" 
+                ? "Vuoi segnalare che non hai assunto la terapia in questo giorno? Il giorno diventerà rosso chiaro."
+                : "Sei sicuro di voler ripristinare questo giorno come 'terapia assunta'? Il giorno tornerà verde e non sarà più contrassegnato come mancato."
+              }
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -376,13 +427,18 @@ export default function MedicationCalendar({ medication, patientId, isDoctorMode
             <AlertDialogAction 
               onClick={() => {
                 if (selectedDate) {
-                  removeMissedMedication.mutate(selectedDate);
+                  if (confirmAction === "add") {
+                    addMissedMedication.mutate(selectedDate);
+                  } else {
+                    removeMissedMedication.mutate(selectedDate);
+                  }
                   setShowConfirmDialog(false);
                   setSelectedDate(null);
                 }
               }}
+              className={confirmAction === "add" ? "bg-red-600 hover:bg-red-700" : ""}
             >
-              Ripristina
+              {confirmAction === "add" ? "Segnala come Mancata" : "Ripristina"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
