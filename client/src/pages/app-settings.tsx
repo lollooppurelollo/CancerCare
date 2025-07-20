@@ -156,7 +156,7 @@ export default function AppSettings() {
                     <SelectValue placeholder="Seleziona medico" />
                   </SelectTrigger>
                   <SelectContent>
-                    {doctors?.map((doctor: any) => (
+                    {doctors?.filter((doctor: any) => doctor.id && doctor.firstName && doctor.lastName).map((doctor: any) => (
                       <SelectItem key={doctor.id} value={doctor.id.toString()}>
                         Dr. {doctor.firstName} {doctor.lastName}
                       </SelectItem>

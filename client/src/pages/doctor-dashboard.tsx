@@ -147,15 +147,18 @@ export default function DoctorDashboard() {
     return patient ? `${patient.firstName} ${patient.lastName}` : "Paziente sconosciuto";
   };
 
+  // Carica i dati dei medici usando React Query
+  const { data: doctorsData } = useQuery({
+    queryKey: ["/api/doctors"],
+    retry: false,
+  });
+
   const getPatientDoctor = (patientId: number) => {
     const patient = patients.find((p: any) => p.id === patientId);
     if (!patient || !patient.assignedDoctorId) return "Nessun medico assegnato";
     
-    // Get doctor info from localStorage or API
-    const doctorsData = localStorage.getItem('doctorsData');
     if (doctorsData) {
-      const doctors = JSON.parse(doctorsData);
-      const doctor = doctors.find((d: any) => d.id === patient.assignedDoctorId);
+      const doctor = doctorsData.find((d: any) => d.id === patient.assignedDoctorId);
       if (doctor) {
         return `Medico: ${doctor.firstName} ${doctor.lastName}`;
       }
@@ -248,75 +251,44 @@ export default function DoctorDashboard() {
           </div>
         </div>
 
-        {/* Quick Stats */}
+        {/* Quick Stats - Solo contatori */}
         <div className="mb-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-3">
-            <BarChart3 className="inline w-5 h-5 mr-2" />
-            Statistiche
+            <TriangleAlert className="inline w-5 h-5 mr-2 text-red-500" />
+            Avvisi e messaggi
           </h2>
           
-          {/* Pazienti totali - ridimensionato */}
-          <div className="mb-4">
-            <div className="bg-sage-50 p-4 rounded-lg border border-sage-200 text-center hover:bg-sage-100 transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer">
-              <div className="text-2xl font-bold text-sage-600 mb-1 transition-transform duration-200 hover:scale-110">{statisticsPatients.length}</div>
-              <div className="text-sm text-gray-700 font-medium">Pazienti totali</div>
-            </div>
-          </div>
-          
-          {/* Pazienti per farmaco */}
-          <div className="mb-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Pazienti per farmaco</h3>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="bg-sage-50 p-3 rounded-lg border border-sage-200 hover:bg-sage-100 transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer">
-                <div className="text-xl font-bold text-sage-600 transition-transform duration-200 hover:scale-110">{abemaciclibCount}</div>
-                <div className="text-xs text-gray-600">Abemaciclib</div>
-              </div>
-              <div className="bg-teal-50 p-3 rounded-lg border border-teal-200 hover:bg-teal-100 transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer">
-                <div className="text-xl font-bold text-teal-600 transition-transform duration-200 hover:scale-110">{ribociclibCount}</div>
-                <div className="text-xs text-gray-600">Ribociclib</div>
-              </div>
-              <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-200 hover:bg-indigo-100 transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer">
-                <div className="text-xl font-bold text-indigo-600 transition-transform duration-200 hover:scale-110">{palbociclibCount}</div>
-                <div className="text-xs text-gray-600">Palbociclib</div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Avvisi e messaggi */}
-          <div>
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Avvisi e messaggi</h3>
-            <div className="grid grid-cols-3 gap-2">
-              <button 
-                onClick={() => {
-                  const urgentSection = document.getElementById('urgent-alerts-section');
-                  urgentSection?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="bg-red-50 p-2 rounded-lg border border-red-200 hover:bg-red-100 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95 text-left"
-              >
-                <div className="text-lg font-bold text-red-600 transition-transform duration-200 hover:scale-110">{urgentAlerts.length}</div>
-                <div className="text-xs text-gray-600">Messaggi urgenti</div>
-              </button>
-              <button 
-                onClick={() => {
-                  const messageSection = document.getElementById('message-alerts-section');
-                  messageSection?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="bg-orange-50 p-2 rounded-lg border border-orange-200 hover:bg-orange-100 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95 text-left"
-              >
-                <div className="text-lg font-bold text-orange-600 transition-transform duration-200 hover:scale-110">{messageAlerts.length}</div>
-                <div className="text-xs text-gray-600">Messaggi pazienti</div>
-              </button>
-              <button 
-                onClick={() => {
-                  const chatSection = document.getElementById('chat-notifications-section');
-                  chatSection?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="bg-blue-50 p-2 rounded-lg border border-blue-200 hover:bg-blue-100 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95 text-left"
-              >
-                <div className="text-lg font-bold text-blue-600 transition-transform duration-200 hover:scale-110">{filteredChatNotifications.length}</div>
-                <div className="text-xs text-gray-600">Messaggi chat</div>
-              </button>
-            </div>
+          <div className="grid grid-cols-3 gap-2">
+            <button 
+              onClick={() => {
+                const urgentSection = document.getElementById('urgent-alerts-section');
+                urgentSection?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="bg-red-50 p-2 rounded-lg border border-red-200 hover:bg-red-100 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95 text-left"
+            >
+              <div className="text-lg font-bold text-red-600 transition-transform duration-200 hover:scale-110">{urgentAlerts.length}</div>
+              <div className="text-xs text-gray-600">Messaggi urgenti</div>
+            </button>
+            <button 
+              onClick={() => {
+                const messageSection = document.getElementById('message-alerts-section');
+                messageSection?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="bg-orange-50 p-2 rounded-lg border border-orange-200 hover:bg-orange-100 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95 text-left"
+            >
+              <div className="text-lg font-bold text-orange-600 transition-transform duration-200 hover:scale-110">{messageAlerts.length}</div>
+              <div className="text-xs text-gray-600">Messaggi pazienti</div>
+            </button>
+            <button 
+              onClick={() => {
+                const chatSection = document.getElementById('chat-notifications-section');
+                chatSection?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="bg-blue-50 p-2 rounded-lg border border-blue-200 hover:bg-blue-100 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95 text-left"
+            >
+              <div className="text-lg font-bold text-blue-600 transition-transform duration-200 hover:scale-110">{filteredChatNotifications.length}</div>
+              <div className="text-xs text-gray-600">Messaggi chat</div>
+            </button>
           </div>
         </div>
 
@@ -452,6 +424,9 @@ export default function DoctorDashboard() {
                             </button>
                             <p className="text-xs opacity-75 mt-1">
                               {formatTimestamp(alert.createdAt)}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {getPatientDoctor(alert.patientId)}
                             </p>
                             
                             {/* Pulsante Risolto in basso a sinistra */}
@@ -607,11 +582,18 @@ export default function DoctorDashboard() {
                             >
                               {getPatientName(entry.patientId)} {getPatientBirthDate(entry.patientId) && `(nato il ${getPatientBirthDate(entry.patientId)})`}
                             </button>
+                            <p className="text-xs opacity-75 mt-1">
+                              Ultima dose mancata: {entry.missedDates && entry.missedDates.length > 0 
+                                ? new Date(entry.missedDates[entry.missedDates.length - 1]).toLocaleDateString('it-IT', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric'
+                                  })
+                                : 'Non disponibile'
+                              }
+                            </p>
                             <p className="text-xs text-gray-500 mt-1">
                               {getPatientDoctor(entry.patientId)}
-                            </p>
-                            <p className="text-xs opacity-75 mt-1">
-                              {formatTimestamp(entry.createdAt)}
                             </p>
                             {entry.notes && (
                               <p className="text-xs mt-1 italic">
