@@ -264,6 +264,15 @@ Preferred communication style: Simple, everyday language.
     - **Medication-dosage specificity**: Accurate dosage analysis for Abemaciclib (150mg/100mg/50mg), Ribociclib (600mg/400mg/200mg), Palbociclib (125mg/100mg/75mg)
     - **Doctor workflow enhancement**: Streamlined analytics interface with only essential counters (Total Patients, Average Adherence) plus interactive drug analysis table
 
+20. **Doctor-Specific Filtering and Enhanced Dashboard (July 2025)**:
+   - **Comprehensive doctor filtering**: Implemented doctor-specific filtering across all dashboard sections (alerts, messages, chat notifications, missed medications)
+   - **Doctor information display**: Added doctor reference information below patient name and birth date in all notifications and alerts
+   - **Removed green statistics section**: Eliminated non-functional green statistics cards from doctor dashboard for cleaner interface
+   - **Enhanced notification counters**: All counters now reflect filtered data based on selected doctor view mode
+   - **Doctor assignment visibility**: Added doctor name display in all patient-related notifications for better identification and workflow management
+   - **Streamlined dashboard**: Focused dashboard on essential functionality with proper data filtering and authentic patient information
+   - **Improved user experience**: Clear visual hierarchy with doctor information consistently displayed across all notification types
+
 ## Data Flow
 
 1. **Patient Registration**: New patients create accounts with medical information

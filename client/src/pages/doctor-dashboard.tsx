@@ -98,14 +98,31 @@ export default function DoctorDashboard() {
     return firstNameMatch && lastNameMatch && birthDateMatch && doctorMatch;
   });
 
-  const urgentAlerts = alerts.filter((alert: any) => alert.severity === "high");
-  const messageAlerts = alerts.filter((alert: any) => alert.type === "message");
+  // Filter alerts by doctor if in doctor mode
+  const filteredAlerts = alerts.filter((alert: any) => {
+    if (viewMode === "all") return true;
+    const patient = patients.find((p: any) => p.id === alert.patientId);
+    return patient && patient.assignedDoctorId && patient.assignedDoctorId.toString() === selectedDoctorId;
+  });
+
+  const urgentAlerts = filteredAlerts.filter((alert: any) => alert.severity === "high");
+  const messageAlerts = filteredAlerts.filter((alert: any) => alert.type === "message");
   
-  // Calculate missed medication alerts - only show patients with more than 5 missed days
+  // Filter missed medication alerts by doctor and count > 5
   const missedMedicationAlerts = allMissedMedications.filter((entry: any) => {
-    // Count the number of missed dates
     const missedDatesCount = entry.missedDates ? entry.missedDates.length : 0;
-    return missedDatesCount > 5;
+    if (missedDatesCount <= 5) return false;
+    
+    if (viewMode === "all") return true;
+    const patient = patients.find((p: any) => p.id === entry.patientId);
+    return patient && patient.assignedDoctorId && patient.assignedDoctorId.toString() === selectedDoctorId;
+  });
+
+  // Filter chat notifications by doctor
+  const filteredChatNotifications = chatNotifications.filter((notification: any) => {
+    if (viewMode === "all") return true;
+    const patient = patients.find((p: any) => p.id === notification.patientId);
+    return patient && patient.assignedDoctorId && patient.assignedDoctorId.toString() === selectedDoctorId;
   });
   
   // Apply doctor filter to all statistics
@@ -128,6 +145,22 @@ export default function DoctorDashboard() {
   const getPatientName = (patientId: number) => {
     const patient = patients.find((p: any) => p.id === patientId);
     return patient ? `${patient.firstName} ${patient.lastName}` : "Paziente sconosciuto";
+  };
+
+  const getPatientDoctor = (patientId: number) => {
+    const patient = patients.find((p: any) => p.id === patientId);
+    if (!patient || !patient.assignedDoctorId) return "Nessun medico assegnato";
+    
+    // Get doctor info from localStorage or API
+    const doctorsData = localStorage.getItem('doctorsData');
+    if (doctorsData) {
+      const doctors = JSON.parse(doctorsData);
+      const doctor = doctors.find((d: any) => d.id === patient.assignedDoctorId);
+      if (doctor) {
+        return `Medico: ${doctor.firstName} ${doctor.lastName}`;
+      }
+    }
+    return `Medico ID: ${patient.assignedDoctorId}`;
   };
 
   const getPatientBirthDate = (patientId: number) => {
@@ -280,7 +313,7 @@ export default function DoctorDashboard() {
                 }}
                 className="bg-blue-50 p-2 rounded-lg border border-blue-200 hover:bg-blue-100 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95 text-left"
               >
-                <div className="text-lg font-bold text-blue-600 transition-transform duration-200 hover:scale-110">{chatNotifications.length}</div>
+                <div className="text-lg font-bold text-blue-600 transition-transform duration-200 hover:scale-110">{filteredChatNotifications.length}</div>
                 <div className="text-xs text-gray-600">Messaggi chat</div>
               </button>
             </div>
@@ -291,20 +324,10 @@ export default function DoctorDashboard() {
         <div className="mb-6" id="alerts-section">
           <h2 className="text-lg font-semibold text-gray-800 mb-3">
             <TriangleAlert className="inline w-5 h-5 mr-2 text-red-500" />
-            Avvisi ({alerts.length})
+            Avvisi ({filteredAlerts.length})
           </h2>
           
-          {alerts.length === 0 ? (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="flex items-center">
-                <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
-                <p className="text-green-800 font-medium">Nessun avviso attivo</p>
-              </div>
-              <p className="text-sm text-green-600 mt-1">
-                Tutti i pazienti sono sotto controllo. Ottimo lavoro!
-              </p>
-            </div>
-          ) : (
+          {filteredAlerts.length > 0 && (
             <div className="space-y-6">
               {/* Avvisi urgenti */}
               {urgentAlerts.length > 0 && (
@@ -335,6 +358,9 @@ export default function DoctorDashboard() {
                             </button>
                             <p className="text-xs opacity-75 mt-1">
                               {formatTimestamp(alert.createdAt)}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {getPatientDoctor(alert.patientId)}
                             </p>
                             
                             {/* Pulsante Risolto in basso a sinistra */}
@@ -485,14 +511,14 @@ export default function DoctorDashboard() {
               )}
 
               {/* Chat Notifications */}
-              {chatNotifications.length > 0 && (
+              {filteredChatNotifications.length > 0 && (
                 <div id="chat-notifications-section">
                   <h3 className="text-md font-medium text-blue-700 mb-3 flex items-center">
                     <MessageCircle className="w-4 h-4 mr-2 transition-transform duration-200 hover:scale-110" />
-                    Nuovi messaggi in Chat ({chatNotifications.length})
+                    Nuovi messaggi in Chat ({filteredChatNotifications.length})
                   </h3>
                   <div className="space-y-2">
-                    {chatNotifications.map((notification: any) => (
+                    {filteredChatNotifications.map((notification: any) => (
                       <div
                         key={notification.id}
                         className="p-3 rounded-lg border bg-blue-50 border-blue-200 text-blue-800 relative"
@@ -517,6 +543,9 @@ export default function DoctorDashboard() {
                             </button>
                             <p className="text-xs opacity-75 mt-1">
                               {formatTimestamp(notification.createdAt)}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {getPatientDoctor(notification.patientId)}
                             </p>
                           </div>
                           
@@ -578,6 +607,9 @@ export default function DoctorDashboard() {
                             >
                               {getPatientName(entry.patientId)} {getPatientBirthDate(entry.patientId) && `(nato il ${getPatientBirthDate(entry.patientId)})`}
                             </button>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {getPatientDoctor(entry.patientId)}
+                            </p>
                             <p className="text-xs opacity-75 mt-1">
                               {formatTimestamp(entry.createdAt)}
                             </p>
