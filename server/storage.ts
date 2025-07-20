@@ -69,6 +69,10 @@ export interface IStorage {
   createMissedMedication(missedMed: InsertMissedMedication): Promise<MissedMedication>;
   getMissedMedicationByPatient(patientId: number): Promise<MissedMedication[]>;
   getMissedMedicationInLastMonth(patientId: number): Promise<MissedMedication[]>;
+
+  // Advanced analytics operations
+  getAdvancedPatientAnalytics(): Promise<any[]>;
+  getSymptomAnalyticsByDosage(symptomType: string): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -725,6 +729,68 @@ export class DatabaseStorage implements IStorage {
     }
 
     return results;
+  }
+
+  async getSymptomAnalyticsByDosage(symptomType: string): Promise<any> {
+    // Get all patients with their symptoms
+    const patientsData = await db
+      .select()
+      .from(patients)
+      .leftJoin(symptoms, eq(symptoms.patientId, patients.id));
+
+    const result = {
+      abemaciclib: { "150mg": 0, "100mg": 0, "50mg": 0 },
+      ribociclib: { "600mg": 0, "400mg": 0, "200mg": 0 },
+      palbociclib: { "125mg": 0, "100mg": 0, "75mg": 0 }
+    };
+
+    // Group by medication and dosage
+    const medicationDosageGroups: any = {};
+
+    for (const row of patientsData) {
+      const patient = row.patients;
+      const symptom = row.symptoms;
+      
+      if (!patient || !patient.medication || !patient.dosage) continue;
+
+      const key = `${patient.medication}-${patient.dosage}`;
+      if (!medicationDosageGroups[key]) {
+        medicationDosageGroups[key] = {
+          patientIds: new Set(),
+          symptomCounts: 0,
+          severeSymptomCounts: 0
+        };
+      }
+
+      medicationDosageGroups[key].patientIds.add(patient.id);
+
+      // Count symptoms for this patient
+      if (symptom && symptom.symptomType === symptomType) {
+        medicationDosageGroups[key].symptomCounts++;
+        // Consider severe if intensity >= 5 (as requested)
+        if (symptom.intensity && symptom.intensity >= 5) {
+          medicationDosageGroups[key].severeSymptomCounts++;
+        }
+      }
+    }
+
+    // Calculate percentages
+    Object.keys(medicationDosageGroups).forEach(key => {
+      const [medication, dosage] = key.split('-');
+      const group = medicationDosageGroups[key];
+      const totalPatients = group.patientIds.size;
+      
+      if (totalPatients > 0) {
+        // Calculate percentage of patients with severe symptoms
+        const severePercentage = (group.severeSymptomCounts / totalPatients) * 100;
+        
+        if (result[medication as keyof typeof result] && dosage in result[medication as keyof typeof result]) {
+          result[medication as keyof typeof result][dosage as keyof typeof result[keyof typeof result]] = Math.round(severePercentage);
+        }
+      }
+    });
+
+    return result;
   }
 
   async getDosageWeeksAnalytics(medication?: string, treatmentSetting?: string): Promise<any[]> {

@@ -254,6 +254,16 @@ Preferred communication style: Simple, everyday language.
     - **Enhanced visual consistency**: Applied same color scheme and styling patterns across all messaging interfaces
     - **Improved file attachment display**: Consistent file preview and management across patient and doctor interfaces
 
+19. **Real-Time Symptom Analytics with Interactive Selector (July 2025)**:
+    - **Real patient data analytics**: Replaced mock percentages with authentic symptom data from database
+    - **Interactive symptom selector**: Added dropdown to analyze different symptom types (diarrea, nausea, vomito, fatigue, dolori articolari, febbre, rush cutaneo, perdita appetito)
+    - **Drug-specific analysis table**: Added comprehensive analysis table showing patient counts and average weeks to first/second dose reduction for all CDK 4/6 inhibitors
+    - **Real-time histogram data**: Symptom severity percentages now calculated from actual patient reports (intensity ≥5) by medication and dosage
+    - **Enhanced API endpoints**: Created `/api/analytics/symptom-by-dosage` endpoint for dynamic symptom analysis
+    - **Performance optimization**: Fixed infinite loop issues in analytics dashboard with useMemo implementation
+    - **Medication-dosage specificity**: Accurate dosage analysis for Abemaciclib (150mg/100mg/50mg), Ribociclib (600mg/400mg/200mg), Palbociclib (125mg/100mg/75mg)
+    - **Doctor workflow enhancement**: Streamlined analytics interface with only essential counters (Total Patients, Average Adherence) plus interactive drug analysis table
+
 ## Data Flow
 
 1. **Patient Registration**: New patients create accounts with medical information

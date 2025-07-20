@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Download, FileBarChart2, FileSpreadsheet, Filter, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,10 +31,16 @@ export default function DoctorAdvancedAnalytics() {
   const [selectedMedication, setSelectedMedication] = useState<string>("all");
   const [selectedSetting, setSelectedSetting] = useState<string>("all");
   const [filteredData, setFilteredData] = useState<PatientAnalytics[]>([]);
+  const [selectedSymptom, setSelectedSymptom] = useState<string>("diarrea");
 
   const { data: analyticsData, isLoading, refetch } = useQuery<PatientAnalytics[]>({
     queryKey: ["/api/analytics/advanced-patient-data"],
     enabled: true,
+  });
+
+  const { data: symptomData, isLoading: isLoadingSymptoms } = useQuery({
+    queryKey: ["/api/analytics/symptom-by-dosage", selectedSymptom],
+    enabled: !!selectedSymptom,
   });
 
   // Mock data in case API returns empty
@@ -131,7 +137,9 @@ export default function DoctorAdvancedAnalytics() {
     }
   ];
 
-  const displayData = analyticsData && analyticsData.length > 0 ? analyticsData : mockAnalyticsData;
+  const displayData = useMemo(() => {
+    return analyticsData && analyticsData.length > 0 ? analyticsData : mockAnalyticsData;
+  }, [analyticsData]);
 
   useEffect(() => {
     let filtered = displayData;
@@ -455,50 +463,80 @@ export default function DoctorAdvancedAnalytics() {
         {/* Istogramma Sintomi per Dosaggio */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-sage-800">% Pazienti con Diarrea Severa per Farmaco e Dosaggio</CardTitle>
-            <p className="text-sm text-gray-600">Percentuale di pazienti con diarrea (intensità ≥5) per almeno 3 giorni/mese</p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <CardTitle className="text-sage-800">% Pazienti con Sintomo Severo per Farmaco e Dosaggio</CardTitle>
+                <p className="text-sm text-gray-600">Percentuale di pazienti con {selectedSymptom} (intensità ≥5) dai dati reali</p>
+              </div>
+              <div className="w-full sm:w-48">
+                <Select value={selectedSymptom} onValueChange={setSelectedSymptom}>
+                  <SelectTrigger className="border-sage-200 focus:ring-sage-500">
+                    <SelectValue placeholder="Seleziona sintomo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="diarrea">Diarrea</SelectItem>
+                    <SelectItem value="nausea">Nausea</SelectItem>
+                    <SelectItem value="vomito">Vomito</SelectItem>
+                    <SelectItem value="fatigue">Fatigue</SelectItem>
+                    <SelectItem value="dolori_articolari">Dolori Articolari</SelectItem>
+                    <SelectItem value="febbre">Febbre</SelectItem>
+                    <SelectItem value="rush_cutaneo">Rush Cutaneo</SelectItem>
+                    <SelectItem value="perdita_appetito">Perdita Appetito</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-6">
-              {["abemaciclib", "ribociclib", "palbociclib"].map((drug) => {
-                const drugPatients = displayData.filter(p => p.medication === drug);
-                
-                // Dosaggi per farmaco
-                const dosages = drug === "abemaciclib" ? ["150mg", "100mg", "50mg"] :
-                               drug === "ribociclib" ? ["600mg", "400mg", "200mg"] :
-                               ["125mg", "100mg", "75mg"];
-                
-                return (
-                  <div key={drug} className="space-y-3">
-                    <h4 className="font-medium text-gray-800 capitalize">{drug}</h4>
-                    <div className="grid grid-cols-3 gap-4">
-                      {dosages.map((dosage) => {
-                        const dosagePatients = drugPatients.filter(p => p.dosage === dosage);
-                        // Simulazione: percentuale di pazienti con diarrea severa
-                        const diarrheaPercentage = dosagePatients.length > 0 ? 
-                          Math.min(100, Math.max(10, 60 - (parseInt(dosage) / 10))) : 0;
-                        
-                        return (
-                          <div key={dosage} className="bg-gray-50 p-4 rounded-lg">
-                            <div className="text-center">
-                              <p className="text-sm font-medium text-gray-700 mb-2">{dosage}</p>
-                              <div className="relative h-24 bg-gray-200 rounded">
-                                <div 
-                                  className="absolute bottom-0 w-full bg-red-500 rounded transition-all duration-300"
-                                  style={{ height: `${diarrheaPercentage}%` }}
-                                ></div>
+            {isLoadingSymptoms ? (
+              <div className="text-center py-8">
+                <RefreshCw className="w-6 h-6 animate-spin text-sage-600 mx-auto mb-2" />
+                <p className="text-sage-600">Caricamento dati sintomi...</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {["abemaciclib", "ribociclib", "palbociclib"].map((drug) => {
+                  // Dosaggi per farmaco
+                  const dosages = drug === "abemaciclib" ? ["150mg", "100mg", "50mg"] :
+                                 drug === "ribociclib" ? ["600mg", "400mg", "200mg"] :
+                                 ["125mg", "100mg", "75mg"];
+                  
+                  const drugPatients = displayData.filter(p => p.medication === drug);
+                  
+                  return (
+                    <div key={drug} className="space-y-3">
+                      <h4 className="font-medium text-gray-800 capitalize">{drug}</h4>
+                      <div className="grid grid-cols-3 gap-4">
+                        {dosages.map((dosage) => {
+                          const dosagePatients = drugPatients.filter(p => p.dosage === dosage);
+                          
+                          // Ottieni percentuale reale dai dati API
+                          const realPercentage = symptomData && symptomData[drug] && symptomData[drug][dosage] 
+                            ? symptomData[drug][dosage] 
+                            : 0;
+                          
+                          return (
+                            <div key={dosage} className="bg-gray-50 p-4 rounded-lg">
+                              <div className="text-center">
+                                <p className="text-sm font-medium text-gray-700 mb-2">{dosage}</p>
+                                <div className="relative h-24 bg-gray-200 rounded">
+                                  <div 
+                                    className="absolute bottom-0 w-full bg-red-500 rounded transition-all duration-300"
+                                    style={{ height: `${realPercentage}%` }}
+                                  ></div>
+                                </div>
+                                <p className="text-lg font-bold text-red-600 mt-2">{realPercentage}%</p>
+                                <p className="text-xs text-gray-500">({dosagePatients.length} paz.)</p>
                               </div>
-                              <p className="text-lg font-bold text-red-600 mt-2">{diarrheaPercentage.toFixed(0)}%</p>
-                              <p className="text-xs text-gray-500">({dosagePatients.length} paz.)</p>
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
 
