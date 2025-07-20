@@ -108,8 +108,14 @@ export default function DoctorDashboard() {
     return missedDatesCount > 5;
   });
   
-  // Conteggio pazienti per farmaco
-  const patientsByDrug = patients.reduce((acc: any, patient: any) => {
+  // Apply doctor filter to all statistics
+  const statisticsPatients = patients.filter((patient: any) => {
+    return viewMode === "all" || 
+      (viewMode === "doctor" && patient.assignedDoctorId && patient.assignedDoctorId.toString() === selectedDoctorId);
+  });
+
+  // Conteggio pazienti per farmaco (filtrati per medico se necessario)
+  const patientsByDrug = statisticsPatients.reduce((acc: any, patient: any) => {
     const drug = patient.medication || "non specificato";
     acc[drug] = (acc[drug] || 0) + 1;
     return acc;
@@ -219,7 +225,7 @@ export default function DoctorDashboard() {
           {/* Pazienti totali - ridimensionato */}
           <div className="mb-4">
             <div className="bg-sage-50 p-4 rounded-lg border border-sage-200 text-center hover:bg-sage-100 transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer">
-              <div className="text-2xl font-bold text-sage-600 mb-1 transition-transform duration-200 hover:scale-110">{patients.length}</div>
+              <div className="text-2xl font-bold text-sage-600 mb-1 transition-transform duration-200 hover:scale-110">{statisticsPatients.length}</div>
               <div className="text-sm text-gray-700 font-medium">Pazienti totali</div>
             </div>
           </div>

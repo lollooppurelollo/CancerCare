@@ -345,7 +345,7 @@ export default function DoctorAdvancedAnalytics() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-sage-700 mb-2 block">Farmaco</label>
                 <Select value={selectedMedication} onValueChange={setSelectedMedication}>
@@ -371,25 +371,6 @@ export default function DoctorAdvancedAnalytics() {
                     <SelectItem value="all">Tutti i setting</SelectItem>
                     <SelectItem value="metastatic">Metastatico</SelectItem>
                     <SelectItem value="adjuvant">Adiuvante</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-sage-700 mb-2 block">Tipo Sintomo</label>
-                <Select value={selectedSymptom} onValueChange={setSelectedSymptom}>
-                  <SelectTrigger className="border-sage-200 focus:ring-sage-500">
-                    <SelectValue placeholder="Seleziona sintomo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="diarrea">Diarrea</SelectItem>
-                    <SelectItem value="nausea">Nausea</SelectItem>
-                    <SelectItem value="vomito">Vomito</SelectItem>
-                    <SelectItem value="fatigue">Fatigue</SelectItem>
-                    <SelectItem value="dolori_articolari">Dolori Articolari</SelectItem>
-                    <SelectItem value="febbre">Febbre</SelectItem>
-                    <SelectItem value="rush_cutaneo">Rush Cutaneo</SelectItem>
-                    <SelectItem value="perdita_appetito">Perdita Appetito</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -453,10 +434,11 @@ export default function DoctorAdvancedAnalytics() {
                       
                       if (!shouldShowDrug) return null;
                       
-                      const drugPatients = displayData.filter(p => p.medication === drug);
+                      // Filtra per farmaco e setting terapeutico
+                      let drugPatients = filteredData.filter(p => p.medication === drug);
                       const patientCount = drugPatients.length;
                       
-                      // Ottieni dati reali dalle API
+                      // Ottieni dati reali dalle API (già filtrati per setting)
                       const drugReductionData = reductionData?.[drug];
                       const avgFirstReduction = drugReductionData?.avgFirstReduction;
                       const avgSecondReduction = drugReductionData?.avgSecondReduction;
@@ -499,6 +481,23 @@ export default function DoctorAdvancedAnalytics() {
                   Percentuale di pazienti con {selectedSymptom} (intensità ≥5) dai dati reali • 
                   Filtri: {selectedSetting === "all" ? "Tutti i setting" : selectedSetting}
                 </p>
+              </div>
+              <div className="w-full sm:w-48">
+                <Select value={selectedSymptom} onValueChange={setSelectedSymptom}>
+                  <SelectTrigger className="border-sage-200 focus:ring-sage-500">
+                    <SelectValue placeholder="Seleziona sintomo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="diarrea">Diarrea</SelectItem>
+                    <SelectItem value="nausea">Nausea</SelectItem>
+                    <SelectItem value="vomito">Vomito</SelectItem>
+                    <SelectItem value="fatigue">Fatigue</SelectItem>
+                    <SelectItem value="dolori_articolari">Dolori Articolari</SelectItem>
+                    <SelectItem value="febbre">Febbre</SelectItem>
+                    <SelectItem value="rush_cutaneo">Rush Cutaneo</SelectItem>
+                    <SelectItem value="perdita_appetito">Perdita Appetito</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </CardHeader>
