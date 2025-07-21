@@ -4,9 +4,11 @@ import { Button } from "./button";
 import { Textarea } from "./textarea";
 import { Input } from "./input";
 import { Slider } from "./slider";
+import { Label } from "./label";
 import { useToast } from "@/hooks/use-toast";
 import { useKeyboardVisibility } from "@/hooks/use-keyboard-visibility";
 import { apiRequest } from "@/lib/queryClient";
+import { Calendar } from "lucide-react";
 
 interface SymptomTrackerProps {
   patientId: number;
@@ -26,6 +28,7 @@ const symptoms = [
 export default function SymptomTracker({ patientId }: SymptomTrackerProps) {
   const [symptomStates, setSymptomStates] = useState<Record<string, any>>({});
   const [additionalNotes, setAdditionalNotes] = useState("");
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -36,12 +39,11 @@ export default function SymptomTracker({ patientId }: SymptomTrackerProps) {
 
   const saveSymptomsMutation = useMutation({
     mutationFn: async () => {
-      const today = new Date().toISOString().split('T')[0];
       const symptomsData = symptoms.map((symptom) => {
         const state = symptomStates[symptom.id] || {};
         return {
           patientId,
-          date: today,
+          date: selectedDate,
           symptomType: symptom.id,
           present: state.present || false,
           intensity: state.intensity || null,
@@ -84,8 +86,39 @@ export default function SymptomTracker({ patientId }: SymptomTrackerProps) {
     updateSymptomState(symptomId, { present });
   };
 
+  const formatDateForDisplay = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("it-IT", {
+      weekday: "long",
+      year: "numeric", 
+      month: "long",
+      day: "numeric"
+    });
+  };
+
   return (
     <div className="space-y-4">
+      {/* Date Selector */}
+      <div className="p-3 bg-sage-50 rounded-lg border border-sage-200">
+        <div className="flex items-center justify-between mb-2">
+          <Label htmlFor="symptom-date" className="text-sm font-medium text-sage-800 flex items-center">
+            <Calendar className="w-4 h-4 mr-2" />
+            Data segnalazione sintomi
+          </Label>
+        </div>
+        <Input
+          id="symptom-date"
+          type="date"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          className="focus:ring-sage-500 focus:border-sage-500"
+          max={new Date().toISOString().split('T')[0]} // Non permettere date future
+        />
+        <p className="text-xs text-sage-600 mt-1">
+          {formatDateForDisplay(selectedDate)}
+        </p>
+      </div>
+
       {symptoms.map((symptom) => {
         const state = symptomStates[symptom.id] || {};
         return (

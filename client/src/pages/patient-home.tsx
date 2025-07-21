@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useKeyboardVisibility } from "@/hooks/use-keyboard-visibility";
 import { apiRequest } from "@/lib/queryClient";
@@ -16,6 +18,7 @@ import BottomNavigation from "@/components/ui/bottom-navigation";
 
 export default function PatientHome() {
   const [diaryContent, setDiaryContent] = useState("");
+  const [diaryDate, setDiaryDate] = useState(new Date().toISOString().split('T')[0]);
   const [showMissedMedDialog, setShowMissedMedDialog] = useState(false);
   const [missedDates, setMissedDates] = useState<string[]>([]);
   const [missedMedNotes, setMissedMedNotes] = useState("");
@@ -34,9 +37,8 @@ export default function PatientHome() {
 
   const saveDiaryMutation = useMutation({
     mutationFn: async () => {
-      const today = new Date().toISOString().split('T')[0];
       await apiRequest("POST", "/api/diary-entries", {
-        date: today,
+        date: diaryDate,
         content: diaryContent,
       });
     },
@@ -174,8 +176,32 @@ export default function PatientHome() {
 
       {/* Daily Diary */}
       <div className="p-4 bg-white border-b border-gray-200">
-        <h2 className="text-md font-semibold text-gray-800 mb-2">Diario del giorno:</h2>
-        <p className="text-sm text-gray-500 mb-3">{currentDate}</p>
+        <h2 className="text-md font-semibold text-gray-800 mb-3">Diario del giorno:</h2>
+        
+        {/* Date Selector for Diary */}
+        <div className="mb-3">
+          <Label htmlFor="diary-date" className="text-sm font-medium text-gray-700 flex items-center mb-1">
+            <Calendar className="w-4 h-4 mr-2" />
+            Data del diario
+          </Label>
+          <Input
+            id="diary-date"
+            type="date"
+            value={diaryDate}
+            onChange={(e) => setDiaryDate(e.target.value)}
+            className="focus:ring-sage-500 focus:border-sage-500 text-sm"
+            max={new Date().toISOString().split('T')[0]} // Non permettere date future
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            {new Date(diaryDate).toLocaleDateString("it-IT", {
+              weekday: "long",
+              year: "numeric", 
+              month: "long",
+              day: "numeric"
+            })}
+          </p>
+        </div>
+
         <Textarea
           ref={diaryTextareaRef}
           className="w-full h-20 resize-none focus:ring-sage-500 focus:border-sage-500"
