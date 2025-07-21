@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useKeyboardVisibility } from "@/hooks/use-keyboard-visibility";
+import { useSmartScroll } from "@/hooks/use-smart-scroll";
 import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import BottomNavigation from "@/components/ui/bottom-navigation";
@@ -17,11 +18,11 @@ export default function PatientProfile() {
   const queryClient = useQueryClient();
   
   // Keyboard visibility hooks for text inputs
-  const firstNameRef = useKeyboardVisibility();
-  const lastNameRef = useKeyboardVisibility();
-  const ageRef = useKeyboardVisibility();
-  const phoneRef = useKeyboardVisibility();
-  const addressRef = useKeyboardVisibility();
+  const firstNameRef = useSmartScroll<HTMLInputElement>({ offsetFromTop: 80 });
+  const lastNameRef = useSmartScroll<HTMLInputElement>({ offsetFromTop: 80 });
+  const ageRef = useSmartScroll<HTMLInputElement>({ offsetFromTop: 80 });
+  const phoneRef = useSmartScroll<HTMLInputElement>({ offsetFromTop: 80 });
+  const addressRef = useSmartScroll<HTMLInputElement>({ offsetFromTop: 80 });
 
   const { data: patient } = useQuery({
     queryKey: ["/api/patients/me"],

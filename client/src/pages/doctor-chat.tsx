@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useKeyboardVisibility } from "@/hooks/use-keyboard-visibility";
+import { useSmartScroll } from "@/hooks/use-smart-scroll";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function DoctorChat() {
@@ -22,8 +23,8 @@ export default function DoctorChat() {
   const [isUrgent, setIsUrgent] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
-  // Keyboard visibility hook for text input
-  const messageInputRef = useKeyboardVisibility();
+  // Smart scroll hook for text input
+  const messageInputRef = useSmartScroll<HTMLTextAreaElement>({ offsetFromTop: 80 });
 
   const resolveAlertMutation = useMutation({
     mutationFn: async (alertId: number) => {

@@ -19,24 +19,49 @@ export function useKeyboardVisibility() {
       
       console.log('🔧 Scrolling element into view');
       
-      // Use the native scrollIntoView API which is more reliable
-      element.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-        inline: 'nearest'
+      // Find the container with submit buttons (look for parent with buttons)
+      const findSubmitContainer = (el: HTMLElement): HTMLElement | null => {
+        let current = el.parentElement;
+        while (current && current !== document.body) {
+          const buttons = current.querySelectorAll('button[type="submit"], button:has([class*="save"]), button:has([class*="invia"])');
+          if (buttons.length > 0) {
+            return current;
+          }
+          current = current.parentElement;
+        }
+        return null;
+      };
+
+      const container = findSubmitContainer(element) || element;
+      
+      // Calculate keyboard height (approximate)
+      const keyboardHeight = window.innerHeight * 0.4; // Assume keyboard takes 40% of screen
+      const visibleHeight = window.innerHeight - keyboardHeight;
+      
+      // Scroll to show the field + submit button with padding
+      const rect = container.getBoundingClientRect();
+      const elementRect = element.getBoundingClientRect();
+      
+      // Position the field in upper half of visible area, leaving space for buttons below
+      const targetPosition = visibleHeight * 0.25; // Show field at 25% from top of visible area
+      const scrollY = window.pageYOffset + elementRect.top - targetPosition;
+      
+      window.scrollTo({
+        top: Math.max(0, scrollY),
+        behavior: 'smooth'
       });
       
-      // Alternative scroll method as fallback
+      // Alternative method as fallback for stubborn cases
       setTimeout(() => {
-        const rect = element.getBoundingClientRect();
-        if (rect.top < 100) { // If still not visible enough
-          const targetY = rect.top + window.pageYOffset - 120;
-          window.scrollTo({
-            top: Math.max(0, targetY),
-            behavior: 'smooth'
+        const newRect = element.getBoundingClientRect();
+        if (newRect.top < 50 || newRect.top > visibleHeight * 0.5) {
+          container.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+            inline: 'nearest'
           });
         }
-      }, 100);
+      }, 150);
     };
 
     const handleFocus = () => {
@@ -49,15 +74,20 @@ export function useKeyboardVisibility() {
       // Initial immediate scroll
       scrollToElement();
       
-      // Secondary scroll after keyboard appears
+      // Secondary scroll after keyboard appears (iOS delay)
       scrollTimeout = setTimeout(() => {
         scrollToElement();
-      }, 300);
+      }, 350);
       
-      // Final scroll for stubborn keyboards
+      // Final scroll for stubborn keyboards (Android delay)
       setTimeout(() => {
         scrollToElement();
-      }, 600);
+      }, 700);
+      
+      // Extra scroll for complex layouts
+      setTimeout(() => {
+        scrollToElement();
+      }, 1000);
     };
 
     const handleResize = () => {

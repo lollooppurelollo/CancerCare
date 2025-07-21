@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useKeyboardVisibility } from "@/hooks/use-keyboard-visibility";
+import { useSmartScroll } from "@/hooks/use-smart-scroll";
 import { apiRequest } from "@/lib/queryClient";
 import BottomNavigation from "@/components/ui/bottom-navigation";
 
@@ -20,9 +21,9 @@ export default function PatientVideo() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Keyboard visibility hooks for text inputs
-  const messageTextareaRef = useKeyboardVisibility();
-  const urgentTextareaRef = useKeyboardVisibility();
+  // Smart scroll hooks for text inputs
+  const messageTextareaRef = useSmartScroll<HTMLTextAreaElement>({ offsetFromTop: 100 });
+  const urgentTextareaRef = useSmartScroll<HTMLTextAreaElement>({ offsetFromTop: 100 });
 
   const { data: patient, isLoading: patientLoading } = useQuery({
     queryKey: ["/api/patients/me"],

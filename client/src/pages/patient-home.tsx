@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useKeyboardVisibility } from "@/hooks/use-keyboard-visibility";
+import { useSmartScroll } from "@/hooks/use-smart-scroll";
 import { apiRequest } from "@/lib/queryClient";
 import MedicationCalendar from "@/components/ui/medication-calendar";
 import SymptomTracker from "@/components/ui/symptom-tracker";
@@ -27,9 +28,9 @@ export default function PatientHome() {
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   
-  // Keyboard visibility hooks for text inputs
-  const diaryTextareaRef = useKeyboardVisibility();
-  const missedMedNotesRef = useKeyboardVisibility();
+  // Smart scroll hooks for text inputs  
+  const diaryTextareaRef = useSmartScroll<HTMLTextAreaElement>({ offsetFromTop: 100 });
+  const missedMedNotesRef = useSmartScroll<HTMLTextAreaElement>({ offsetFromTop: 100 });
 
   const { data: patient, isLoading: patientLoading } = useQuery({
     queryKey: ["/api/patients/me"],
