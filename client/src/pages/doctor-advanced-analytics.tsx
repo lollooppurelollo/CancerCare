@@ -511,7 +511,7 @@ export default function DoctorAdvancedAnalytics() {
               <div className="space-y-6">
                 {["abemaciclib", "ribociclib", "palbociclib"].map((drug) => {
                   // Dosaggi per farmaco
-                  const dosages = drug === "abemaciclib" ? ["150mg", "100mg", "50mg"] :
+                  const dosages = drug === "abemaciclib" ? ["150mg BID", "100mg BID", "50mg BID"] :
                                  drug === "ribociclib" ? ["600mg", "400mg", "200mg"] :
                                  ["125mg", "100mg", "75mg"];
                   

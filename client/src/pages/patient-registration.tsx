@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 const medications = {
-  abemaciclib: ["150mg", "100mg", "50mg"],
+  abemaciclib: ["150mg BID", "100mg BID", "50mg BID"],
   ribociclib: ["600mg", "400mg", "200mg"],
   palbociclib: ["125mg", "100mg", "75mg"],
 };

@@ -490,12 +490,12 @@ export class DatabaseStorage implements IStorage {
     // Get the maximum dosage for this medication/treatment setting
     const maxDosageMap = {
       metastatic: {
-        abemaciclib: '150mg',
+        abemaciclib: '150mg BID',
         ribociclib: '600mg',
         palbociclib: '125mg'
       },
       adjuvant: {
-        abemaciclib: '150mg',
+        abemaciclib: '150mg BID',
         ribociclib: '400mg',
         palbociclib: '' // Not used in adjuvant
       }
@@ -578,12 +578,12 @@ export class DatabaseStorage implements IStorage {
   async getValidDosagesForTreatment(medication: string, treatmentSetting: string): Promise<string[]> {
     const dosageRules = {
       metastatic: {
-        abemaciclib: ['150mg', '100mg', '50mg'],
+        abemaciclib: ['150mg BID', '100mg BID', '50mg BID'],
         ribociclib: ['600mg', '400mg', '200mg'],
         palbociclib: ['125mg', '100mg', '75mg']
       },
       adjuvant: {
-        abemaciclib: ['150mg', '100mg', '50mg'],
+        abemaciclib: ['150mg BID', '100mg BID', '50mg BID'],
         ribociclib: ['400mg', '200mg'], // No 600mg in adjuvant
         palbociclib: [] // Palbociclib not allowed in adjuvant
       }
@@ -754,7 +754,7 @@ export class DatabaseStorage implements IStorage {
     const patientsData = await query;
 
     const result = {
-      abemaciclib: { "150mg": 0, "100mg": 0, "50mg": 0 },
+      abemaciclib: { "150mg BID": 0, "100mg BID": 0, "50mg BID": 0 },
       ribociclib: { "600mg": 0, "400mg": 0, "200mg": 0 },
       palbociclib: { "125mg": 0, "100mg": 0, "75mg": 0 }
     };

@@ -127,11 +127,12 @@ Preferred communication style: Simple, everyday language.
 
 10. **Medication Dosage Correction (July 2025)**:
     - Updated correct dosages for all CDK 4/6 inhibitors across application
-    - Abemaciclib: 150mg, 100mg, 50mg (instead of previous incorrect values)
-    - Ribociclib: 600mg, 400mg, 200mg (instead of previous cp-based values)
-    - Palbociclib: 125mg, 100mg, 75mg (verified and standardized)
-    - Updated database records with correct dosage values
+    - Abemaciclib: 150mg BID, 100mg BID, 50mg BID (BID = bis in die, twice daily)
+    - Ribociclib: 600mg, 400mg, 200mg (once daily dosing)
+    - Palbociclib: 125mg, 100mg, 75mg (once daily dosing)
+    - Updated database records with correct dosage values including BID notation
     - Standardized medication dropdowns in all forms (registration, profile, doctor interface)
+    - Updated analytics and storage functions to reflect BID dosing for abemaciclib
     - Ensured consistency between database and UI display throughout application
 
 11. **Settings and Doctor Filtering System (July 2025)**:
