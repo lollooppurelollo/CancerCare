@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Settings, Save, AlertTriangle, User, Bell, MoreVertical, XCircle, Calendar, Plus, X } from "lucide-react";
 import { useLocation } from "wouter";
@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { useSimpleScroll } from "@/hooks/use-simple-scroll";
+import { addMobileScrollSupport } from "@/utils/mobile-scroll";
 import { apiRequest } from "@/lib/queryClient";
 import MedicationCalendar from "@/components/ui/medication-calendar";
 import SymptomTracker from "@/components/ui/symptom-tracker";
@@ -27,9 +27,17 @@ export default function PatientHome() {
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   
-  // Simple scroll hooks for text inputs  
-  const diaryTextareaRef = useSimpleScroll();
-  const missedMedNotesRef = useSimpleScroll();
+  // Refs per scroll mobile
+  const diaryTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Aggiungi supporto scroll mobile
+  useEffect(() => {
+    const diaryElement = diaryTextareaRef.current;
+    if (!diaryElement) return;
+    
+    const cleanup = addMobileScrollSupport(diaryElement);
+    return cleanup;
+  }, []);
 
   const { data: patient, isLoading: patientLoading } = useQuery({
     queryKey: ["/api/patients/me"],
@@ -143,35 +151,7 @@ export default function PatientHome() {
       <div className="p-4 bg-white border-b border-gray-200">
         <MedicationCalendar medication={patient.medication} patientId={patient.id} />
         
-        {/* Missed Medication Button */}
-        <div className="mt-4">
-          <Dialog open={showMissedMedDialog} onOpenChange={setShowMissedMedDialog}>
-            <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
-              >
-                <XCircle className="w-5 h-5 mr-2" />
-                Segnala Terapia Non Assunta
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Segnalazione Terapia Non Assunta</DialogTitle>
-              </DialogHeader>
-              <MissedMedicationDialog
-                missedDates={missedDates}
-                setMissedDates={setMissedDates}
-                notes={missedMedNotes}
-                setNotes={setMissedMedNotes}
-                onSave={() => reportMissedMedication.mutate()}
-                onCancel={() => setShowMissedMedDialog(false)}
-                isLoading={reportMissedMedication.isPending}
-                notesRef={missedMedNotesRef}
-              />
-            </DialogContent>
-          </Dialog>
-        </div>
+
       </div>
 
       {/* Daily Diary */}

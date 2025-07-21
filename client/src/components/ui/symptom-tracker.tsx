@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "./button";
 import { Textarea } from "./textarea";
@@ -6,7 +6,7 @@ import { Input } from "./input";
 import { Slider } from "./slider";
 import { Label } from "./label";
 import { useToast } from "@/hooks/use-toast";
-import { useSimpleScroll } from "@/hooks/use-simple-scroll";
+import { addMobileScrollSupport } from "@/utils/mobile-scroll";
 import { apiRequest } from "@/lib/queryClient";
 import { Calendar } from "lucide-react";
 
@@ -32,10 +32,25 @@ export default function SymptomTracker({ patientId }: SymptomTrackerProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Simple scroll hooks for text inputs
-  const additionalNotesRef = useSimpleScroll();
-  const temperatureInputRef = useSimpleScroll();
-  const diarrheaCountRef = useSimpleScroll();
+  // Refs per scroll mobile
+  const additionalNotesRef = useRef<HTMLTextAreaElement>(null);
+  const temperatureInputRef = useRef<HTMLInputElement>(null);
+  const diarrheaCountRef = useRef<HTMLInputElement>(null);
+
+  // Aggiungi supporto scroll mobile
+  useEffect(() => {
+    const elements = [
+      additionalNotesRef.current,
+      temperatureInputRef.current,
+      diarrheaCountRef.current
+    ].filter(Boolean) as HTMLElement[];
+
+    const cleanups = elements.map(element => addMobileScrollSupport(element));
+    
+    return () => {
+      cleanups.forEach(cleanup => cleanup());
+    };
+  }, []);
 
   const saveSymptomsMutation = useMutation({
     mutationFn: async () => {
