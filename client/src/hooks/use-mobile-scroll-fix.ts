@@ -20,67 +20,95 @@ export function useMobileScrollFix<T extends HTMLElement = HTMLElement>() {
     let timeouts: NodeJS.Timeout[] = [];
 
     const performScroll = () => {
+      console.log('📱 Mobile scroll fix ACTIVATED');
+      
       const rect = element.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
       
-      // Keyboard is likely visible if viewport is significantly reduced
-      const isKeyboardVisible = viewportHeight < window.screen.height * 0.75;
+      console.log(`📱 Element position: top=${rect.top}, viewport=${viewportHeight}`);
       
-      if (!isKeyboardVisible) return;
-      
-      // Target: position field at 30% from top of visible viewport
-      const targetPosition = viewportHeight * 0.3;
+      // Always scroll when this function is called - don't check keyboard visibility
+      // Target: position field at 25% from top of viewport
+      const targetPosition = viewportHeight * 0.25;
       const currentTop = rect.top;
       
       // Calculate required scroll
       const scrollNeeded = currentTop - targetPosition;
       const newScrollY = window.pageYOffset + scrollNeeded;
+      const maxScroll = documentHeight - viewportHeight;
+      const finalScrollY = Math.max(0, Math.min(newScrollY, maxScroll));
       
-      console.log(`📱 Mobile scroll fix: viewport=${viewportHeight}, target=${targetPosition}, scrollTo=${newScrollY}`);
+      console.log(`📱 Scrolling from ${window.pageYOffset} to ${finalScrollY}`);
       
-      // Scroll to position
+      // Force scroll to position
       window.scrollTo({
-        top: Math.max(0, newScrollY),
+        top: finalScrollY,
         behavior: 'smooth'
       });
+      
+      // Also try with instant scroll as backup
+      setTimeout(() => {
+        window.scrollTo(0, finalScrollY);
+      }, 200);
     };
 
     const handleFocusIn = () => {
-      console.log('📱 Focus detected - scheduling scroll sequence');
+      console.log('📱 FOCUS DETECTED - starting aggressive scroll sequence');
       
       // Clear any existing timeouts
       timeouts.forEach(clearTimeout);
       timeouts = [];
       
-      // Schedule multiple scroll attempts with different delays
-      const delays = [50, 200, 400, 600, 800, 1000, 1500];
+      // Immediate scroll
+      performScroll();
+      
+      // Schedule multiple scroll attempts with aggressive delays
+      const delays = [100, 300, 500, 700, 1000, 1500, 2000];
       
       delays.forEach(delay => {
-        const timeout = setTimeout(performScroll, delay);
+        const timeout = setTimeout(() => {
+          console.log(`📱 Delayed scroll attempt at ${delay}ms`);
+          performScroll();
+        }, delay);
         timeouts.push(timeout);
       });
     };
 
     const handleInput = () => {
-      // Additional scroll on input to handle edge cases
+      console.log('📱 INPUT detected');
       if (document.activeElement === element) {
-        const timeout = setTimeout(performScroll, 100);
+        performScroll();
+        const timeout = setTimeout(performScroll, 200);
         timeouts.push(timeout);
       }
     };
 
     const handleTouchStart = () => {
-      // Trigger on touch for better mobile responsiveness
-      const timeout = setTimeout(handleFocusIn, 50);
+      console.log('📱 TOUCH START detected');
+      const timeout = setTimeout(() => {
+        console.log('📱 Touch triggered focus sequence');
+        handleFocusIn();
+      }, 100);
       timeouts.push(timeout);
     };
 
-    // Add event listeners
+    const handleClick = () => {
+      console.log('📱 CLICK detected');
+      const timeout = setTimeout(handleFocusIn, 150);
+      timeouts.push(timeout);
+    };
+
+    // Add aggressive event listeners
     element.addEventListener('focusin', handleFocusIn);
     element.addEventListener('focus', handleFocusIn);
     element.addEventListener('input', handleInput);
     element.addEventListener('touchstart', handleTouchStart, { passive: true });
-    element.addEventListener('click', handleFocusIn);
+    element.addEventListener('touchend', handleTouchStart, { passive: true });
+    element.addEventListener('click', handleClick);
+    element.addEventListener('mousedown', handleClick);
+    
+    console.log('📱 Mobile scroll fix initialized for element:', element.tagName);
 
     // Visual Viewport API for modern browsers
     if ('visualViewport' in window) {
@@ -99,7 +127,9 @@ export function useMobileScrollFix<T extends HTMLElement = HTMLElement>() {
         element.removeEventListener('focus', handleFocusIn);
         element.removeEventListener('input', handleInput);
         element.removeEventListener('touchstart', handleTouchStart);
-        element.removeEventListener('click', handleFocusIn);
+        element.removeEventListener('touchend', handleTouchStart);
+        element.removeEventListener('click', handleClick);
+        element.removeEventListener('mousedown', handleClick);
         window.visualViewport?.removeEventListener('resize', handleViewportChange);
       };
     }
@@ -111,7 +141,9 @@ export function useMobileScrollFix<T extends HTMLElement = HTMLElement>() {
       element.removeEventListener('focus', handleFocusIn);
       element.removeEventListener('input', handleInput);
       element.removeEventListener('touchstart', handleTouchStart);
-      element.removeEventListener('click', handleFocusIn);
+      element.removeEventListener('touchend', handleTouchStart);
+      element.removeEventListener('click', handleClick);
+      element.removeEventListener('mousedown', handleClick);
     };
   }, []);
 
