@@ -31,62 +31,29 @@ export function useSmartScroll<T extends HTMLElement = HTMLElement>(options: Use
       
       console.log('📱 Smart scroll activated for text field');
       
-      // Find the form container or custom container  
-      const findContainer = (el: T): HTMLElement => {
-        if (containerSelector) {
-          const customContainer = document.querySelector(containerSelector) as HTMLElement;
-          if (customContainer) return customContainer;
-        }
-        
-        // Look for form or parent with submit buttons
-        let current = el.parentElement;
-        while (current && current !== document.body) {
-          if (current.tagName === 'FORM' || 
-              current.querySelector(submitButtonSelector)) {
-            return current;
-          }
-          current = current.parentElement;
-        }
-        return el;
-      };
-
-      const container = findContainer(element);
-      const submitButton = container.querySelector(submitButtonSelector) as HTMLElement;
-      
-      // Calculate visible viewport (excluding keyboard)
-      const originalHeight = window.screen.height;
-      const currentHeight = window.innerHeight;
-      const keyboardHeight = Math.max(0, originalHeight - currentHeight - 100);
-      const availableHeight = currentHeight - Math.max(keyboardHeight * 0.1, 50);
-      
-      // Get positions
+      // Get current element position
       const elementRect = element.getBoundingClientRect();
-      const submitRect = submitButton?.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
       
-      // Calculate required space
-      const fieldHeight = elementRect.height;
-      const buttonHeight = submitRect?.height || 40;
-      const totalNeededHeight = fieldHeight + buttonHeight + 60; // 60px padding
+      // Estimate keyboard height (typically 40-50% of viewport on mobile)
+      const estimatedKeyboardHeight = viewportHeight * 0.45;
+      const availableViewport = viewportHeight - estimatedKeyboardHeight;
       
-      // Determine scroll position
-      let targetY;
+      // Target position: place field in upper third of available viewport
+      const targetFromTop = availableViewport * 0.3;
       
-      if (totalNeededHeight <= availableHeight) {
-        // Both field and button can fit - center them in available space
-        const centerPosition = availableHeight / 2 - totalNeededHeight / 2;
-        targetY = window.pageYOffset + elementRect.top - centerPosition;
-      } else {
-        // Prioritize field visibility at top with some padding
-        targetY = window.pageYOffset + elementRect.top - offsetFromTop;
-      }
+      // Calculate scroll needed
+      const currentScrollY = window.pageYOffset;
+      const elementTopRelativeToDocument = elementRect.top + currentScrollY;
+      const targetScrollY = elementTopRelativeToDocument - targetFromTop;
       
-      // Smooth scroll to calculated position
+      console.log(`📱 Element top: ${elementRect.top}, Target scroll: ${targetScrollY}, Available viewport: ${availableViewport}`);
+      
+      // Perform scroll
       window.scrollTo({
-        top: Math.max(0, targetY),
+        top: Math.max(0, targetScrollY),
         behavior: 'smooth'
       });
-      
-      console.log(`📱 Scrolled to position: ${targetY}, available height: ${availableHeight}`);
     };
 
     const handleFocus = () => {
@@ -96,13 +63,12 @@ export function useSmartScroll<T extends HTMLElement = HTMLElement>(options: Use
       
       if (scrollTimeout) clearTimeout(scrollTimeout);
       
-      // Immediate scroll
-      smartScroll();
-      
-      // Delayed scrolls for keyboard appearance
-      scrollTimeout = setTimeout(smartScroll, 300);
-      setTimeout(smartScroll, 600);
-      setTimeout(smartScroll, 900);
+      // Multiple delayed scrolls to handle different keyboard appearance timings
+      setTimeout(smartScroll, 100);   // Quick initial scroll
+      setTimeout(smartScroll, 300);   // iOS standard delay
+      setTimeout(smartScroll, 500);   // Android delay
+      setTimeout(smartScroll, 800);   // Slow keyboards
+      setTimeout(smartScroll, 1200);  // Very slow keyboards
     };
 
     const handleResize = () => {
@@ -110,30 +76,81 @@ export function useSmartScroll<T extends HTMLElement = HTMLElement>(options: Use
       
       if (resizeTimeout) clearTimeout(resizeTimeout);
       
-      // Re-scroll if element is still focused after viewport change
+      // Re-scroll if element is still focused after viewport change (keyboard appearing/disappearing)
       if (document.activeElement === element) {
         resizeTimeout = setTimeout(() => {
           console.log('📱 Viewport changed while focused - re-adjusting scroll');
           smartScroll();
-        }, 150);
+          // Additional scrolls for stubborn cases
+          setTimeout(smartScroll, 200);
+          setTimeout(smartScroll, 500);
+        }, 100);
       }
     };
 
     const handleClick = () => {
       if (!isMobile) return;
-      // Slight delay for click to register before scrolling
-      setTimeout(handleFocus, 50);
+      // Delay for click to register, then trigger scroll sequence
+      setTimeout(() => {
+        console.log('📱 Element clicked - triggering scroll');
+        setTimeout(smartScroll, 50);
+        setTimeout(smartScroll, 200);
+        setTimeout(smartScroll, 400);
+      }, 50);
     };
 
-    // Event listeners
+    // Enhanced event listeners for better mobile support
     element.addEventListener('focus', handleFocus);
     element.addEventListener('click', handleClick);
     element.addEventListener('touchstart', handleClick);
+    element.addEventListener('touchend', handleClick);
+    element.addEventListener('input', () => {
+      // Scroll on input to handle cases where focus doesn't trigger
+      if (document.activeElement === element) {
+        setTimeout(smartScroll, 100);
+      }
+    });
+    
     window.addEventListener('resize', handleResize);
     window.addEventListener('orientationchange', () => {
       setTimeout(handleResize, 200);
     });
+    
+    // Additional mobile-specific events
+    window.addEventListener('scroll', () => {
+      // Prevent browser auto-scroll from interfering
+      if (document.activeElement === element) {
+        setTimeout(smartScroll, 50);
+      }
+    }, { passive: true });
+    
+    // Visual viewport API for better keyboard detection on modern browsers
+    if ('visualViewport' in window) {
+      const visualViewport = window.visualViewport!;
+      const handleViewportChange = () => {
+        if (document.activeElement === element) {
+          console.log('📱 Visual viewport changed - adjusting scroll');
+          setTimeout(smartScroll, 100);
+          setTimeout(smartScroll, 300);
+        }
+      };
+      
+      visualViewport.addEventListener('resize', handleViewportChange);
+      
+      return () => {
+        if (scrollTimeout) clearTimeout(scrollTimeout);
+        if (resizeTimeout) clearTimeout(resizeTimeout);
+        
+        element.removeEventListener('focus', handleFocus);
+        element.removeEventListener('click', handleClick);
+        element.removeEventListener('touchstart', handleClick);
+        element.removeEventListener('touchend', handleClick);
+        window.removeEventListener('resize', handleResize);
+        visualViewport.removeEventListener('resize', handleViewportChange);
+      };
+    }
 
+    // Fallback cleanup for browsers without visual viewport
     return () => {
       if (scrollTimeout) clearTimeout(scrollTimeout);
       if (resizeTimeout) clearTimeout(resizeTimeout);
@@ -141,6 +158,7 @@ export function useSmartScroll<T extends HTMLElement = HTMLElement>(options: Use
       element.removeEventListener('focus', handleFocus);
       element.removeEventListener('click', handleClick);
       element.removeEventListener('touchstart', handleClick);
+      element.removeEventListener('touchend', handleClick);
       window.removeEventListener('resize', handleResize);
     };
   }, [submitButtonSelector, containerSelector, offsetFromTop]);

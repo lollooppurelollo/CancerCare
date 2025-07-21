@@ -73,6 +73,45 @@
   /* Sage utility classes are now handled by Tailwind config */
 }
 
+/* Mobile viewport fixes for keyboard issues */
+@media screen and (max-width: 768px) {
+  html, body {
+    height: 100%;
+    overflow-x: hidden;
+    /* Prevent iOS Safari zoom on input */
+    -webkit-text-size-adjust: 100%;
+    /* Prevent iOS Safari bounce */
+    overscroll-behavior: none;
+  }
+  
+  /* Ensure input fields don't zoom on focus */
+  input, textarea, select {
+    font-size: 16px !important;
+    /* Prevent zoom on iOS */
+    -webkit-appearance: none;
+    border-radius: 4px;
+  }
+  
+  /* Fix viewport units for mobile browsers with dynamic viewports */
+  .mobile-viewport-fix {
+    height: 100vh;
+    height: 100dvh; /* Dynamic viewport height when supported */
+  }
+  
+  /* Smooth scrolling behavior */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Prevent text selection on mobile during scroll operations */
+  .scroll-locked {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+}
+
 /* Mobile keyboard visibility improvements */
 @media (max-width: 768px) and (hover: none) and (pointer: coarse) {
   input, textarea, select {

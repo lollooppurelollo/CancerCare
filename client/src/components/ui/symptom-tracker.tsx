@@ -8,6 +8,7 @@ import { Label } from "./label";
 import { useToast } from "@/hooks/use-toast";
 import { useKeyboardVisibility } from "@/hooks/use-keyboard-visibility";
 import { useSmartScroll } from "@/hooks/use-smart-scroll";
+import { useMobileScrollFix } from "@/hooks/use-mobile-scroll-fix";
 import { apiRequest } from "@/lib/queryClient";
 import { Calendar } from "lucide-react";
 
@@ -33,10 +34,10 @@ export default function SymptomTracker({ patientId }: SymptomTrackerProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Smart scroll hooks for text inputs
-  const additionalNotesRef = useSmartScroll<HTMLTextAreaElement>({ offsetFromTop: 80 });
-  const temperatureInputRef = useSmartScroll<HTMLInputElement>({ offsetFromTop: 80 });
-  const diarrheaCountRef = useSmartScroll<HTMLInputElement>({ offsetFromTop: 80 });
+  // Mobile scroll hooks for text inputs
+  const additionalNotesRef = useMobileScrollFix<HTMLTextAreaElement>();
+  const temperatureInputRef = useMobileScrollFix<HTMLInputElement>();
+  const diarrheaCountRef = useMobileScrollFix<HTMLInputElement>();
 
   const saveSymptomsMutation = useMutation({
     mutationFn: async () => {
