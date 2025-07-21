@@ -10,9 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { useKeyboardVisibility } from "@/hooks/use-keyboard-visibility";
-import { useSmartScroll } from "@/hooks/use-smart-scroll";
-import { useForceScroll } from "@/hooks/use-force-scroll";
+import { useSimpleScroll } from "@/hooks/use-simple-scroll";
 import { apiRequest } from "@/lib/queryClient";
 import MedicationCalendar from "@/components/ui/medication-calendar";
 import SymptomTracker from "@/components/ui/symptom-tracker";
@@ -29,9 +27,9 @@ export default function PatientHome() {
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   
-  // Force scroll hooks for text inputs  
-  const diaryTextareaRef = useForceScroll<HTMLTextAreaElement>();
-  const missedMedNotesRef = useForceScroll<HTMLTextAreaElement>();
+  // Simple scroll hooks for text inputs  
+  const diaryTextareaRef = useSimpleScroll();
+  const missedMedNotesRef = useSimpleScroll();
 
   const { data: patient, isLoading: patientLoading } = useQuery({
     queryKey: ["/api/patients/me"],
